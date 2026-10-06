@@ -22,6 +22,7 @@ Un jeu de commerce en pixel art qui vit dans une barre discrète ancrée en bas 
 | 1. Le voyage | Monde (8 villes, 12 routes), marchés aux prix partagés, caravane, chariots, barre pixel art | Fait |
 | 2. Métiers et ateliers | Fondation avec métier et ville, 4 artisans, recettes, production en temps réel, entrepôt, amélioration d'atelier, barre propre à chaque métier | Fait, à tester en jeu |
 | Réglages de la barre | Bouton engrenage et menu de l'icône : taille de 75 % à 200 %, choix de l'écran, mémorisés dans `user://preferences.cfg` | Fait, à tester sur plusieurs écrans |
+| Relance rapide | Atelier à l'arrêt : un clic sur l'emplacement de la barre relance la dernière recette au maximum possible (mémorisée dans `user://workshop.cfg`) | Fait |
 | 3. Les échanges | Comptoir, entrepôts pour tous, contrats de transport et caution, transporteur du jeu, négociant jouable | **Prochaine étape** |
 | 4. Les événements | Route (bandits, orage, péage…), atelier (commande spéciale, panne…), consignes par défaut | À faire |
 | 5. La maîtrise | Apprenti → compagnon → maître, qualité, signature des chefs-d'œuvre, talents, améliorations de caravane fabriquées par les artisans | À faire |

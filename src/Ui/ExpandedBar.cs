@@ -15,6 +15,8 @@ public partial class ExpandedBar : MarginContainer
 
     public event Action? ActionRequested;
 
+    public event Action? SlotRequested;
+
     public event Action? SettingsRequested;
 
     public RoadLane Lane { get; private set; } = null!;
@@ -43,7 +45,7 @@ public partial class ExpandedBar : MarginContainer
         row.AddChild(Lane);
 
         _slot = new TownSlot();
-        ClickBinding.OnLeftPress(_slot.Button, () => ActionRequested?.Invoke());
+        ClickBinding.OnLeftPress(_slot.Button, () => SlotRequested?.Invoke());
         row.AddChild(_slot.Button);
 
         row.AddChild(WindowButtons.CreateSettings(() => SettingsRequested?.Invoke()));

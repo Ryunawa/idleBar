@@ -27,26 +27,26 @@ public static class BarStatusBuilder
     public static BarStatus Unavailable(string reason) =>
         Waiting(reason, new SlotContent("IdleBar", "Indisponible", BarPalette.Danger, reason), reason);
 
-    public static BarStatus Describe(GameSession session) => session.Status switch
+    public static BarStatus Describe(GameSession session, RecipeInfo? relaunch) => session.Status switch
     {
         SessionStatus.SignedOut => Waiting("Non connecté", SignInSlot, "Connecte-toi pour commencer"),
         SessionStatus.Connecting => Waiting("Connexion…", ConnectingSlot, string.Empty),
         SessionStatus.NeedsFounding => Waiting("Pas encore installé", FoundingSlot, "Choisis ton métier pour commencer"),
         SessionStatus.Offline when session.Player is null => Waiting("Hors ligne", OfflineSlot, "Serveur injoignable"),
-        SessionStatus.Offline => DescribePlayer(session) with { Slot = OfflineSlot },
-        _ => DescribePlayer(session),
+        SessionStatus.Offline => DescribePlayer(session, null) with { Slot = OfflineSlot },
+        _ => DescribePlayer(session, relaunch),
     };
 
     private static BarStatus Waiting(string situation, SlotContent slot, string caption) =>
         new("IdleBar", situation, $"IdleBar · {situation}", slot, LaneScene.Idle(caption));
 
-    private static BarStatus DescribePlayer(GameSession session)
+    private static BarStatus DescribePlayer(GameSession session, RecipeInfo? relaunch)
     {
         PlayerState player = session.Player!;
         string coins = $"{NumberFormat.Amount(player.Coins)} écus";
         BarStatus status = session.Caravan is CaravanState caravan
             ? DescribeCaravan(session, caravan, coins)
-            : DescribeWorkshop(session, session.Workshop!, coins);
+            : DescribeWorkshop(session, session.Workshop!, coins, relaunch);
         return status with { Compact = $"{player.Name} · {coins} · {status.Situation}" };
     }
 
@@ -78,7 +78,7 @@ public static class BarStatusBuilder
             LaneScene.InTown(world?.FindTown(caravan.TownId)?.Biome ?? Biome.Plain, town));
     }
 
-    private static BarStatus DescribeWorkshop(GameSession session, WorkshopState workshop, string coins)
+    private static BarStatus DescribeWorkshop(GameSession session, WorkshopState workshop, string coins, RecipeInfo? relaunch)
     {
         WorldData? world = session.World;
         GameSnapshot snapshot = session.Snapshot!;
@@ -106,8 +106,23 @@ public static class BarStatusBuilder
             coins,
             situation,
             situation,
-            new SlotContent("Atelier", "À l'arrêt", BarPalette.Warning, "Ton atelier ne produit rien. Clique pour lancer une fabrication."),
+            DescribeIdleSlot(world, relaunch),
             LaneScene.Workshop(biome, snapshot.Player.CraftId, false, 0, products, $"{town} · atelier à l'arrêt"));
+    }
+
+    private static SlotContent DescribeIdleSlot(WorldData? world, RecipeInfo? relaunch)
+    {
+        if (world is null || relaunch is null)
+        {
+            return new SlotContent("Atelier", "À l'arrêt", BarPalette.Warning, "Ton atelier ne produit rien. Clique pour lancer une fabrication.");
+        }
+
+        string good = world.GoodName(relaunch.OutputGoodId).ToLower(French);
+        return new SlotContent(
+            "Atelier à l'arrêt",
+            $"Relancer : {good}",
+            BarPalette.Gold,
+            $"Clique pour relancer {good} autant que tes matières premières le permettent. Clique sur le paysage pour ouvrir l'atelier.");
     }
 
     private static IReadOnlyList<string> ListProducts(WorldData? world, IReadOnlyList<StockLine> storage) =>
