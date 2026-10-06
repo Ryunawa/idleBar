@@ -26,4 +26,9 @@ public static class DurationFormat
     }
 
     public static string ClockTime(DateTimeOffset moment) => moment.ToLocalTime().ToString("HH:mm", French);
+
+    public static string Moment(DateTimeOffset moment, DateTimeOffset now) =>
+        moment.ToLocalTime().Date == now.ToLocalTime().Date
+            ? ClockTime(moment)
+            : moment.ToLocalTime().ToString("dd/MM HH:mm", French);
 }

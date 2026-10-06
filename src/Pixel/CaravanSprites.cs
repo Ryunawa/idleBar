@@ -1,7 +1,12 @@
+using System.Collections.Generic;
+using System.Linq;
+
 namespace IdleBar.Pixel;
 
 public static class CaravanSprites
 {
+    private static readonly Dictionary<WagonStyle, PixelSprite> Wagons = [];
+
     private static readonly string[] Canvas =
     [
         "....kkkkkkkkkk....",
@@ -23,21 +28,33 @@ public static class CaravanSprites
         "...kOOOOOOOOk...",
     ];
 
-    public static PixelSprite WagonRolling { get; } = PixelSprite.Parse(
+    private static readonly string[] RollingWheels =
     [
-        .. Canvas,
         "...kBk......kBk...",
         "..kBsBk....kBsBk..",
         "...kBk......kBk...",
-    ]);
+    ];
 
-    public static PixelSprite WagonTurning { get; } = PixelSprite.Parse(
+    private static readonly string[] TurningWheels =
     [
-        .. Canvas,
         "...ksk......ksk...",
         "..ksBsk....ksBsk..",
         "...ksk......ksk...",
-    ]);
+    ];
+
+    public static PixelSprite Wagon(bool rolling, CaravanLook look)
+    {
+        WagonStyle style = new(rolling, look.Tarp, look.IronWheels);
+        if (!Wagons.TryGetValue(style, out PixelSprite? sprite))
+        {
+            IEnumerable<string> canvas = Canvas.Select(row => look.Tarp ? row.Replace('w', 'm').Replace('W', 'C') : row);
+            IEnumerable<string> wheels = (rolling ? RollingWheels : TurningWheels).Select(row => look.IronWheels ? row.Replace('B', 'S') : row);
+            sprite = PixelSprite.Parse([.. canvas, .. wheels]);
+            Wagons[style] = sprite;
+        }
+
+        return sprite;
+    }
 
     public static PixelSprite OxStepping { get; } = PixelSprite.Parse(
     [

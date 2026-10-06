@@ -12,9 +12,12 @@ public sealed record WorkshopState(
     string? RecipeId,
     int Queued,
     int? BatchSeconds,
-    DateTimeOffset? StartedAt)
+    DateTimeOffset? StartedAt,
+    DateTimeOffset? PausedUntil)
 {
     public bool IsProducing => Queued > 0 && BatchSeconds is > 0 && StartedAt is not null;
+
+    public bool IsPaused(DateTimeOffset now) => IsProducing && PausedUntil > now;
 
     public DateTimeOffset? NextBatchAt => IsProducing ? StartedAt!.Value.AddSeconds(BatchSeconds!.Value) : null;
 
@@ -29,8 +32,9 @@ public sealed record WorkshopState(
             return 0;
         }
 
-        double elapsed = Math.Max(0, (now - StartedAt!.Value).TotalSeconds);
-        return BatchesDone(now) >= Queued ? 1 : elapsed % BatchSeconds!.Value / BatchSeconds.Value;
+        DateTimeOffset moment = IsPaused(now) ? PausedUntil!.Value : now;
+        double elapsed = Math.Max(0, (moment - StartedAt!.Value).TotalSeconds);
+        return BatchesDone(moment) >= Queued ? 1 : elapsed % BatchSeconds!.Value / BatchSeconds.Value;
     }
 
     private int BatchesDone(DateTimeOffset now)

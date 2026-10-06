@@ -26,9 +26,7 @@ public sealed class GameSession
 
     public event Action? Changed;
 
-    public event Action<TownInfo>? Arrived;
-
-    public event Action<RecipeInfo, int>? ProductionDelivered;
+    public event Action<GameSnapshot?, GameSnapshot>? Applied;
 
     public SessionStatus Status { get; private set; } = SessionStatus.SignedOut;
 
@@ -150,6 +148,10 @@ public sealed class GameSession
             GD.PushWarning($"Session refusée : {exception.Message}");
             SignOut();
         }
+        catch (ActionRefusedException exception)
+        {
+            GD.PushWarning($"État non rafraîchi : {exception.Message}");
+        }
         catch (Exception exception) when (TransportFailure.Matches(exception))
         {
             GD.PushWarning($"Serveur injoignable : {exception.Message}");
@@ -177,15 +179,6 @@ public sealed class GameSession
         Status = snapshot.Player is null ? SessionStatus.NeedsFounding : SessionStatus.Ready;
         Changed?.Invoke();
 
-        if (snapshot.EndsTripOf(previous) && World?.FindTown(snapshot.Caravan!.TownId) is TownInfo town)
-        {
-            Arrived?.Invoke(town);
-        }
-
-        int delivered = snapshot.BatchesDeliveredSince(previous);
-        if (delivered > 0 && World?.FindRecipe(previous!.Workshop!.RecipeId!) is RecipeInfo recipe)
-        {
-            ProductionDelivered?.Invoke(recipe, delivered);
-        }
+        Applied?.Invoke(previous, snapshot);
     }
 }

@@ -89,19 +89,27 @@ public partial class RoadLane : Control
         switch (_scene.Mode)
         {
             case LaneMode.Travelling:
-                CaravanPainter.PaintTravelling(canvas, _time, _scene.Progress);
+                CaravanPainter.PaintTravelling(canvas, _time, _scene.Progress, _scene.Look ?? CaravanLook.Plain);
+                break;
+            case LaneMode.Halted:
+                CaravanPainter.PaintHalted(canvas, _scene.Progress, _scene.Look ?? CaravanLook.Plain, _scene.Hazard);
                 break;
             case LaneMode.InTown:
-                CaravanPainter.PaintInTown(canvas);
+                CaravanPainter.PaintInTown(canvas, _scene.Look ?? CaravanLook.Plain);
                 break;
             case LaneMode.Workshop:
                 WorkshopPainter.Paint(canvas, _scene.CraftId, _time, _scene.Busy, _scene.Products);
-                if (_scene.Busy)
+                if (_scene.Busy && _scene.Progress > 0)
                 {
                     TownPainter.PaintProgress(canvas, _scene.Progress);
                 }
 
                 break;
+        }
+
+        if (_scene.Raining)
+        {
+            WeatherPainter.PaintRain(canvas, _time);
         }
     }
 

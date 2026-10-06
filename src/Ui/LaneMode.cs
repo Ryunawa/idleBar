@@ -6,4 +6,5 @@ public enum LaneMode
     Travelling,
     InTown,
     Workshop,
+    Halted,
 }

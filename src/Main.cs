@@ -81,6 +81,7 @@ public partial class Main : Control
         _expanded.QuitRequested += Quit;
         _expanded.ActionRequested += () => _game.OpenFromLane(_placement.DialogScale);
         _expanded.SlotRequested += () => _game.PressSlot(_placement.DialogScale);
+        _expanded.NewsRequested += () => _game.PressNews(_placement.DialogScale);
         _expanded.SettingsRequested += OpenSettings;
 
         _collapsedBar = new CollapsedBar();

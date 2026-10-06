@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using Godot;
 using IdleBar.Cloud;
 using IdleBar.Trade;
@@ -9,15 +8,12 @@ namespace IdleBar.Ui;
 
 public sealed class GameBridge : IDisposable
 {
-    private const float ArrivalBannerSeconds = 8;
     private const float HintBannerSeconds = 4;
-    private const float ProductionBannerSeconds = 6;
+    private const float RefusalBannerSeconds = 6;
     private const int HttpTimeoutSeconds = 10;
     private const string SessionPath = "user://session.dat";
     private const string RecipeMemoryPath = "user://workshop.cfg";
     private const string MissingConfiguration = "Supabase n'est pas configuré";
-
-    private static readonly CultureInfo French = CultureInfo.GetCultureInfo("fr-FR");
 
     private readonly HttpClient? _http;
     private readonly GameSession? _session;
@@ -37,8 +33,8 @@ public sealed class GameBridge : IDisposable
         SessionKeeper keeper = new(new SupabaseAuth(_http, settings), new SessionStore(ProjectSettings.GlobalizePath(SessionPath)));
         GameApi api = new(new SupabaseRpc(_http, settings));
         GameSession session = new(keeper, api, new ServerClock());
-        session.Arrived += town => Announced?.Invoke($"Ta caravane est arrivée à {town.Name}", ArrivalBannerSeconds);
-        session.ProductionDelivered += (recipe, batches) => AnnounceDelivery(session, recipe, batches);
+        SessionBanners banners = new(session);
+        banners.Announced += (message, seconds) => Announced?.Invoke(message, seconds);
 
         GameActions actions = new(session, api);
         _dialogs = new GameDialogs(session, actions, host);
@@ -67,16 +63,7 @@ public sealed class GameBridge : IDisposable
 
     public void SignOut() => _session?.SignOut();
 
-    public void OpenFromLane(float dialogScale)
-    {
-        if (_session is { Status: SessionStatus.Ready, IsTravelling: true })
-        {
-            Announced?.Invoke(Status.Slot.Tooltip, HintBannerSeconds);
-            return;
-        }
-
-        _dialogs?.OpenFor(dialogScale);
-    }
+    public void OpenFromLane(float dialogScale) => _dialogs?.OpenFor(dialogScale);
 
     public async void PressSlot(float dialogScale)
     {
@@ -94,18 +81,35 @@ public sealed class GameBridge : IDisposable
         _relaunching = true;
         RelaunchOutcome outcome = await _relaunch.RelaunchAsync(recipe);
         _relaunching = false;
-        Announced?.Invoke(outcome.Message, outcome.Started ? HintBannerSeconds : ProductionBannerSeconds);
+        Announced?.Invoke(outcome.Message, outcome.Started ? HintBannerSeconds : RefusalBannerSeconds);
         if (!outcome.Started)
         {
             _dialogs?.OpenFor(dialogScale);
         }
     }
 
-    public void Dispose() => _http?.Dispose();
-
-    private void AnnounceDelivery(GameSession session, RecipeInfo recipe, int batches)
+    public void PressNews(float dialogScale)
     {
-        string good = session.World?.GoodName(recipe.OutputGoodId).ToLower(French) ?? recipe.OutputGoodId;
-        Announced?.Invoke($"+{NumberFormat.Amount(batches * recipe.OutputQuantity)} {good} à l'entrepôt", ProductionBannerSeconds);
+        if (_session?.Snapshot is not GameSnapshot snapshot)
+        {
+            return;
+        }
+
+        if (snapshot.TripEvent is not null || snapshot.News.Total == 0)
+        {
+            _dialogs?.OpenFor(dialogScale, TownTab.Journal);
+            return;
+        }
+
+        if (_session.IsTravelling)
+        {
+            Announced?.Invoke(ExchangeText.News(snapshot.News), HintBannerSeconds);
+            _dialogs?.MarkNewsSeen();
+            return;
+        }
+
+        _dialogs?.OpenFor(dialogScale, snapshot.News.Offers > 0 ? TownTab.Counter : TownTab.Contracts);
     }
+
+    public void Dispose() => _http?.Dispose();
 }

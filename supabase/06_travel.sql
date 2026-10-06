@@ -26,35 +26,42 @@ begin
 end;
 $$;
 
-create or replace function public.depart(p_destination_id text) returns jsonb
+drop function if exists public.depart(text);
+
+create or replace function public.depart(p_destination_id text, p_directive_id text default null) returns jsonb
 language plpgsql
 security definer
 set search_path = ''
 as $$
 declare
   v_caravan public.caravans;
+  v_route public.routes;
   v_seconds numeric;
 begin
   perform private.lock_player();
   v_caravan := private.lock_caravan_in_town();
-  select round(routes.minutes * 60 * settings.travel_time_factor) into v_seconds
-  from public.routes
-  cross join private.settings
-  where routes.from_town_id = v_caravan.town_id and routes.to_town_id = p_destination_id;
+  select * into v_route from public.routes where from_town_id = v_caravan.town_id and to_town_id = p_destination_id;
   if not found then
     raise exception 'Aucune route ne mène là depuis ici.';
   end if;
 
+  if p_directive_id is not null and not exists (select 1 from public.directives where id = p_directive_id) then
+    raise exception 'Cette directive n''existe pas.';
+  end if;
+
+  v_seconds := round(v_route.minutes * 60 * (select travel_time_factor from private.settings) * (1 - private.bonus(v_caravan.player_id, 'swift')));
   update public.caravans
   set from_town_id = town_id,
       town_id = p_destination_id,
       departed_at = now(),
-      arrives_at = now() + make_interval(secs => v_seconds)
+      arrives_at = now() + make_interval(secs => v_seconds),
+      directive_id = coalesce(p_directive_id, directive_id)
   where player_id = v_caravan.player_id;
 
+  perform private.roll_trip_event(v_caravan.player_id, now(), now() + make_interval(secs => v_seconds), v_route.biome, v_route.minutes);
   return public.get_state();
 end;
 $$;
 
-revoke all on function public.buy_wagon(), public.depart(text) from public, anon;
-grant execute on function public.buy_wagon(), public.depart(text) to authenticated;
+revoke all on function public.buy_wagon(), public.depart(text, text) from public, anon;
+grant execute on function public.buy_wagon(), public.depart(text, text) to authenticated;

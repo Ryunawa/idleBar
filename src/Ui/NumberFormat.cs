@@ -14,6 +14,8 @@ public static class NumberFormat
     public static string Rate(double value) =>
         value < 1000 ? value.ToString("0.#", French) : WithSuffix(value);
 
+    public static string Count(int count, string one, string many) => $"{Amount(count)} {(count > 1 ? many : one)}";
+
     private static string WithSuffix(double value)
     {
         int tier = Math.Min((int)Math.Floor(Math.Log10(value) / 3), Suffixes.Length - 1);

@@ -14,28 +14,26 @@ public sealed class GameDialogs
     private readonly LoginWindow _login = new();
     private readonly FoundingWindow _founding = new();
     private readonly TownWindow _town = new();
+    private readonly SeenMarker _seen;
     private float _scale = 1f;
 
     public GameDialogs(GameSession session, GameActions actions, Node host)
     {
         _session = session;
         _actions = actions;
+        _seen = new SeenMarker(session, actions);
         host.AddChild(_login);
         host.AddChild(_founding);
         host.AddChild(_town);
 
         _login.Submitted += OnLoginSubmitted;
         _founding.Submitted += OnFoundingSubmitted;
-        _town.BuyRequested += (goodId, quantity) => RunInTown(() => _actions.BuyAsync(goodId, quantity));
-        _town.SellRequested += (goodId, quantity) => RunInTown(() => _actions.SellAsync(goodId, quantity));
-        _town.WagonRequested += () => RunInTown(_actions.BuyWagonAsync);
-        _town.DepartRequested += destinationId => RunInTown(() => _actions.DepartAsync(destinationId));
-        _town.ProductionRequested += (recipeId, batches) => RunInTown(() => _actions.StartProductionAsync(recipeId, batches));
-        _town.WorkshopUpgradeRequested += () => RunInTown(_actions.UpgradeWorkshopAsync);
+        _town.Requested += command => RunInTown(() => command(_actions));
+        _town.TabViewed += _seen.MarkTab;
         _session.Changed += RefreshTown;
     }
 
-    public void OpenFor(float scale)
+    public void OpenFor(float scale, TownTab? tab = null)
     {
         _scale = scale;
         switch (_session.Status)
@@ -49,11 +47,13 @@ public sealed class GameDialogs
             case SessionStatus.Offline:
                 _session.Retry();
                 break;
-            case SessionStatus.Ready when !_session.IsTravelling:
-                OpenTown();
+            case SessionStatus.Ready:
+                OpenTown(tab);
                 break;
         }
     }
+
+    public void MarkNewsSeen() => _seen.MarkExchanges();
 
     private void OpenFounding()
     {
@@ -63,9 +63,14 @@ public sealed class GameDialogs
         }
     }
 
-    private void OpenTown()
+    private void OpenTown(TownTab? tab)
     {
-        _town.Open(_scale, _session.Caravan is not null);
+        if (_session is not { World: WorldData world, Snapshot: GameSnapshot snapshot })
+        {
+            return;
+        }
+
+        _town.Open(_scale, TownAccess.For(world, snapshot, _session.Clock.Now), tab);
         RefreshTown();
     }
 
@@ -76,7 +81,7 @@ public sealed class GameDialogs
             return;
         }
 
-        if (_session is { Status: SessionStatus.Ready, World: WorldData world, Snapshot: GameSnapshot snapshot } && !_session.IsTravelling)
+        if (_session is { Status: SessionStatus.Ready, World: WorldData world, Snapshot: GameSnapshot snapshot })
         {
             _town.Refresh(world, snapshot, _session.Clock);
             return;
@@ -144,6 +149,6 @@ public sealed class GameDialogs
         }
 
         _founding.Hide();
-        OpenTown();
+        OpenTown(null);
     }
 }

@@ -7,25 +7,62 @@ using IdleBar.Trade;
 
 namespace IdleBar.Ui;
 
-public partial class RoutesPanel : VBoxContainer
+public partial class RoutesPanel : VBoxContainer, ITownPanel
 {
     private static readonly CultureInfo French = CultureInfo.GetCultureInfo("fr-FR");
 
-    public event Action<string>? DepartRequested;
+    private readonly ChoicePicker _directive = new(160);
+    private Label _directiveNote = null!;
+    private VBoxContainer _list = null!;
+    private WorldData? _world;
+    private string? _serverDirective;
 
-    public override void _Ready() => AddThemeConstantOverride("separation", 10);
+    public event Action<TownCommand>? Requested;
 
-    public void Refresh(WorldData world, string townId)
+    public override void _Ready()
     {
-        foreach (Node child in GetChildren())
+        AddThemeConstantOverride("separation", 8);
+        HBoxContainer directiveRow = new();
+        directiveRow.AddThemeConstantOverride("separation", 8);
+        Label caption = BarLabels.Create(13, BarPalette.Muted);
+        caption.Text = "Directive du voyage :";
+        directiveRow.AddChild(caption);
+        directiveRow.AddChild(_directive.Button);
+        AddChild(directiveRow);
+        _directive.Button.ItemSelected += _ => RefreshDirectiveNote();
+
+        _directiveNote = ActionRow.Note(string.Empty);
+        AddChild(_directiveNote);
+
+        _list = new VBoxContainer { SizeFlagsVertical = SizeFlags.ExpandFill };
+        _list.AddThemeConstantOverride("separation", 10);
+        AddChild(_list);
+    }
+
+    public void Refresh(TownContext context)
+    {
+        WorldData world = context.World;
+        _world = world;
+        string? serverDirective = context.Snapshot.Caravan?.DirectiveId;
+        if (!_directive.HasSelection || serverDirective != _serverDirective)
         {
-            RemoveChild(child);
-            child.QueueFree();
+            _directive.Fill(world.Directives.Select(directive => new PickerChoice(directive.Id, directive.Name)).ToList());
+            _directive.Choose(serverDirective);
+            _serverDirective = serverDirective;
         }
 
-        foreach (RouteInfo route in world.RoutesFrom(townId))
+        RefreshDirectiveNote();
+        ActionRow.Clear(_list);
+        double swift = context.Snapshot.Mastery?.Bonus("swift") ?? 0;
+        foreach (RouteInfo route in world.RoutesFrom(context.TownId))
         {
-            AddChild(CreateRow(world, route));
+            string title = $"{world.TownName(route.ToTownId)} · {DurationFormat.Span(TimeSpan.FromSeconds(route.Seconds * (1 - swift)))} de {BiomeText.Describe(route.Biome)}";
+            string trade = world.FindTown(route.ToTownId) is TownInfo destination
+                ? $"Vend : {ListGoods(world, destination.Produces)} · Paie cher : {ListGoods(world, destination.Demands)}"
+                : string.Empty;
+            string destinationId = route.ToTownId;
+            _list.AddChild(ActionRow.Create(title, trade, "Partir", false,
+                () => Requested?.Invoke(actions => actions.DepartAsync(destinationId, _directive.SelectedId))));
         }
     }
 
@@ -35,30 +72,16 @@ public partial class RoutesPanel : VBoxContainer
         return list.Length == 0 ? "rien de particulier" : list;
     }
 
-    private HBoxContainer CreateRow(WorldData world, RouteInfo route)
+    private void RefreshDirectiveNote()
     {
-        HBoxContainer row = new();
-        row.AddThemeConstantOverride("separation", 12);
-
-        VBoxContainer details = new() { SizeFlagsHorizontal = SizeFlags.ExpandFill };
-        details.AddThemeConstantOverride("separation", 0);
-
-        Label name = BarLabels.Create(14, BarPalette.Text);
-        name.Text = $"{world.TownName(route.ToTownId)} · {DurationFormat.Span(TimeSpan.FromSeconds(route.Seconds))} de {BiomeText.Describe(route.Biome)}";
-        details.AddChild(name);
-
-        if (world.FindTown(route.ToTownId) is TownInfo destination)
+        if (_world?.FindDirective(_directive.SelectedId ?? string.Empty) is not DirectiveInfo directive)
         {
-            Label trade = BarLabels.Create(11, BarPalette.Muted);
-            trade.Text = $"Vend : {ListGoods(world, destination.Produces)} · Paie cher : {ListGoods(world, destination.Demands)}";
-            details.AddChild(trade);
+            _directiveNote.Text = string.Empty;
+            return;
         }
 
-        row.AddChild(details);
-
-        Button depart = new() { Text = "Partir", FocusMode = FocusModeEnum.None, SizeFlagsVertical = SizeFlags.ShrinkCenter };
-        depart.Pressed += () => DepartRequested?.Invoke(route.ToTownId);
-        row.AddChild(depart);
-        return row;
+        string reactions = string.Join(", ", directive.Choices.Select(reaction =>
+            $"{_world.FindEventKind(reaction.KindId)?.Name.ToLower(French)} : {_world.FindEventKind(reaction.KindId)?.Choices.FirstOrDefault(choice => choice.Id == reaction.ChoiceId)?.Name.ToLower(French)}"));
+        _directiveNote.Text = $"{directive.Description} Si tu ne réponds pas dans l'heure à un événement : {reactions}.";
     }
 }

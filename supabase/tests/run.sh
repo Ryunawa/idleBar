@@ -13,6 +13,6 @@ until docker logs "$container" 2>&1 | grep -q "PostgreSQL init process complete"
   sleep 1
 done
 
-for file in "$here/supabase_stub.sql" "$schema"/0*.sql "$here"/*_test.sql; do
+for file in "$here/supabase_stub.sql" "$schema"/[0-9][0-9]_*.sql "$here"/*_test.sql; do
   docker exec -i "$container" psql -q -U postgres -v ON_ERROR_STOP=1 < "$file"
 done

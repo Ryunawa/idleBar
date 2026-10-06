@@ -6,7 +6,7 @@ using IdleBar.Trade;
 
 namespace IdleBar.Ui;
 
-public partial class WorkshopPanel : VBoxContainer
+public partial class WorkshopPanel : VBoxContainer, ITownPanel
 {
     private const int MaxBatches = 99;
 
@@ -23,9 +23,8 @@ public partial class WorkshopPanel : VBoxContainer
     private ServerClock? _clock;
     private int _batches = 1;
 
-    public event Action<string, int>? ProductionRequested;
+    public event Action<TownCommand>? Requested;
 
-    public event Action? UpgradeRequested;
 
     public override void _Ready()
     {
@@ -45,7 +44,7 @@ public partial class WorkshopPanel : VBoxContainer
         _level = BarLabels.Create(12, BarPalette.Muted);
         _level.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         _upgrade = new Button { FocusMode = FocusModeEnum.None };
-        _upgrade.Pressed += () => UpgradeRequested?.Invoke();
+        _upgrade.Pressed += () => Requested?.Invoke(actions => actions.UpgradeWorkshopAsync());
         levelRow.AddChild(_level);
         levelRow.AddChild(_upgrade);
         AddChild(levelRow);
@@ -59,35 +58,33 @@ public partial class WorkshopPanel : VBoxContainer
         }
     }
 
-    public void Refresh(WorldData world, GameSnapshot snapshot, ServerClock clock)
+    public void Refresh(TownContext context)
     {
+        WorldData world = context.World;
+        GameSnapshot snapshot = context.Snapshot;
         _world = world;
         _snapshot = snapshot;
-        _clock = clock;
+        _clock = context.Clock;
         WorkshopState workshop = snapshot.Workshop!;
 
-        foreach (Node child in _recipes.GetChildren())
-        {
-            _recipes.RemoveChild(child);
-            child.QueueFree();
-        }
-
+        ActionRow.Clear(_recipes);
         foreach (RecipeInfo recipe in world.RecipesOf(snapshot.Player!.CraftId))
         {
-            _recipes.AddChild(CreateRecipeRow(world, snapshot, workshop, recipe));
+            _recipes.AddChild(CreateRecipeRow(context, workshop, recipe));
         }
 
         _level.Text = $"Atelier niveau {workshop.Level} · vitesse ×{workshop.Speed.ToString("0.##", French)} · entrepôt {workshop.StorageCapacity} · file de {workshop.MaxQueue}";
         _upgrade.Text = workshop.NextLevelPrice is int price ? $"Agrandir · {NumberFormat.Amount(price)} écus" : "Niveau maximal";
         _upgrade.Disabled = workshop.NextLevelPrice is not int cost || snapshot.Player.Coins < cost;
-        RefreshStatus(world, workshop, clock.Now);
+        RefreshStatus(world, workshop, context.Clock.Now);
     }
 
     private static string Describe(WorldData world, StockLine line) =>
         $"{NumberFormat.Amount(line.Quantity)} {world.GoodName(line.GoodId).ToLower(French)}";
 
-    private HBoxContainer CreateRecipeRow(WorldData world, GameSnapshot snapshot, WorkshopState workshop, RecipeInfo recipe)
+    private HBoxContainer CreateRecipeRow(TownContext context, WorkshopState workshop, RecipeInfo recipe)
     {
+        WorldData world = context.World;
         HBoxContainer row = new();
         row.AddThemeConstantOverride("separation", 12);
         VBoxContainer details = new() { SizeFlagsHorizontal = SizeFlags.ExpandFill };
@@ -101,7 +98,7 @@ public partial class WorkshopPanel : VBoxContainer
 
         Label needs = BarLabels.Create(11, BarPalette.Muted);
         string inputs = string.Join(" + ", recipe.Inputs.Select(input => Describe(world, input)));
-        string held = string.Join(", ", recipe.Inputs.Select(input => Describe(world, input with { Quantity = snapshot.OwnedQuantity(input.GoodId) })));
+        string held = string.Join(", ", recipe.Inputs.Select(input => Describe(world, input with { Quantity = context.Owned(input.GoodId) })));
         needs.Text = $"Demande {inputs} · en stock : {held}";
         details.AddChild(needs);
         row.AddChild(details);
@@ -114,7 +111,7 @@ public partial class WorkshopPanel : VBoxContainer
             FocusMode = FocusModeEnum.None,
             SizeFlagsVertical = SizeFlags.ShrinkCenter,
         };
-        start.Pressed += () => ProductionRequested?.Invoke(recipe.Id, _batches);
+        start.Pressed += () => Requested?.Invoke(actions => actions.StartProductionAsync(recipe.Id, _batches));
         row.AddChild(start);
         return row;
     }
@@ -124,6 +121,13 @@ public partial class WorkshopPanel : VBoxContainer
         if (!workshop.IsProducing || world.FindRecipe(workshop.RecipeId!) is not RecipeInfo recipe)
         {
             _status.Text = "L'atelier est à l'arrêt : lance une fabrication.";
+            _progress.Value = 0;
+            return;
+        }
+
+        if (workshop.IsPaused(now))
+        {
+            _status.Text = $"Panne : l'atelier reprend à {DurationFormat.ClockTime(workshop.PausedUntil!.Value)}.";
             _progress.Value = 0;
             return;
         }

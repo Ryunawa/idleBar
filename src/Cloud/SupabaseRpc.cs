@@ -12,6 +12,9 @@ public sealed class SupabaseRpc
 {
     private const string RaisedExceptionCode = "P0001";
     private const string UnknownFunctionCode = "PGRST202";
+    private const string DeadlockCode = "40P01";
+    private const string SerializationCode = "40001";
+    private const string BusyMessage = "Le serveur était occupé par un autre joueur : réessaie dans un instant.";
 
     private readonly HttpClient _http;
     private readonly SupabaseSettings _settings;
@@ -46,6 +49,7 @@ public sealed class SupabaseRpc
         return error switch
         {
             { Code: RaisedExceptionCode, Message: not null } => new ActionRefusedException(error.Message),
+            { Code: DeadlockCode or SerializationCode } => new ActionRefusedException(BusyMessage),
             { Code: UnknownFunctionCode } => new CloudRequestException(
                 $"La fonction {function} n'existe pas sur Supabase : exécute les scripts du dossier supabase."),
             _ => new CloudRequestException($"{function} : HTTP {status} {error?.Message ?? body}"),

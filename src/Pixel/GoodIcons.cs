@@ -12,6 +12,8 @@ public static class GoodIcons
     private static readonly PixelSprite Tarps = PixelSprite.Parse("wWwWw", "WwWwW", "wWwWw");
     private static readonly PixelSprite Remedies = PixelSprite.Parse(".s.", "lll", "lVl", "lll");
     private static readonly PixelSprite Ointment = PixelSprite.Parse("kkkk", "yLLy", "yyyy");
+    private static readonly PixelSprite Wagon = PixelSprite.Parse(".www.", "bbbbb", ".k.k.");
+    private static readonly PixelSprite Masterpiece = PixelSprite.Parse("..g..", ".gLg.", "gLLLg", ".gLg.", "..g..");
 
     public static PixelSprite For(string goodId) => goodId switch
     {
@@ -22,6 +24,8 @@ public static class GoodIcons
         "baches" => Tarps,
         "remedes" => Remedies,
         "onguent" => Ointment,
+        "chariot" => Wagon,
+        "chef_oeuvre" => Masterpiece,
         _ => Crates,
     };
 }

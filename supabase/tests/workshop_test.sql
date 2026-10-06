@@ -1,5 +1,7 @@
 \set ON_ERROR_STOP on
 
+update private.settings set events_enabled = false;
+
 insert into auth.users (id) values ('55555555-5555-5555-5555-555555555555');
 
 create function pg_temp.expect_refusal(p_call text, p_message text) returns void
@@ -19,7 +21,7 @@ $$;
 create function pg_temp.held(p_state jsonb, p_good_id text) returns integer
 language sql
 as $$
-  select coalesce((select (line ->> 'quantity')::int from jsonb_array_elements(p_state -> 'storage') line where line ->> 'good_id' = p_good_id), 0);
+  select coalesce((select (line ->> 'quantity')::int from jsonb_array_elements(p_state -> 'warehouses') line where line ->> 'good_id' = p_good_id), 0);
 $$;
 
 grant execute on function pg_temp.expect_refusal(text, text), pg_temp.held(jsonb, text) to authenticated;
@@ -38,7 +40,7 @@ begin
   assert (v_state -> 'workshop' ->> 'storage_capacity')::int = 60, 'the level 1 warehouse holds 60 goods';
   assert (v_state -> 'workshop' ->> 'max_queue')::int = 6, 'the level 1 workshop queues 6 batches';
   assert (v_state -> 'workshop' ->> 'queued')::int = 0, 'a new workshop is idle';
-  assert jsonb_array_length(v_state -> 'market') = 18, 'the artisan trades on the home town market';
+  assert jsonb_array_length(v_state -> 'market') = 19, 'the artisan trades on the home town market';
 end;
 $$;
 

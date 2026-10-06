@@ -125,6 +125,7 @@ public partial class FoundingWindow : Window
         _townHint.Text = craft.Kind switch
         {
             CraftKind.Itinerant => "Ta caravane partira de cette ville.",
+            _ when craft.OpensBranches => "Ton comptoir sera ici. Tu pourras ouvrir des succursales dans d'autres villes.",
             _ when local.Count > 0 => $"Ton atelier restera ici. Bon marché sur place : {string.Join(", ", local)}.",
             _ => "Ton atelier restera ici, mais tes matières premières viennent d'ailleurs : elles coûteront plus cher.",
         };

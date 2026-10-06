@@ -1,5 +1,7 @@
 \set ON_ERROR_STOP on
 
+update private.settings set events_enabled = false;
+
 insert into auth.users (id) values
   ('11111111-1111-1111-1111-111111111111'),
   ('22222222-2222-2222-2222-222222222222');
@@ -39,9 +41,9 @@ declare
   v_world jsonb := public.get_world();
   v_state jsonb := public.get_state();
 begin
-  assert jsonb_array_length(v_world -> 'goods') = 18, 'world lists every raw and crafted good';
-  assert jsonb_array_length(v_world -> 'crafts') = 6, 'world lists every craft';
-  assert jsonb_array_length(v_world -> 'recipes') = 8, 'world lists every recipe';
+  assert jsonb_array_length(v_world -> 'goods') = 19, 'world lists every raw and crafted good';
+  assert jsonb_array_length(v_world -> 'crafts') = 7, 'world lists every craft';
+  assert jsonb_array_length(v_world -> 'recipes') = 9, 'world lists every recipe';
   assert jsonb_array_length(v_world -> 'towns') = 8, 'world lists every town';
   assert jsonb_array_length(v_world -> 'routes') = 24, 'every road is travelable both ways';
   assert (select town -> 'produces' ? 'sel' from jsonb_array_elements(v_world -> 'towns') town where town ->> 'id' = 'port-sable'),
@@ -53,7 +55,7 @@ end;
 $$;
 
 select pg_temp.expect_refusal($$select public.found_player('ab', 'caravanier', 'port-sable')$$, 'entre 3 et 20');
-select pg_temp.expect_refusal($$select public.found_player('Robin', 'negociant', 'port-sable')$$, 'pas encore disponible');
+select pg_temp.expect_refusal($$select public.found_player('Robin', 'cartographe', 'port-sable')$$, 'pas encore disponible');
 select pg_temp.expect_refusal($$select public.found_player('Robin', 'caravanier', 'atlantide')$$, 'n''existe pas');
 select pg_temp.expect_refusal($$select public.buy_goods('sel', 1)$$, 'Installe-toi d''abord');
 
@@ -66,7 +68,7 @@ begin
   assert v_state -> 'workshop' = 'null'::jsonb, 'a caravan driver has no workshop';
   assert (v_state -> 'caravan' ->> 'capacity')::int = 40, 'one wagon carries 40 goods';
   assert v_state -> 'caravan' ->> 'town_id' = 'port-sable', 'the caravan starts in the chosen town';
-  assert jsonb_array_length(v_state -> 'market') = 18, 'the town market is visible on arrival';
+  assert jsonb_array_length(v_state -> 'market') = 19, 'the town market is visible on arrival';
 end;
 $$;
 

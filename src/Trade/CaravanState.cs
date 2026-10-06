@@ -5,11 +5,13 @@ namespace IdleBar.Trade;
 public sealed record CaravanState(
     int Wagons,
     int Capacity,
+    int Load,
     int? NextWagonPrice,
     string TownId,
     string? FromTownId,
     DateTimeOffset? DepartedAt,
-    DateTimeOffset? ArrivesAt)
+    DateTimeOffset? ArrivesAt,
+    string DirectiveId)
 {
     public bool IsTravelling(DateTimeOffset now) => ArrivesAt is DateTimeOffset arrival && arrival > now;
 

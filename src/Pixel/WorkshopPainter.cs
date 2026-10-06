@@ -32,6 +32,7 @@ public static class WorkshopPainter
             "forgeron" => PaintForge(canvas, origin, ground, busy, striking, beat),
             "charron" => PaintWheelwright(canvas, origin, ground, striking, beat),
             "tisserand" => PaintWeaver(canvas, origin, ground, busy, striking, time),
+            "negociant" => CounterPainter.Paint(canvas, origin, ground, busy, beat),
             _ => PaintHerbalist(canvas, origin, ground, busy, striking, beat),
         };
         PaintProducts(canvas, productsX, ground, products);

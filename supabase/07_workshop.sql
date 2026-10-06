@@ -10,6 +10,7 @@ declare
   v_input record;
   v_batches integer;
   v_needs text;
+  v_saving numeric;
 begin
   if p_batches is null or p_batches < 1 then
     raise exception 'Quantité invalide.';
@@ -26,6 +27,7 @@ begin
     raise exception 'Ton atelier fabrique déjà autre chose : attends la fin de la commande en cours.';
   end if;
 
+  v_saving := 1 - private.bonus(v_player.player_id, 'saving');
   v_batches := least(p_batches, private.max_queue(v_workshop.level) - v_workshop.queued);
   if v_batches < 1 then
     raise exception 'La file de l''atelier est pleine.';
@@ -40,7 +42,7 @@ begin
       and warehouses.good_id = recipe_inputs.good_id
     where recipe_inputs.recipe_id = p_recipe_id
   loop
-    v_batches := least(v_batches, v_input.held / v_input.quantity);
+    v_batches := least(v_batches, floor(v_input.held / (v_input.quantity * v_saving))::integer);
   end loop;
 
   if v_batches < 1 then
@@ -52,7 +54,7 @@ begin
   end if;
 
   for v_input in select good_id, quantity from public.recipe_inputs where recipe_id = p_recipe_id loop
-    perform private.change_warehouse(v_player.player_id, v_workshop.town_id, v_input.good_id, -v_input.quantity * v_batches);
+    perform private.change_warehouse(v_player.player_id, v_workshop.town_id, v_input.good_id, -private.random_round(v_input.quantity * v_batches * v_saving));
   end loop;
 
   if v_workshop.queued = 0 then
@@ -60,9 +62,16 @@ begin
     set recipe_id = p_recipe_id,
         queued = v_batches,
         started_at = now(),
-        batch_seconds = greatest(ceil(v_recipe.seconds * (select craft_time_factor from private.settings) / private.workshop_speed(level)), 1)
-    where player_id = v_player.player_id;
+        batch_seconds = greatest(ceil(v_recipe.seconds * (select craft_time_factor from private.settings) / (private.workshop_speed(level) * (1 + private.bonus(v_player.player_id, 'speed')))), 1)
+    where player_id = v_player.player_id
+    returning * into v_workshop;
+    delete from public.pending_events where player_id = v_player.player_id and kind_id = 'panne';
+    perform private.roll_breakdown(v_player.player_id, now(), v_workshop.batch_seconds * v_workshop.queued);
   else
+    perform private.roll_breakdown(
+      v_player.player_id,
+      v_workshop.started_at + make_interval(secs => v_workshop.batch_seconds * v_workshop.queued),
+      v_workshop.batch_seconds * v_batches);
     update public.workshops set queued = queued + v_batches where player_id = v_player.player_id;
   end if;
 

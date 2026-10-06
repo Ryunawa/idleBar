@@ -5,7 +5,7 @@ using IdleBar.Trade;
 
 namespace IdleBar.Ui;
 
-public partial class MarketPanel : VBoxContainer
+public partial class MarketPanel : VBoxContainer, ITownPanel
 {
     private const int MaxQuantity = 1000;
 
@@ -15,9 +15,7 @@ public partial class MarketPanel : VBoxContainer
     private GridContainer _grid = null!;
     private int _quantity = 1;
 
-    public event Action<string, int>? BuyRequested;
-
-    public event Action<string, int>? SellRequested;
+    public event Action<TownCommand>? Requested;
 
     public override void _Ready()
     {
@@ -36,31 +34,27 @@ public partial class MarketPanel : VBoxContainer
         AddChild(legend);
     }
 
-    public void Refresh(WorldData world, GameSnapshot snapshot)
+    public void Refresh(TownContext context)
     {
-        foreach (Node child in _grid.GetChildren())
-        {
-            _grid.RemoveChild(child);
-            child.QueueFree();
-        }
-
+        ActionRow.Clear(_grid);
         foreach (string header in Headers)
         {
             _grid.AddChild(CreateCell(header, BarPalette.Muted));
         }
 
-        TownInfo? town = world.FindTown(snapshot.Caravan!.TownId);
-        foreach (MarketQuote quote in snapshot.Market)
+        string townId = context.TownId;
+        TownInfo? town = context.World.FindTown(townId);
+        foreach (MarketQuote quote in context.Snapshot.MarketAt(townId))
         {
-            int owned = snapshot.OwnedQuantity(quote.GoodId);
+            int owned = context.Owned(quote.GoodId);
             bool local = town?.Produces.Contains(quote.GoodId) == true;
             bool wanted = town?.Demands.Contains(quote.GoodId) == true;
-            _grid.AddChild(CreateCell(world.GoodName(quote.GoodId), BarPalette.Text));
+            _grid.AddChild(CreateCell(context.World.GoodName(quote.GoodId), BarPalette.Text));
             _grid.AddChild(CreateCell(owned > 0 ? NumberFormat.Amount(owned) : "–", BarPalette.Muted));
             _grid.AddChild(CreateCell(NumberFormat.Rate(quote.BuyPrice), local ? BarPalette.Success : BarPalette.Text));
-            _grid.AddChild(CreateAction("Acheter", () => BuyRequested?.Invoke(quote.GoodId, _quantity), false));
+            _grid.AddChild(CreateAction("Acheter", () => Requested?.Invoke(actions => actions.BuyAsync(quote.GoodId, _quantity, townId)), context.World.FindGood(quote.GoodId)?.MarketSells == false));
             _grid.AddChild(CreateCell(NumberFormat.Rate(quote.SellPrice), wanted ? BarPalette.Gold : BarPalette.Text));
-            _grid.AddChild(CreateAction("Vendre", () => SellRequested?.Invoke(quote.GoodId, _quantity), owned == 0));
+            _grid.AddChild(CreateAction("Vendre", () => Requested?.Invoke(actions => actions.SellAsync(quote.GoodId, _quantity, townId)), owned == 0));
         }
     }
 

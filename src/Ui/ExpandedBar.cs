@@ -7,6 +7,7 @@ public partial class ExpandedBar : MarginContainer
 {
     private Label _coins = null!;
     private Label _situation = null!;
+    private TownSlot _news = null!;
     private TownSlot _slot = null!;
 
     public event Action? ToggleRequested;
@@ -16,6 +17,8 @@ public partial class ExpandedBar : MarginContainer
     public event Action? ActionRequested;
 
     public event Action? SlotRequested;
+
+    public event Action? NewsRequested;
 
     public event Action? SettingsRequested;
 
@@ -44,6 +47,11 @@ public partial class ExpandedBar : MarginContainer
         Lane.Pressed += () => ActionRequested?.Invoke();
         row.AddChild(Lane);
 
+        _news = new TownSlot();
+        _news.Button.Visible = false;
+        ClickBinding.OnLeftPress(_news.Button, () => NewsRequested?.Invoke());
+        row.AddChild(_news.Button);
+
         _slot = new TownSlot();
         ClickBinding.OnLeftPress(_slot.Button, () => SlotRequested?.Invoke());
         row.AddChild(_slot.Button);
@@ -60,6 +68,12 @@ public partial class ExpandedBar : MarginContainer
         _coins.Text = status.Coins;
         _situation.Text = status.Situation;
         _slot.Refresh(status.Slot);
+        _news.Button.Visible = status.News is not null;
+        if (status.News is SlotContent news)
+        {
+            _news.Refresh(news);
+        }
+
         Lane.SetScene(status.Scene);
     }
 }

@@ -77,4 +77,30 @@ public static class WorkerSprites
         ".qVVq...",
         .. Legs,
     ]);
+
+    public static PixelSprite MerchantWaiting { get; } = PixelSprite.Parse(
+    [
+        "..RR....",
+        ".RRRR...",
+        "..pp....",
+        "..pp....",
+        ".aaaa...",
+        ".aaaap..",
+        ".aaaa...",
+        ".aaaa...",
+        .. Legs,
+    ]);
+
+    public static PixelSprite MerchantCounting { get; } = PixelSprite.Parse(
+    [
+        "..RR..g.",
+        ".RRRR.p.",
+        "..pp..a.",
+        "..pp.aa.",
+        ".aaaaa..",
+        ".aaaa...",
+        ".aaaa...",
+        ".aaaa...",
+        .. Legs,
+    ]);
 }
