@@ -15,6 +15,8 @@ public partial class ExpandedBar : MarginContainer
 
     public event Action? ActionRequested;
 
+    public event Action? SettingsRequested;
+
     public RoadLane Lane { get; private set; } = null!;
 
     public override void _Ready()
@@ -43,6 +45,8 @@ public partial class ExpandedBar : MarginContainer
         _slot = new TownSlot();
         ClickBinding.OnLeftPress(_slot.Button, () => ActionRequested?.Invoke());
         row.AddChild(_slot.Button);
+
+        row.AddChild(WindowButtons.CreateSettings(() => SettingsRequested?.Invoke()));
 
         VBoxContainer windowButtons = new() { Alignment = BoxContainer.AlignmentMode.Center };
         WindowButtons.Add(windowButtons, "–", () => ToggleRequested?.Invoke(), () => QuitRequested?.Invoke());

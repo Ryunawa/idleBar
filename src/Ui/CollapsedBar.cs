@@ -11,6 +11,8 @@ public partial class CollapsedBar : MarginContainer
 
     public event Action? QuitRequested;
 
+    public event Action? SettingsRequested;
+
     public override void _Ready()
     {
         AddThemeConstantOverride("margin_left", 10);
@@ -25,6 +27,7 @@ public partial class CollapsedBar : MarginContainer
         _summary = BarLabels.Create(12, BarPalette.Gold);
         _summary.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         row.AddChild(_summary);
+        row.AddChild(WindowButtons.CreateSettings(() => SettingsRequested?.Invoke()));
         WindowButtons.Add(row, "+", () => ToggleRequested?.Invoke(), () => QuitRequested?.Invoke());
     }
 

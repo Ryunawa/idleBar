@@ -37,13 +37,27 @@ public sealed class AppBar : IDisposable
 
     public event Action<bool>? FullscreenAppChanged;
 
-    public float Scale { get; private set; } = 1f;
+    public float DpiScale { get; private set; } = 1f;
+
+    public float SizeFactor { get; private set; } = 1f;
+
+    public float Scale => DpiScale * SizeFactor;
+
+    public string? ScreenDevice { get; private set; }
 
     public bool FullscreenAppActive { get; private set; }
 
     public void Dock(int logicalHeight)
     {
         _logicalHeight = logicalHeight;
+        _positionInvalidated = true;
+        Update();
+    }
+
+    public void Place(string? screenDevice, float sizeFactor)
+    {
+        ScreenDevice = screenDevice;
+        SizeFactor = sizeFactor;
         _positionInvalidated = true;
         Update();
     }
@@ -61,7 +75,7 @@ public sealed class AppBar : IDisposable
             ApplyFullscreenState(fullscreen);
         }
 
-        if (_positionInvalidated)
+        if (_positionInvalidated && _logicalHeight > 0)
         {
             _positionInvalidated = false;
             Reposition();
@@ -81,20 +95,12 @@ public sealed class AppBar : IDisposable
         Win32.SetWindowLongPtr(_window, Win32.GwlpWndProc, _originalWindowProcedure);
     }
 
-    private static float ReadScale(IntPtr monitor)
-    {
-        int result = Win32.GetDpiForMonitor(monitor, Win32.MdtEffectiveDpi, out uint dpi, out uint _);
-        return result == 0 && dpi > 0 ? dpi / Win32.DefaultDpi : 1f;
-    }
-
     private void Reposition()
     {
-        IntPtr monitor = Win32.MonitorFromPoint(new Win32Point(), Win32.MonitorDefaultToPrimary);
-        Scale = ReadScale(monitor);
+        IntPtr monitor = DisplayScreens.Resolve(ScreenDevice);
+        DpiScale = DisplayScreens.ReadDpiScale(monitor);
         int height = (int)MathF.Round(_logicalHeight * Scale);
-
-        MonitorInfo monitorInfo = new() { Size = (uint)Marshal.SizeOf<MonitorInfo>() };
-        Win32.GetMonitorInfo(monitor, ref monitorInfo);
+        MonitorInfo monitorInfo = DisplayScreens.Describe(monitor);
 
         AppBarData data = CreateData();
         data.Bounds = monitorInfo.Monitor;

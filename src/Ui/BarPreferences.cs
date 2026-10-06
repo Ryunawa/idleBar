@@ -6,28 +6,44 @@ public sealed class BarPreferences
 {
     private const string Section = "bar";
     private const string CollapsedKey = "collapsed";
+    private const string SizeKey = "size";
+    private const string ScreenKey = "screen";
 
     private readonly string _path;
 
-    private BarPreferences(string path, bool collapsed)
+    private BarPreferences(string path)
     {
         _path = path;
-        Collapsed = collapsed;
     }
 
     public bool Collapsed { get; set; }
 
+    public float Size { get; set; } = 1f;
+
+    public string? ScreenDevice { get; set; }
+
     public static BarPreferences Load(string path)
     {
+        BarPreferences preferences = new(path);
         ConfigFile file = new();
-        bool collapsed = file.Load(path) == Error.Ok && file.GetValue(Section, CollapsedKey, false).AsBool();
-        return new BarPreferences(path, collapsed);
+        if (file.Load(path) != Error.Ok)
+        {
+            return preferences;
+        }
+
+        preferences.Collapsed = file.GetValue(Section, CollapsedKey, false).AsBool();
+        preferences.Size = BarSizes.Nearest(file.GetValue(Section, SizeKey, 1f).AsSingle());
+        string screen = file.GetValue(Section, ScreenKey, string.Empty).AsString();
+        preferences.ScreenDevice = screen.Length == 0 ? null : screen;
+        return preferences;
     }
 
     public void Save()
     {
         ConfigFile file = new();
         file.SetValue(Section, CollapsedKey, Collapsed);
+        file.SetValue(Section, SizeKey, Size);
+        file.SetValue(Section, ScreenKey, ScreenDevice ?? string.Empty);
         Error result = file.Save(_path);
         if (result != Error.Ok)
         {

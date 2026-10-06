@@ -40,6 +40,7 @@ public static class WindowFrame
         window.ContentScaleFactor = scale;
         window.Size = new Vector2I((int)(baseSize.X * scale), (int)(baseSize.Y * scale));
         window.Show();
+        window.CurrentScreen = DisplayServer.WindowGetCurrentScreen();
         window.MoveToCenter();
         window.GrabFocus();
     }

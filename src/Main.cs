@@ -11,10 +11,6 @@ namespace IdleBar;
 
 public partial class Main : Control
 {
-    private const int ExpandedHeight = 56;
-    private const int CollapsedHeight = 24;
-    private const int ActiveFramesPerSecond = 30;
-    private const int BackgroundFramesPerSecond = 5;
     private const double TrayRefreshIntervalSeconds = 2;
     private const float ArrivalBannerSeconds = 8;
     private const float HintBannerSeconds = 4;
@@ -28,12 +24,12 @@ public partial class Main : Control
     private static readonly CultureInfo French = CultureInfo.GetCultureInfo("fr-FR");
 
     private SingleInstance _instance = null!;
-    private BarPreferences _preferences = null!;
+    private BarPlacement _placement = null!;
     private ExpandedBar _expanded = null!;
     private CollapsedBar _collapsedBar = null!;
     private TrayMenu _tray = null!;
+    private SettingsWindow _settings = null!;
     private BarStatus _status = BarStatusBuilder.Unavailable(MissingConfiguration);
-    private AppBar? _appBar;
     private HttpClient? _http;
     private GameSession? _session;
     private GameDialogs? _dialogs;
@@ -44,18 +40,21 @@ public partial class Main : Control
         _instance = SingleInstance.ReplaceRunningInstance(ProjectSettings.GlobalizePath(InstancePath));
         GetTree().AutoAcceptQuit = false;
         Theme = BarTheme.Create();
-        _preferences = BarPreferences.Load(PreferencesPath);
         _session = CreateSession();
         BuildInterface();
-        DockToScreen();
-        ApplyCollapsed(_preferences.Collapsed);
+
+        BarPreferences preferences = BarPreferences.Load(PreferencesPath);
+        _placement = new BarPlacement(GetWindow(), preferences);
+        _placement.CollapsedChanged += OnCollapsedChanged;
+        _placement.ApplyCollapsed(preferences.Collapsed);
+
         _session?.Start();
         RefreshInterface();
     }
 
     public override void _Process(double delta)
     {
-        _appBar?.Update();
+        _placement.Update();
         _session?.Tick(delta);
         RefreshInterface();
 
@@ -77,7 +76,7 @@ public partial class Main : Control
 
     public override void _ExitTree()
     {
-        _appBar?.Dispose();
+        _placement.Dispose();
         _http?.Dispose();
         _instance.Dispose();
     }
@@ -110,22 +109,29 @@ public partial class Main : Control
         _expanded = new ExpandedBar();
         AddChild(_expanded);
         _expanded.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        _expanded.ToggleRequested += ToggleCollapsed;
+        _expanded.ToggleRequested += () => _placement.ToggleCollapsed();
         _expanded.QuitRequested += Quit;
         _expanded.ActionRequested += OnBarActionRequested;
+        _expanded.SettingsRequested += OpenSettings;
 
         _collapsedBar = new CollapsedBar();
         AddChild(_collapsedBar);
         _collapsedBar.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        _collapsedBar.ToggleRequested += ToggleCollapsed;
+        _collapsedBar.ToggleRequested += () => _placement.ToggleCollapsed();
         _collapsedBar.QuitRequested += Quit;
+        _collapsedBar.SettingsRequested += OpenSettings;
 
         _tray = new TrayMenu();
         AddChild(_tray);
-        _tray.ToggleRequested += ToggleCollapsed;
+        _tray.ToggleRequested += () => _placement.ToggleCollapsed();
         _tray.SignOutRequested += () => _session?.SignOut();
+        _tray.SettingsRequested += OpenSettings;
         _tray.QuitRequested += Quit;
 
+        _settings = new SettingsWindow();
+        AddChild(_settings);
+        _settings.SizeChosen += size => _placement.Resize(size);
+        _settings.ScreenChosen += device => _placement.MoveTo(device);
     }
 
     private void RefreshInterface()
@@ -133,6 +139,13 @@ public partial class Main : Control
         _status = _session is null ? BarStatusBuilder.Unavailable(MissingConfiguration) : BarStatusBuilder.Describe(_session);
         _expanded.Refresh(_status);
         _collapsedBar.Refresh(_status);
+    }
+
+    private void OnCollapsedChanged(bool collapsed)
+    {
+        _expanded.Visible = !collapsed;
+        _collapsedBar.Visible = collapsed;
+        _tray.SetCollapsed(collapsed);
     }
 
     private void OnBarActionRequested()
@@ -143,7 +156,17 @@ public partial class Main : Control
             return;
         }
 
-        _dialogs?.OpenFor(_appBar?.Scale ?? 1f);
+        _dialogs?.OpenFor(_placement.DialogScale);
+    }
+
+    private void OpenSettings()
+    {
+        DisplayScreen[] noScreens = [];
+        _settings.Open(
+            _placement.DialogScale,
+            _placement.Size,
+            _placement.ScreenDevice,
+            OperatingSystem.IsWindows() ? DisplayScreens.Detect() : noScreens);
     }
 
     private void ShowDelivery(GameSession session, RecipeInfo recipe, int batches)
@@ -154,44 +177,8 @@ public partial class Main : Control
 
     private void Quit()
     {
-        _appBar?.Dispose();
+        _placement.Dispose();
         _tray.Dismiss();
         GetTree().Quit();
-    }
-
-    private void DockToScreen()
-    {
-        if (!OperatingSystem.IsWindows())
-        {
-            GD.PushWarning("La barre réservée n'est disponible que sous Windows.");
-            return;
-        }
-
-        IntPtr window = new(DisplayServer.WindowGetNativeHandle(DisplayServer.HandleType.WindowHandle));
-        _appBar = new AppBar(window);
-        _appBar.Docked += () => GetWindow().ContentScaleFactor = _appBar.Scale;
-        _appBar.FullscreenAppChanged += _ => UpdateFrameRate();
-    }
-
-    private void ToggleCollapsed()
-    {
-        ApplyCollapsed(!_preferences.Collapsed);
-        _preferences.Save();
-    }
-
-    private void ApplyCollapsed(bool collapsed)
-    {
-        _preferences.Collapsed = collapsed;
-        _expanded.Visible = !collapsed;
-        _collapsedBar.Visible = collapsed;
-        _appBar?.Dock(collapsed ? CollapsedHeight : ExpandedHeight);
-        _tray.SetCollapsed(collapsed);
-        UpdateFrameRate();
-    }
-
-    private void UpdateFrameRate()
-    {
-        bool inBackground = _preferences.Collapsed || _appBar?.FullscreenAppActive == true;
-        Engine.MaxFps = inBackground ? BackgroundFramesPerSecond : ActiveFramesPerSecond;
     }
 }

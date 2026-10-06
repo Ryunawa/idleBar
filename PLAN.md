@@ -21,6 +21,7 @@ Un jeu de commerce en pixel art qui vit dans une barre discrète ancrée en bas 
 |---|---|---|
 | 1. Le voyage | Monde (8 villes, 12 routes), marchés aux prix partagés, caravane, chariots, barre pixel art | Fait |
 | 2. Métiers et ateliers | Fondation avec métier et ville, 4 artisans, recettes, production en temps réel, entrepôt, amélioration d'atelier, barre propre à chaque métier | Fait, à tester en jeu |
+| Réglages de la barre | Bouton engrenage et menu de l'icône : taille de 75 % à 200 %, choix de l'écran, mémorisés dans `user://preferences.cfg` | Fait, à tester sur plusieurs écrans |
 | 3. Les échanges | Comptoir, entrepôts pour tous, contrats de transport et caution, transporteur du jeu, négociant jouable | **Prochaine étape** |
 | 4. Les événements | Route (bandits, orage, péage…), atelier (commande spéciale, panne…), consignes par défaut | À faire |
 | 5. La maîtrise | Apprenti → compagnon → maître, qualité, signature des chefs-d'œuvre, talents, améliorations de caravane fabriquées par les artisans | À faire |
@@ -88,7 +89,8 @@ Un jeu de commerce en pixel art qui vit dans une barre discrète ancrée en bas 
   - `GameActions` : les commandes du joueur.
 - `src/Pixel/` : la palette (`PixelPalette`), les sprites et les peintres (paysage, caravane, ateliers, ville).
 - `src/Ui/` : la barre (dépliée et repliée), la voie animée (`RoadLane`) et les fenêtres (compte, installation, ville et atelier).
-- `src/Desktop/` : l'ancrage de la barre dans Windows. Ne pas casser.
+- `src/Desktop/` : l'ancrage de la barre dans Windows (`AppBar`) et la détection des écrans (`DisplayScreens`). Ne pas casser.
+- `src/Ui/BarPlacement.cs` : le repli, la taille et l'écran de la barre ; `SettingsWindow` : la fenêtre Réglages.
 
 ## Conventions
 

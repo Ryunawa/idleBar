@@ -23,6 +23,7 @@ internal static class Win32
     public const uint SwpNoMoveNoSizeNoActivate = 0x0013;
 
     public const uint MonitorDefaultToPrimary = 0x00000001;
+    public const uint MonitorInfoPrimary = 0x00000001;
     public const int MdtEffectiveDpi = 0;
     public const float DefaultDpi = 96f;
 
@@ -69,9 +70,13 @@ internal static class Win32
     [DllImport("user32.dll")]
     public static extern IntPtr MonitorFromPoint(Win32Point point, uint flags);
 
-    [DllImport("user32.dll", EntryPoint = "GetMonitorInfoW")]
+    [DllImport("user32.dll", EntryPoint = "GetMonitorInfoW", CharSet = CharSet.Unicode)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool GetMonitorInfo(IntPtr monitor, ref MonitorInfo info);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool EnumDisplayMonitors(IntPtr deviceContext, IntPtr clip, MonitorEnumProcedure callback, IntPtr data);
 
     [DllImport("shcore.dll")]
     public static extern int GetDpiForMonitor(IntPtr monitor, int dpiType, out uint dpiX, out uint dpiY);

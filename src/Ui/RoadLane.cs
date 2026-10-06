@@ -6,7 +6,7 @@ namespace IdleBar.Ui;
 
 public partial class RoadLane : Control
 {
-    private const float PixelScale = 2f;
+    private const float TargetArtRows = 23f;
     private const float ScrollSpeed = 7f;
     private const int CaptionFontSize = 12;
     private const float CaptionHeight = 18f;
@@ -81,8 +81,8 @@ public partial class RoadLane : Control
     public override void _Draw()
     {
         float contentScale = GetWindow().ContentScaleFactor;
-        float scale = Math.Max(1, MathF.Round(PixelScale * contentScale)) / contentScale;
-        PixelCanvas canvas = new(this, scale, Size);
+        float physicalPixel = Math.Max(1, MathF.Round(Size.Y * contentScale / TargetArtRows, MidpointRounding.AwayFromZero));
+        PixelCanvas canvas = new(this, physicalPixel / contentScale, Size);
         bool withProps = _scene.Mode is LaneMode.Idle or LaneMode.Travelling;
         LandscapePainter.Paint(canvas, BiomeStyles.For(_scene.Biome), _distance, withProps);
 
