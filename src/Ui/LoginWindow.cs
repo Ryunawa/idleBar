@@ -5,92 +5,76 @@ namespace IdleBar.Ui;
 
 public partial class LoginWindow : Window
 {
-    private static readonly Vector2I BaseSize = new(380, 250);
+    private static readonly Vector2I BaseSize = new(380, 290);
 
     private LineEdit _email = null!;
     private LineEdit _password = null!;
-    private Button _submit = null!;
+    private Button _signIn = null!;
+    private Button _signUp = null!;
     private Label _message = null!;
     private bool _busy;
 
-    public event Action<string, string>? Submitted;
+    public event Action<string, string, bool>? Submitted;
 
     public override void _Ready()
     {
-        Title = "IdleBar · Synchronisation";
-        Unresizable = true;
-        Transient = false;
-        AlwaysOnTop = true;
-        Visible = false;
-        CloseRequested += Hide;
+        VBoxContainer form = WindowFrame.Build(this, "IdleBar · Compte", 8);
 
-        Panel background = new();
-        background.AddThemeStyleboxOverride("panel", new StyleBoxFlat { BgColor = BarPalette.Background });
-        AddChild(background);
-        background.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-
-        MarginContainer margin = new();
-        foreach (string side in new[] { "margin_left", "margin_right", "margin_top", "margin_bottom" })
+        form.AddChild(new Label
         {
-            margin.AddThemeConstantOverride(side, 18);
-        }
-
-        AddChild(margin);
-        margin.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-
-        VBoxContainer form = new();
-        form.AddThemeConstantOverride("separation", 8);
-        margin.AddChild(form);
-
-        Label intro = new()
-        {
-            Text = "Connecte-toi pour partager ta progression entre tes PC.",
+            Text = "Connecte-toi pour prendre la route avec ta caravane.",
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
-        };
-        form.AddChild(intro);
+        });
 
         _email = new LineEdit { PlaceholderText = "Email" };
         _email.TextSubmitted += _ => _password.GrabFocus();
         form.AddChild(_email);
 
         _password = new LineEdit { PlaceholderText = "Mot de passe", Secret = true };
-        _password.TextSubmitted += _ => Submit();
+        _password.TextSubmitted += _ => Submit(false);
         form.AddChild(_password);
 
-        _submit = new Button { Text = "Se connecter" };
-        _submit.Pressed += Submit;
-        form.AddChild(_submit);
+        _signIn = new Button { Text = "Se connecter" };
+        _signIn.Pressed += () => Submit(false);
+        form.AddChild(_signIn);
 
-        _message = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
-        _message.AddThemeColorOverride("font_color", BarPalette.Danger);
+        _signUp = new Button { Text = "Créer un compte", Flat = true };
+        _signUp.Pressed += () => Submit(true);
+        form.AddChild(_signUp);
+
+        _message = WindowFrame.CreateMessage();
         form.AddChild(_message);
     }
 
     public void Open(float scale, string? email)
     {
-        ContentScaleFactor = scale;
-        Size = new Vector2I((int)(BaseSize.X * scale), (int)(BaseSize.Y * scale));
-
         _email.Text = email ?? string.Empty;
         _password.Text = string.Empty;
         _message.Text = string.Empty;
         SetBusy(false);
-        Show();
-        MoveToCenter();
-        GrabFocus();
+        WindowFrame.Present(this, BaseSize, scale);
         (_email.Text.Length == 0 ? _email : _password).GrabFocus();
     }
 
-    public void ShowError(string message) => _message.Text = message;
+    public void ShowError(string message) => ShowMessage(message, BarPalette.Danger);
+
+    public void ShowInfo(string message) => ShowMessage(message, BarPalette.Success);
 
     public void SetBusy(bool busy)
     {
         _busy = busy;
-        _submit.Disabled = busy;
-        _submit.Text = busy ? "Connexion…" : "Se connecter";
+        _signIn.Disabled = busy;
+        _signUp.Disabled = busy;
+        _signIn.Text = busy ? "Connexion…" : "Se connecter";
     }
 
-    private void Submit()
+    private void ShowMessage(string message, Color color)
+    {
+        _message.Text = message;
+        _message.AddThemeColorOverride("font_color", color);
+    }
+
+    private void Submit(bool createAccount)
     {
         if (_busy)
         {
@@ -98,6 +82,6 @@ public partial class LoginWindow : Window
         }
 
         _message.Text = string.Empty;
-        Submitted?.Invoke(_email.Text.Trim(), _password.Text);
+        Submitted?.Invoke(_email.Text.Trim(), _password.Text, createAccount);
     }
 }

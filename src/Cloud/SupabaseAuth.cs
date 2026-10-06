@@ -24,6 +24,15 @@ public sealed class SupabaseAuth
         "user_banned",
     ];
 
+    private static readonly HashSet<HttpStatusCode> RefusalStatuses =
+    [
+        HttpStatusCode.BadRequest,
+        HttpStatusCode.Unauthorized,
+        HttpStatusCode.Forbidden,
+        HttpStatusCode.UnprocessableEntity,
+        HttpStatusCode.TooManyRequests,
+    ];
+
     private readonly HttpClient _http;
     private readonly SupabaseSettings _settings;
 
@@ -33,14 +42,29 @@ public sealed class SupabaseAuth
         _settings = settings;
     }
 
-    public Task<AuthSession> SignInAsync(string email, string password) =>
-        RequestTokenAsync("password", new PasswordGrant(email, password));
+    public async Task<AuthSession> SignInAsync(string email, string password)
+    {
+        TokenResponse token = await PostAsync<PasswordGrant, TokenResponse>("token?grant_type=password", new PasswordGrant(email, password));
+        return ToSession(token.AccessToken, token.RefreshToken, token.ExpiresIn, token.User);
+    }
+
+    public async Task<AuthSession?> SignUpAsync(string email, string password)
+    {
+        SignUpResponse response = await PostAsync<PasswordGrant, SignUpResponse>("signup", new PasswordGrant(email, password));
+        if (response is not { AccessToken: string accessToken, RefreshToken: string refreshToken, ExpiresIn: long expiresIn, User: TokenUser user })
+        {
+            return null;
+        }
+
+        return ToSession(accessToken, refreshToken, expiresIn, user);
+    }
 
     public async Task<AuthSession> RefreshAsync(string refreshToken)
     {
         try
         {
-            return await RequestTokenAsync("refresh_token", new RefreshGrant(refreshToken));
+            TokenResponse token = await PostAsync<RefreshGrant, TokenResponse>("token?grant_type=refresh_token", new RefreshGrant(refreshToken));
+            return ToSession(token.AccessToken, token.RefreshToken, token.ExpiresIn, token.User);
         }
         catch (CloudAuthException exception) when (!RevokedSessionCodes.Contains(exception.ErrorCode))
         {
@@ -48,10 +72,18 @@ public sealed class SupabaseAuth
         }
     }
 
+    private static AuthSession ToSession(string accessToken, string refreshToken, long expiresIn, TokenUser user) =>
+        new(accessToken, refreshToken, Time.GetUnixTimeFromSystem() + expiresIn, user.Id, user.Email ?? string.Empty);
+
     private static string DescribeError(string errorCode) => errorCode switch
     {
         "invalid_credentials" or "invalid_grant" => "Email ou mot de passe incorrect.",
         "email_not_confirmed" => "Cet email n'a pas encore été confirmé.",
+        "user_already_exists" or "email_exists" => "Un compte existe déjà avec cet email.",
+        "weak_password" => "Mot de passe trop faible (6 caractères minimum).",
+        "email_address_invalid" or "validation_failed" => "Adresse email invalide.",
+        "signup_disabled" => "Les inscriptions sont fermées.",
+        "over_email_send_rate_limit" or "over_request_rate_limit" => "Trop de tentatives, réessaie dans quelques minutes.",
         "refresh_token_not_found" or "refresh_token_already_used" or "session_not_found" or "session_expired" =>
             "Session expirée, reconnecte-toi.",
         _ => $"Connexion refusée par Supabase ({errorCode}).",
@@ -78,14 +110,14 @@ public sealed class SupabaseAuth
         }
     }
 
-    private async Task<AuthSession> RequestTokenAsync<TGrant>(string grantType, TGrant grant)
+    private async Task<TResponse> PostAsync<TBody, TResponse>(string endpoint, TBody body)
     {
-        using HttpRequestMessage request = new(HttpMethod.Post, $"{_settings.Url}/auth/v1/token?grant_type={grantType}");
+        using HttpRequestMessage request = new(HttpMethod.Post, $"{_settings.Url}/auth/v1/{endpoint}");
         request.Headers.Add("apikey", _settings.PublishableKey);
-        request.Content = JsonContent.Create(grant, options: SupabaseJson.Options);
+        request.Content = JsonContent.Create(body, options: SupabaseJson.Options);
 
         using HttpResponseMessage response = await _http.SendAsync(request);
-        if (response.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+        if (RefusalStatuses.Contains(response.StatusCode))
         {
             string errorCode = ReadErrorCode(await response.Content.ReadAsStringAsync());
             throw new CloudAuthException(DescribeError(errorCode), errorCode);
@@ -96,14 +128,7 @@ public sealed class SupabaseAuth
             throw new CloudRequestException($"Authentification Supabase : HTTP {(int)response.StatusCode}.");
         }
 
-        TokenResponse token = await response.Content.ReadFromJsonAsync<TokenResponse>(SupabaseJson.Options)
+        return await response.Content.ReadFromJsonAsync<TResponse>(SupabaseJson.Options)
             ?? throw new CloudRequestException("Réponse d'authentification Supabase vide.");
-
-        return new AuthSession(
-            token.AccessToken,
-            token.RefreshToken,
-            Time.GetUnixTimeFromSystem() + token.ExpiresIn,
-            token.User.Id,
-            token.User.Email ?? string.Empty);
     }
 }
