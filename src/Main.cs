@@ -10,6 +10,7 @@ public partial class Main : Control
     private const double TrayRefreshIntervalSeconds = 2;
     private const string PreferencesPath = "user://preferences.cfg";
     private const string InstancePath = "user://instance.pid";
+    private const float UpdateBannerSeconds = 10;
 
     private SingleInstance _instance = null!;
     private BarPlacement _placement = null!;
@@ -18,6 +19,7 @@ public partial class Main : Control
     private CollapsedBar _collapsedBar = null!;
     private TrayMenu _tray = null!;
     private SettingsWindow _settings = null!;
+    private UpdateNotice _updates = null!;
     private double _sinceTrayRefresh = TrayRefreshIntervalSeconds;
 
     public override void _Ready()
@@ -85,6 +87,7 @@ public partial class Main : Control
         _expanded.NewsRequested += () => _game.PressNews(_placement.DialogScale);
         _expanded.SettingsRequested += OpenSettings;
         _expanded.PurseRequested += () => _game.CollectPurse();
+        _expanded.UpdateRequested += OpenDownloadPage;
 
         _collapsedBar = new CollapsedBar();
         AddChild(_collapsedBar);
@@ -99,6 +102,14 @@ public partial class Main : Control
         _tray.SignOutRequested += () => _game.SignOut();
         _tray.SettingsRequested += OpenSettings;
         _tray.QuitRequested += Quit;
+
+        _updates = new UpdateNotice();
+        AddChild(_updates);
+        _updates.Found += release =>
+        {
+            _expanded.ShowUpdate(release.Name);
+            _expanded.Lane.ShowBanner($"Nouvelle version {release.Name} disponible : clique sur « Mise à jour »", UpdateBannerSeconds);
+        };
 
         _settings = new SettingsWindow();
         AddChild(_settings);
@@ -117,6 +128,14 @@ public partial class Main : Control
         _expanded.Visible = !collapsed;
         _collapsedBar.Visible = collapsed;
         _tray.SetCollapsed(collapsed);
+    }
+
+    private void OpenDownloadPage()
+    {
+        if (_updates.Latest is { HasSafePage: true } release)
+        {
+            OS.ShellOpen(release.HtmlUrl);
+        }
     }
 
     private void OpenSettings() =>

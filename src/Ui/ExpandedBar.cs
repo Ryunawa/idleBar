@@ -25,6 +25,7 @@ public partial class ExpandedBar : MarginContainer
     private float _time;
     private Label _situation = null!;
     private TownSlot _news = null!;
+    private TownSlot _update = null!;
     private TownSlot _slot = null!;
 
     public event Action? ToggleRequested;
@@ -40,6 +41,8 @@ public partial class ExpandedBar : MarginContainer
     public event Action? SettingsRequested;
 
     public event Action? PurseRequested;
+
+    public event Action? UpdateRequested;
 
     public RoadLane Lane { get; private set; } = null!;
 
@@ -78,6 +81,11 @@ public partial class ExpandedBar : MarginContainer
         ClickBinding.OnLeftPress(_news.Button, () => NewsRequested?.Invoke());
         row.AddChild(_news.Button);
 
+        _update = new TownSlot();
+        _update.Button.Visible = false;
+        ClickBinding.OnLeftPress(_update.Button, () => UpdateRequested?.Invoke());
+        row.AddChild(_update.Button);
+
         _slot = new TownSlot();
         ClickBinding.OnLeftPress(_slot.Button, () => SlotRequested?.Invoke());
         row.AddChild(_slot.Button);
@@ -104,6 +112,16 @@ public partial class ExpandedBar : MarginContainer
         _coins.Text = NumberFormat.Coins(_shownCoins);
         _glow = Math.Max(0, _glow - (float)delta / GlowSeconds);
         _coins.Modulate = Colors.White.Lerp(Glow, _glow);
+    }
+
+    public void ShowUpdate(string version)
+    {
+        _update.Refresh(new SlotContent(
+            "Mise à jour",
+            $"version {version}",
+            BarPalette.Gold,
+            $"La version {version} d'IdleBar est disponible. Clique pour ouvrir la page de téléchargement, puis remplace ton jeu actuel : ta progression est gardée sur le serveur."));
+        _update.Button.Visible = true;
     }
 
     public void Refresh(BarStatus status)

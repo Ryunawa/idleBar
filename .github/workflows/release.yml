@@ -57,6 +57,8 @@ jobs:
           version="${GITHUB_REF_NAME#v}"
           sed -i -E "s/^application\/(short_version|version)=.*/application\/\1=\"${version}\"/" export_presets.cfg
           sed -i -E "s/^application\/(file_version|product_version)=.*/application\/\1=\"${version}.0\"/" export_presets.cfg
+          sed -i -E "s/^config\/version=.*/config\/version=\"${version}\"/" project.godot
+          grep -q "^config/version=\"${version}\"" project.godot
 
       - name: Build and import
         run: |
