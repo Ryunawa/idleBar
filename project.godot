@@ -38,3 +38,4 @@ cloud/supabase_publishable_key="sb_publishable_xO_91va-nUB8KihgfmML_g_DpmJbfR9"
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 environment/defaults/default_clear_color=Color(0.105882, 0.121569, 0.141176, 1)
+textures/vram_compression/import_etc2_astc=true

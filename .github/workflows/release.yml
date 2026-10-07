@@ -66,19 +66,33 @@ jobs:
       - name: Export Windows
         run: |
           mkdir -p build/windows
-          "${GODOT}" --headless --path . --export-release "Windows" build/windows/IdleBar.exe
+          "${GODOT}" --headless --path . --export-release "Windows" build/windows/IdleBar.exe 2>&1 | tee build/export-windows.log
           test -f build/windows/IdleBar.exe
 
       - name: Export macOS
+        id: macos
+        continue-on-error: true
         run: |
           mkdir -p build/macos
-          "${GODOT}" --headless --path . --export-release "macOS" build/macos/IdleBar.zip
+          "${GODOT}" --headless --path . --export-release "macOS" build/macos/IdleBar.zip 2>&1 | tee build/export-macos.log
           test -f build/macos/IdleBar.zip
+
+      - name: Report export errors
+        if: failure() || steps.macos.outcome == 'failure'
+        run: |
+          for log in build/export-*.log; do
+            [ -f "${log}" ] || continue
+            grep -iE "error|failed|cannot|not found" "${log}" | tail -n 10 | while IFS= read -r line; do
+              echo "::error title=$(basename "${log}")::${line}"
+            done
+          done
 
       - name: Package
         run: |
           (cd build/windows && zip -qr "../IdleBar-${GITHUB_REF_NAME}-windows.zip" .)
-          cp build/macos/IdleBar.zip "build/IdleBar-${GITHUB_REF_NAME}-macos.zip"
+          if [ -f build/macos/IdleBar.zip ]; then
+            cp build/macos/IdleBar.zip "build/IdleBar-${GITHUB_REF_NAME}-macos.zip"
+          fi
 
       - uses: actions/upload-artifact@v4
         with:
