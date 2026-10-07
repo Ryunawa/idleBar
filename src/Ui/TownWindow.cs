@@ -14,6 +14,7 @@ public partial class TownWindow : Window
     private Label _town = null!;
     private OptionButton _townPicker = null!;
     private Label _purse = null!;
+    private Label _standing = null!;
     private TabContainer _tabs = null!;
     private ITownPanel[] _panels = [];
     private Label _message = null!;
@@ -43,6 +44,8 @@ public partial class TownWindow : Window
         header.AddChild(_townPicker);
         header.AddChild(_purse);
         content.AddChild(header);
+        _standing = BarLabels.Create(12, BarPalette.Muted);
+        content.AddChild(_standing);
 
         _tabs = new TabContainer { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
         AddPanel(new WorkshopPanel { Name = "Atelier" });
@@ -166,7 +169,9 @@ public partial class TownWindow : Window
             { Branches: true } => $"Comptoir de {player.Name} · {context.TownName}",
             _ => $"Atelier de {player.Name} · {context.TownName}",
         };
-        _purse.Text = $"{NumberFormat.Coins(player.Coins)} · {storage} {snapshot.HoldingsLoadAt(context.TownId)}/{snapshot.HoldingsCapacity}";
+        _purse.Text = $"{NumberFormat.Coins(player.Coins)} · {storage} {snapshot.HoldingsLoadAt(context.TownId)}/{snapshot.HoldingsCapacityAt(context.TownId)}";
+        _standing.Visible = snapshot.Standing.Tiers.Count > 0;
+        _standing.Text = $"Réputation à {context.TownName} : {ReputationText.Standing(snapshot.Standing, context.TownId)}";
         foreach (TownTab tab in Enum.GetValues<TownTab>().Where(_access.Shows))
         {
             _panels[(int)tab].Refresh(context);

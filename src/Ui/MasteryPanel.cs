@@ -63,6 +63,7 @@ public partial class MasteryPanel : VBoxContainer, ITownPanel
         }
 
         AddMasterpieces(context);
+        ReputationText.AddRows(_list, context);
     }
 
     private void AddTier(WorldData world, CraftInfo craft, MasteryState mastery, MasteryRank tier)

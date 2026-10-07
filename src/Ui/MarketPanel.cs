@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using Godot;
 using IdleBar.Trade;
@@ -8,6 +9,8 @@ namespace IdleBar.Ui;
 public partial class MarketPanel : VBoxContainer, ITownPanel
 {
     private const int MaxQuantity = 1000;
+
+    private static readonly CultureInfo French = CultureInfo.GetCultureInfo("fr-FR");
 
     private const string PriceLegend = "Prix vert : spécialité de la ville, bon marché. Prix doré : la ville en manque et paie cher.";
 
@@ -47,7 +50,17 @@ public partial class MarketPanel : VBoxContainer, ITownPanel
             _grid.AddChild(CreateCell(header, BarPalette.Muted));
         }
 
-        _legend.Text = context.Itinerant ? $"{PriceLegend} Vendre prend d'abord dans l'entrepôt de la ville, puis dans la cale." : PriceLegend;
+        _legend.Text = context switch
+        {
+            { Itinerant: true } => $"{PriceLegend} Vendre prend d'abord dans l'entrepôt de la ville, puis dans la cale.",
+            _ when context.World.FindCraft(context.Player.CraftId)?.OpensBranches == true =>
+                $"{PriceLegend} En négociant, tu achètes moins cher et vends plus cher que les autres marchands : c'est déjà compté dans ces prix.",
+            _ => PriceLegend,
+        };
+        if (context.Snapshot.Standing.TierAt(context.TownId) is { PriceRate: > 0 } tier)
+        {
+            _legend.Text += $" Ta réputation ({tier.Name.ToLowerInvariant()}) te fait gagner {tier.PriceRate.ToString("P0", French)} à l'achat comme à la vente ici.";
+        }
 
         string townId = context.TownId;
         TownInfo? town = context.World.FindTown(townId);

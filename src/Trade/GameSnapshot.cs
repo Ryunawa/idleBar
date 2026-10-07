@@ -25,8 +25,11 @@ public sealed record GameSnapshot(
     MasteryState? Mastery,
     IReadOnlyList<MasterpieceInfo> Masterpieces,
     IReadOnlyList<string> Fittings,
-    TripEventInfo? TripEvent)
+    TripEventInfo? TripEvent,
+    ReputationState? Reputation)
 {
+    public ReputationState Standing => Reputation ?? ReputationState.None;
+
     public string? DefaultTownId => Caravan?.TownId ?? Player?.HomeTownId;
 
     public IReadOnlyList<string> PresentTownsAt(DateTimeOffset now) => Caravan switch
@@ -44,9 +47,9 @@ public sealed record GameSnapshot(
 
     public int HoldingsLoadAt(string townId) => Caravan?.Load ?? StorageAt(townId).Sum(line => line.Quantity);
 
-    public int HoldingsCapacity => Caravan?.Capacity ?? Workshop?.StorageCapacity ?? 0;
+    public int HoldingsCapacityAt(string townId) => Caravan?.Capacity ?? StorageCapacityAt(townId);
 
-    public int StorageCapacity => Workshop?.StorageCapacity ?? 0;
+    public int StorageCapacityAt(string townId) => (Workshop?.StorageCapacity ?? 0) + Standing.StorageBonusAt(townId);
 
     public int OwnedQuantity(string goodId, string townId) =>
         HoldingsAt(townId).FirstOrDefault(line => line.GoodId == goodId)?.Quantity ?? 0;

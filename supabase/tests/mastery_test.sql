@@ -205,8 +205,8 @@ do $$
 declare
   v_state jsonb := public.start_production('outils', 99);
 begin
-  assert (v_state -> 'workshop' ->> 'queued')::int = 6, 'the queue is still limited';
-  assert pg_temp.stored(v_state, 'fer') between 9 and 10 and pg_temp.stored(v_state, 'charbon') between 4 and 5,
+  assert (v_state -> 'workshop' ->> 'queued')::int = 8, 'the queue is still limited';
+  assert pg_temp.stored(v_state, 'fer') between 6 and 7 and pg_temp.stored(v_state, 'charbon') between 3 and 4,
     'the thrifty smith saves 15 % of the raw materials on average';
 end;
 $$;
@@ -358,7 +358,7 @@ declare
   v_before int := (public.get_state() -> 'mastery' ->> 'xp')::int;
   v_state jsonb := public.accept_offer((select (offer ->> 'id')::bigint from jsonb_array_elements(public.get_state() -> 'offers') offer));
 begin
-  assert (v_state -> 'mastery' ->> 'xp')::int between v_before + 2 and v_before + 3, 'a concluded offer gives 1 experience per 20 coins traded';
+  assert (v_state -> 'mastery' ->> 'xp')::int between v_before + 5 and v_before + 6, 'a concluded offer gives 1 experience per 10 coins traded';
 end;
 $$;
 

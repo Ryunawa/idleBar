@@ -65,7 +65,7 @@ public partial class BranchesPanel : VBoxContainer, ITownPanel
             int stored = snapshot.StorageAt(townId).Sum(line => line.Quantity);
             int offers = snapshot.MyOffers.Count(offer => offer.TownId == townId && offer.Status == OfferStatus.Open);
             string role = townId == context.Player.HomeTownId ? "Siège" : "Succursale";
-            _list.AddChild(ActionRow.Create($"{world.TownName(townId)} · {role}", $"entrepôt {NumberFormat.Amount(stored)}/{NumberFormat.Amount(counter.StorageCapacity)} · {NumberFormat.Count(offers, "offre", "offres")} au comptoir", string.Empty, true, () => { }));
+            _list.AddChild(ActionRow.Create($"{world.TownName(townId)} · {role}", $"entrepôt {NumberFormat.Amount(stored)}/{NumberFormat.Amount(snapshot.StorageCapacityAt(townId))} · {NumberFormat.Count(offers, "offre", "offres")} au comptoir", string.Empty, true, () => { }));
         }
 
         _town.Fill(world.Towns.Where(town => !towns.Contains(town.Id)).Select(town => new PickerChoice(town.Id, town.Name)).ToList());

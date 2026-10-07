@@ -38,7 +38,7 @@ begin
   assert v_state -> 'caravan' = 'null'::jsonb, 'an artisan has no caravan';
   assert (v_state -> 'workshop' ->> 'level')::int = 1, 'the workshop starts at level 1';
   assert (v_state -> 'workshop' ->> 'storage_capacity')::int = 60, 'the level 1 warehouse holds 60 goods';
-  assert (v_state -> 'workshop' ->> 'max_queue')::int = 6, 'the level 1 workshop queues 6 batches';
+  assert (v_state -> 'workshop' ->> 'max_queue')::int = 8, 'the level 1 workshop queues 8 batches';
   assert (v_state -> 'workshop' ->> 'queued')::int = 0, 'a new workshop is idle';
   assert jsonb_array_length(v_state -> 'market') = 19, 'the artisan trades on the home town market';
 end;
@@ -131,7 +131,7 @@ begin
   v_state := public.upgrade_workshop();
   assert (v_state -> 'workshop' ->> 'level')::int = 2, 'the workshop is upgraded';
   assert (v_state -> 'workshop' ->> 'storage_capacity')::int = 80, 'the warehouse grows with the level';
-  assert (v_state -> 'workshop' ->> 'max_queue')::int = 8, 'the queue grows with the level';
+  assert (v_state -> 'workshop' ->> 'max_queue')::int = 10, 'the queue grows with the level';
   assert (v_state -> 'workshop' ->> 'next_level_price')::int = 720, 'the next level costs more';
 
   perform public.buy_goods('fer', 2);

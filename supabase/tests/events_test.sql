@@ -80,7 +80,7 @@ declare
   v_world jsonb := public.get_world();
   v_state jsonb := public.found_player('Ulric', 'caravanier', 'port-sable');
 begin
-  assert jsonb_array_length(v_world -> 'event_kinds') = 8, 'the world lists every event';
+  assert jsonb_array_length(v_world -> 'event_kinds') = 9, 'the world lists every event';
   assert (select jsonb_array_length(kind -> 'choices') from jsonb_array_elements(v_world -> 'event_kinds') kind where kind ->> 'id' = 'bandits') = 2,
     'each event offers its reactions';
   assert jsonb_array_length(v_world -> 'directives') = 3, 'the world lists the trip directives';

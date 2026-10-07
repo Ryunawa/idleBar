@@ -99,7 +99,7 @@ public static class BarStatusBuilder
         DateTimeOffset now = session.Clock.Now;
         string town = world?.TownName(workshop.TownId) ?? workshop.TownId;
         string craft = MasteryText.Title(snapshot.Mastery?.Rank, world?.FindCraft(snapshot.Player!.CraftId)?.Name ?? snapshot.Player!.CraftId);
-        string situation = $"{craft} à {town} · entrepôt {snapshot.HoldingsLoadAt(workshop.TownId)}/{workshop.StorageCapacity}";
+        string situation = $"{craft} à {town} · entrepôt {snapshot.HoldingsLoadAt(workshop.TownId)}/{snapshot.StorageCapacityAt(workshop.TownId)}";
         IReadOnlyList<string> products = Enumerable.Repeat(MasterpieceIcon, snapshot.Masterpieces.Count)
             .Concat(ListProducts(world, snapshot.StorageAt(workshop.TownId)))
             .Take(ShownProducts)

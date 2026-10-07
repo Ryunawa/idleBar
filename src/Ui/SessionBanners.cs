@@ -10,6 +10,7 @@ public sealed class SessionBanners
     private const float ProductionBannerSeconds = 6;
     private const float NewsBannerSeconds = 8;
     private const float DecisionBannerSeconds = 12;
+    private const float ReputationBannerSeconds = 10;
 
     private readonly GameSession _session;
 
@@ -31,6 +32,15 @@ public sealed class SessionBanners
         if (current.EndsTripOf(previous) && world.FindTown(current.Caravan!.TownId) is TownInfo town)
         {
             Announced?.Invoke($"Ta caravane est arrivée à {town.Name}", ArrivalBannerSeconds);
+        }
+
+        foreach (TownReputation standing in current.Standing.Towns)
+        {
+            if (current.Standing.TierAt(standing.TownId) is ReputationTier reached
+                && reached.Level > (previous.Standing.TierAt(standing.TownId)?.Level ?? 0))
+            {
+                Announced?.Invoke($"Tu es désormais {reached.Name.ToLowerInvariant()} à {world.TownName(standing.TownId)}", ReputationBannerSeconds);
+            }
         }
 
         int delivered = current.BatchesDeliveredSince(previous);

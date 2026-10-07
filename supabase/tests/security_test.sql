@@ -51,6 +51,8 @@ select pg_temp.expect_denied('select * from public.caravan_fittings');
 select pg_temp.expect_denied('select * from public.directives');
 select pg_temp.expect_denied('select * from public.directive_choices');
 select pg_temp.expect_denied('select * from public.trip_events');
+select pg_temp.expect_denied('select * from public.reputation_tiers');
+select pg_temp.expect_denied('select * from public.reputations');
 select pg_temp.expect_denied('select * from private.settings');
 select pg_temp.expect_denied('select public.get_world()');
 select pg_temp.expect_denied('select public.get_state()');
@@ -100,6 +102,8 @@ begin
   assert (select count(*) from public.markets) = 152, 'players read the markets';
   assert (select count(*) from public.caravans) = 1, 'a player reads their own caravan';
   assert (select count(*) from public.cargo) = 1, 'a player reads their own cargo';
+  assert (select count(*) from public.reputation_tiers) = 6, 'players read the reputation tiers';
+  assert (select count(*) from public.reputations) = 1, 'a player reads their own reputation';
 end;
 $$;
 
@@ -166,6 +170,11 @@ select pg_temp.expect_denied($$update public.caravans set directive_id = 'econom
 select pg_temp.expect_denied($$update public.directive_choices set choice_id = 'fuir'$$);
 select pg_temp.expect_denied($$select private.apply_road_event(auth.uid(), 'trouvaille', null, 0, now())$$);
 select pg_temp.expect_denied($$select private.directive_choice(auth.uid(), 'orage')$$);
+select pg_temp.expect_denied($$insert into public.reputations (player_id, town_id, points) values (auth.uid(), 'ambrevault', 99999)$$);
+select pg_temp.expect_denied($$update public.reputations set points = 99999$$);
+select pg_temp.expect_denied($$update public.reputation_tiers set price_rate = 0.5$$);
+select pg_temp.expect_denied($$select private.gain_reputation(auth.uid(), 'port-sable', 99999)$$);
+select pg_temp.expect_denied($$select private.town_rate(auth.uid(), 'port-sable')$$);
 
 select set_config('request.jwt.claim.sub', '44444444-4444-4444-4444-444444444444', false);
 do $$
@@ -174,6 +183,7 @@ begin
   assert (select count(*) from public.cargo) = 0, 'another player cannot read the cargo';
   assert (select count(*) from public.players) = 0, 'another player cannot read the profile';
   assert (select count(*) from public.offers) = 0, 'another player cannot read the offer rows';
+  assert (select count(*) from public.reputations) = 0, 'another player cannot read the reputation';
   assert public.get_state() -> 'player' = 'null'::jsonb, 'get_state only returns the caller player';
 end;
 $$;

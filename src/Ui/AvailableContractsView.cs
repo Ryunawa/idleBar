@@ -68,7 +68,7 @@ public partial class AvailableContractsView : VBoxContainer, ITownPanel
     private static string? FindBlocker(TownContext context, ContractInfo contract)
     {
         GameSnapshot snapshot = context.Snapshot;
-        int free = snapshot.HoldingsCapacity - snapshot.HoldingsLoadAt(context.TownId);
+        int free = snapshot.HoldingsCapacityAt(context.TownId) - snapshot.HoldingsLoadAt(context.TownId);
         if (contract.OriginTownId != context.TownId)
         {
             return $"À charger à {context.World.TownName(contract.OriginTownId)} : va d'abord là-bas.";

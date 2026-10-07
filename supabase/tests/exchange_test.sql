@@ -87,7 +87,7 @@ begin
     'the world names several units of a good';
   assert v_state -> 'player' ->> 'craft_id' = 'negociant', 'the merchant is playable';
   assert (v_state -> 'workshop' ->> 'storage_capacity')::int = 60, 'the counter stores like a level 1 workshop';
-  assert (v_state -> 'player' ->> 'next_branch_price')::int = 300, 'the first branch costs 300 coins';
+  assert (v_state -> 'player' ->> 'next_branch_price')::int = 200, 'the first branch costs 200 coins';
   assert jsonb_array_length(v_state -> 'market') = 19, 'only the home market is visible before any branch';
 end;
 $$;
@@ -101,8 +101,8 @@ declare
   v_state jsonb := public.open_branch('hautecombe');
 begin
   assert v_state -> 'branches' = '["hautecombe"]'::jsonb, 'the branch is opened';
-  assert pg_temp.coins(v_state) = 100, 'the branch is paid';
-  assert (v_state -> 'player' ->> 'next_branch_price')::int = 540, 'the next branch costs more';
+  assert pg_temp.coins(v_state) = 200, 'the branch is paid';
+  assert (v_state -> 'player' ->> 'next_branch_price')::int = 360, 'the next branch costs more';
   assert jsonb_array_length(v_state -> 'market') = 38, 'the branch market is visible';
 end;
 $$;
@@ -121,6 +121,27 @@ begin
   v_state := public.buy_goods('sel', 5, 'hautecombe');
   assert pg_temp.stored(v_state, 'port-sable', 'sel') = 30, 'the merchant buys at home';
   assert pg_temp.stored(v_state, 'hautecombe', 'sel') = 5, 'the merchant buys at a branch';
+end;
+$$;
+
+do $$
+declare
+  v_state jsonb;
+  v_ids bigint[] := '{}';
+  v_id bigint;
+begin
+  for v_index in 1..9 loop
+    v_state := public.post_offer('sel', 1, null, 10);
+    v_ids := v_ids || (v_state -> 'my_offers' -> 0 ->> 'id')::bigint;
+  end loop;
+
+  assert (select count(*) from jsonb_array_elements(v_state -> 'my_offers') offer where offer ->> 'status' = 'open') = 9,
+    'a merchant keeps more than 8 offers open';
+  foreach v_id in array v_ids loop
+    v_state := public.cancel_offer(v_id);
+  end loop;
+
+  assert pg_temp.stored(v_state, 'port-sable', 'sel') = 30, 'the withdrawn offers go back to the warehouse';
 end;
 $$;
 
@@ -154,6 +175,32 @@ select pg_temp.expect_refusal(format('select public.accept_offer(%s)', pg_temp.i
 
 select pg_temp.as_player('66666666-6666-6666-6666-666666666666');
 select public.found_player('Gaspard', 'caravanier', 'port-sable');
+
+do $$
+declare
+  v_caravan jsonb := public.get_state();
+  v_merchant jsonb;
+  v_caravan_buy numeric;
+  v_merchant_buy numeric;
+begin
+  perform pg_temp.as_player('88888888-8888-8888-8888-888888888888');
+  v_merchant := public.get_state();
+  perform pg_temp.as_player('66666666-6666-6666-6666-666666666666');
+  select (quote ->> 'buy_price')::numeric into v_caravan_buy from jsonb_array_elements(v_caravan -> 'market') quote
+  where quote ->> 'town_id' = 'port-sable' and quote ->> 'good_id' = 'epices';
+  select (quote ->> 'buy_price')::numeric into v_merchant_buy from jsonb_array_elements(v_merchant -> 'market') quote
+  where quote ->> 'town_id' = 'port-sable' and quote ->> 'good_id' = 'epices';
+  assert v_merchant_buy between v_caravan_buy * 0.94 and v_caravan_buy * 0.96,
+    format('the merchant buys 5 %% cheaper: %s against %s', v_merchant_buy, v_caravan_buy);
+  assert (select (quote ->> 'sell_price')::numeric from jsonb_array_elements(v_merchant -> 'market') quote
+      where quote ->> 'town_id' = 'port-sable' and quote ->> 'good_id' = 'epices')
+    > (select (quote ->> 'sell_price')::numeric from jsonb_array_elements(v_caravan -> 'market') quote
+      where quote ->> 'town_id' = 'port-sable' and quote ->> 'good_id' = 'epices'),
+    'the merchant sells dearer';
+  assert (select craft ->> 'description' from jsonb_array_elements(public.get_world() -> 'crafts') craft where craft ->> 'id' = 'negociant')
+    like '%moins cher%', 'the merchant advantage is described';
+end;
+$$;
 
 reset role;
 update public.players set coins = 2000 where player_id = '66666666-6666-6666-6666-666666666666';
@@ -262,6 +309,27 @@ begin
 
   v_state := public.mark_exchanges_seen();
   assert v_state -> 'news' = '{"concluded": 0, "expired": 0, "delivered": 0, "failed": 0}'::jsonb, 'news are cleared once seen';
+end;
+$$;
+
+do $$
+declare
+  v_before bigint := pg_temp.coins(public.get_state());
+  v_state jsonb;
+  v_ids bigint[] := '{}';
+  v_id bigint;
+begin
+  for v_index in 1..8 loop
+    v_state := public.post_offer(null, 1, 'charbon', 1);
+    v_ids := v_ids || (v_state -> 'my_offers' -> 0 ->> 'id')::bigint;
+  end loop;
+
+  perform pg_temp.expect_refusal($call$select public.post_offer(null, 1, 'charbon', 1)$call$, 'déjà 8 offres');
+  foreach v_id in array v_ids loop
+    v_state := public.cancel_offer(v_id);
+  end loop;
+
+  assert pg_temp.coins(v_state) = v_before, 'a forge is limited to 8 open offers and gets its coins back';
 end;
 $$;
 

@@ -42,7 +42,7 @@ public partial class WarehousePanel : VBoxContainer, ITownPanel
     {
         WorldData world = context.World;
         IReadOnlyList<StockLine> storage = context.Storage;
-        int capacity = context.Itinerant ? world.Rules.DepotCapacity : context.Snapshot.StorageCapacity;
+        int capacity = context.Itinerant ? world.Rules.DepotCapacity + context.Snapshot.Standing.StorageBonusAt(context.TownId) : context.Snapshot.StorageCapacityAt(context.TownId);
         _summary.Text = $"Entrepôt à {context.TownName} · {NumberFormat.Amount(storage.Sum(line => line.Quantity))}/{NumberFormat.Amount(capacity)}";
         _picker.Visible = context.Itinerant;
         ActionRow.Clear(_list);

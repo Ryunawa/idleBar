@@ -107,7 +107,9 @@ public partial class ContractForm : VBoxContainer
         int reward = (int)_reward.Value;
         JourneyInfo? journey = world.FindJourney(context.TownId, destinationId);
         double logistics = context.Snapshot.Mastery?.Bonus("logistics") ?? 0;
-        int fee = Math.Max((int)Math.Ceiling(world.FreightFee(goodId, quantity, journey?.Minutes ?? 0) * (1 - logistics)), 1);
+        ReputationState standing = context.Snapshot.Standing;
+        double discount = Math.Max(standing.FreightDiscountAt(context.TownId), standing.FreightDiscountAt(destinationId));
+        int fee = Math.Max((int)Math.Ceiling(world.FreightFee(goodId, quantity, journey?.Minutes ?? 0) * (1 - logistics) * (1 - discount)), 1);
         int deposit = (world.FindGood(goodId)?.BasePrice ?? 0) * quantity;
         TimeSpan road = TimeSpan.FromSeconds(journey?.Seconds ?? 0);
         TimeSpan allowed = road + TimeSpan.FromSeconds(world.Rules.ContractSlackSeconds);

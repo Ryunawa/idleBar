@@ -26,8 +26,8 @@ Un jeu de commerce en pixel art qui vit dans une barre discrète ancrée en bas 
 | 3. Les échanges | Comptoir, entrepôts pour tous, contrats de transport et caution, transporteur du jeu, négociant jouable | Fait, à tester en jeu |
 | 4. Les événements | Route (bandits, orage, péage…), atelier (commande spéciale, panne…), consignes par défaut | Fait, à tester en jeu |
 | 5. La maîtrise | Apprenti → compagnon → maître, qualité, signature des chefs-d'œuvre, talents, améliorations de caravane fabriquées par les artisans | Fait, à tester en jeu |
-| 6. L'automatisation | Ordres de marché, intendant (circuit automatique, `pg_cron`), contremaître, courtier | **Prochaine étape** |
-| 7. La suite | Second métier, rencontres sur la route, carte du monde, réputation, notifications Windows | À faire |
+| 6. Réputation et personnel | Réputation par ville (5 paliers, avantages locaux), puis personnel embauché et payé chaque jour : contremaître, courtier, intendant, commis | Réputation faite, à tester en jeu ; personnel : **prochaine étape** |
+| 7. La suite | Second métier, rencontres sur la route, carte du monde, notifications Windows | À faire |
 
 ## Étape 3 : les règles des échanges
 
@@ -129,6 +129,43 @@ Un jeu de commerce en pixel art qui vit dans une barre discrète ancrée en bas 
 - L'équilibre des talents et la valeur des chefs-d'œuvre.
 - La lisibilité de l'onglet Maîtrise.
 
+## Étape 6 : réputation et personnel
+
+**Pourquoi.** Aujourd'hui, tout s'achète en une vingtaine d'heures de jeu actif : 5 660 écus de chariots, 4 750 écus de niveaux d'atelier. Ensuite, l'argent ne sert plus et seul le rang de maître reste à viser. Le but est double. D'une part, des récompenses fréquentes au début puis de plus en plus espacées, pour progresser sans frustration pendant des semaines. D'autre part, des dépenses qui ne s'arrêtent jamais.
+
+**Réputation.** Chaque joueur a une réputation dans chaque ville, qui ne baisse jamais : une absence ne doit pas être punie. Elle se gagne dans la ville concernée :
+- 1 point par 20 écus achetés ou vendus au marché ;
+- 1 point par 20 écus d'une offre conclue au comptoir, pour les deux joueurs ;
+- 1 point par 10 écus de marchandise livrée par contrat : le transporteur le gagne dans la ville d'arrivée, l'expéditeur dans la ville de départ ;
+- 1 point par 10 écus d'une commande spéciale livrée.
+
+| Palier | Points | Volume d'échanges correspondant | Avantages dans la ville, cumulés |
+|---|---|---|---|
+| Connu | 200 | environ 4 000 écus | Achat 1 % moins cher, vente 1 % plus chère |
+| Estimé | 800 | environ 16 000 écus | +20 places d'entrepôt ; on peut y embaucher un courtier |
+| Notable | 3 000 | environ 60 000 écus | Prix à 2 % ; transporteur du jeu 25 % moins cher depuis ou vers la ville ; un intendant peut y faire étape |
+| Bourgeois | 10 000 | environ 200 000 écus | Prix à 3 % ; commandes spéciales 50 % plus grosses |
+| Patricien | 30 000 | environ 600 000 écus | Prix à 4 % ; +60 places d'entrepôt ; titre affiché au comptoir |
+
+On devient Connu dans sa première ville en une ou deux heures, Estimé en une demi-journée de jeu, Notable en quelques jours. Bourgeois puis Patricien demandent des semaines, et il y a 8 villes. Les villes lointaines comme Ambrevault deviennent intéressantes à cultiver. L'avantage de prix s'ajoute au marchandage, au moment de calculer le prix et non après.
+
+**Personnel.** On l'embauche une fois, puis on le paie chaque jour. Comme l'atelier, tout se règle à la lecture, sans tâche planifiée. Le salaire est prélevé au prorata. Quand la bourse est vide, l'employé s'arrête, le note au journal et reprend dès qu'on peut le payer : jamais de dette.
+
+| Employé | Pour qui | Ce qu'il fait | Condition | Embauche | Salaire par jour |
+|---|---|---|---|---|---|
+| Contremaître | Artisans | Relance la dernière recette dès que la file est vide, avec le stock de l'entrepôt | Compagnon | 1 500 écus | 600 écus |
+| Courtier | Tous, un par ville | Ordres permanents : vendre une marchandise quand son prix dépasse un seuil, en acheter quand il passe dessous, dans la limite d'un budget et de l'entrepôt | Estimé dans la ville | 1 000 écus | 300 écus |
+| Commis | Négociant | Expédie un contrat quand le stock d'une marchandise dépasse un seuil dans l'une de ses villes | Notable dans les deux villes | 2 000 écus | 600 écus |
+| Intendant | Caravanier | Fait tourner la caravane en boucle sur 2 à 4 villes, avec des consignes d'achat et de vente à chaque étape. Les événements suivent la directive | Compagnon, et Notable dans chaque ville de la boucle | 3 000 écus | 1 500 écus |
+
+Chaque embauche coûte 3 à 10 heures de gains du début de partie, et chaque salaire environ un cinquième de ce que l'employé rapporte. L'argent garde ainsi un usage, et chaque recrue fait passer le joueur de la gestion à la main à un commerce qui tourne seul.
+
+**Ordre de réalisation.**
+1. Fait : la réputation (script `16`) : table `reputations` (joueur, ville, points), `private.gain_reputation` branchée sur le marché, le comptoir, les contrats et les commandes, prix et entrepôt par ville, affichage dans l'en-tête de la ville et dans l'onglet Maîtrise, journal et bannière au changement de palier.
+2. Le contremaître, le plus simple : il prolonge la production déjà réglée à la lecture.
+3. Le courtier : les prix reviennent vers la normale selon une courbe connue, donc on sait calculer à quel moment un seuil est franchi.
+4. Le commis et l'intendant, qui enchaînent plusieurs étapes à la lecture.
+
 ## Reprendre sur un autre PC
 
 1. **Installer et cloner** : cloner `https://github.com/Ryunawa/idleBar.git`, installer Godot 4.7.2 (version .NET) et le SDK .NET 8.
@@ -175,6 +212,10 @@ Un jeu de commerce en pixel art qui vit dans une barre discrète ancrée en bas 
   - `10` : les événements (route, panne, commandes spéciales), les consignes et le journal. Leurs tables sont dans `01` (types, réactions, chances par biome) et `02` (consignes, événements à venir, commandes, journal).
   - `11` : la maîtrise (rangs, talents, chefs-d'œuvre, équipements et attelage de la caravane). Ses tables sont dans `01` (talents, équipements) et `02` (expérience, talents choisis, chefs-d'œuvre, équipements installés).
   - `12` : le caravanier puise aussi dans l'entrepôt de la ville pour vendre au marché, publier au comptoir et atteler un chariot du charron (entrepôt d'abord, puis cale).
+  - `13` : le singulier et le pluriel de chaque marchandise (`one_name`, `many_name`), renvoyés par `get_world`.
+  - `14` : l'avantage du négociant, qui achète moins cher et vend plus cher au marché (`merchant_market_rate`) et tient plus d'offres au comptoir (`merchant_open_offers`).
+  - `15` : une passe d'équilibrage (file d'atelier, prix du chariot, succursales, prise en charge des contrats, expérience du négociant).
+  - `16` : la réputation par ville (`reputation_tiers`, `reputations`, `private.gain_reputation`), branchée sur le marché, le comptoir, les contrats et les commandes, et les durées des textes du serveur en minutes ou en heures (`private.duration_text`).
   - `tests/` : les tests SQL.
 - `src/Cloud/` : l'authentification Supabase et les appels aux fonctions SQL.
 - `src/Trade/` : le modèle de jeu.
@@ -204,13 +245,15 @@ Un jeu de commerce en pixel art qui vit dans une barre discrète ancrée en bas 
 
 - **Départ** : 400 écus.
 - **Caravane** : 40 places au départ, puis 20 de plus par chariot, jusqu'à 6 chariots.
-- **Atelier de niveau 1** : 60 places en entrepôt et une file de 6 fabrications.
-- **Recettes** : de 6 à 15 minutes par lot.
+- **Atelier de niveau 1** : 60 places en entrepôt et une file de 8 fabrications (6 + 2 par niveau), soit 48 min à 4 h de travail selon la recette.
+- **Recettes** : de 6 à 15 minutes par lot, 30 pour le chariot. Le chariot vaut 560 écus pour rester rentable à fabriquer.
 - **Prix** : environ 1 % de variation par unité achetée ou vendue, avec retour à la normale en environ 4 h.
+- **Négociant** : achète 5 % moins cher et vend 5 % plus cher au marché, en plus du talent « Sens du négoce » ; 16 offres ouvertes au comptoir au lieu de 8.
+- **Expérience** : 60 par heure de fabrication ou de route ; le négociant gagne 1 point pour 10 écus vendus (`trade_xp_value`). Compagnon à 600, maître à 3 000.
 - **Entrepôt du caravanier** : 60 places par ville.
 - **Comptoir** : 8 offres ouvertes au plus, pendant 48 h.
-- **Contrats** : 5 en cours par expéditeur, 3 transportés par caravanier. Le transporteur du jeu prend la relève après 3 h, roule 2 fois plus lentement et coûte 5 % de la valeur, plus 6 % par heure de trajet. L'échéance vaut le trajet plus 6 h.
-- **Succursales** : 3 au plus, à 300, 540 et 970 écus.
+- **Contrats** : 5 en cours par expéditeur, 3 transportés par caravanier. Le transporteur du jeu prend la relève après 1 h 30, roule 2 fois plus lentement et coûte 5 % de la valeur, plus 6 % par heure de trajet. L'échéance vaut le trajet plus 6 h.
+- **Succursales** : 3 au plus, à 200, 360 et 650 écus.
 - **Événements de route** : `road_event_minutes` = 150, soit 18 % de chances pour 30 min de route.
 - **Pannes** : `breakdown_hours` = 6, soit 15 % de chances pour une heure de fabrication.
 - **Commandes spéciales** : une toutes les 8 h en moyenne, d'environ 400 écus, payée 95 % du prix d'achat du marché, à livrer sous 6 h.
