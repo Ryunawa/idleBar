@@ -137,7 +137,7 @@ public partial class RoadLane : Control
                 CaravanPainter.PaintInTown(canvas, look, ambience);
                 break;
             case LaneMode.Workshop:
-                WorkshopPainter.Paint(canvas, _scene.CraftId, ambience, _scene.Busy, _scene.Sleeping, _scene.Products, _pop);
+                WorkshopPainter.Paint(canvas, _scene.CraftId, ambience, _scene.Busy, _scene.Errands, _scene.Products, _pop);
                 if (_scene.Busy && _scene.Progress > 0)
                 {
                     TownPainter.PaintProgress(canvas, _scene.Progress);

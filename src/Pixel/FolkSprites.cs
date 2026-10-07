@@ -14,11 +14,13 @@ public static class FolkSprites
 
     public static Walker Peddler { get; } = Create("..kk..", "..pp..", "bbaaa.", "bbaaap", "bbaaa.", ".aaaa.");
 
+    public static Walker Porter { get; } = Create("..pp...", "..pp...", ".qqqqbb", ".qqqqBB", ".qqqq..", ".qqqq..");
+
+    public static Walker Courier { get; } = Create("..pp..", "..pp..", ".qqqq.", ".qqqqp", ".qqqq.", ".qqqq.");
+
     public static PixelSprite BirdUp { get; } = PixelSprite.Parse("x...x", ".xxx.");
 
     public static PixelSprite BirdDown { get; } = PixelSprite.Parse(".xxx.", "x...x");
-
-    public static PixelSprite Snooze { get; } = PixelSprite.Parse("hhhh", "..h.", ".h..", "hhhh");
 
     private static Walker Create(params string[] body) =>
         new(PixelSprite.Parse([.. body, .. Standing]), PixelSprite.Parse([.. body, .. Striding]), PixelSprite.Parse([.. body, .. Passing]));

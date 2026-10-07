@@ -17,10 +17,13 @@ public static class FolkPainter
     private const float FlapsPerSecond = 6f;
     private const int FireflySpread = 45;
     private const float FireflyBlinkSeconds = 2.8f;
-    private const float SnoozeSpeed = 0.35f;
+    private const float ErrandPhase = 5f;
+    private const int ErrandReach = 18;
+    private const float CoinRise = 3f;
 
     private static readonly Color Harness = new("4e331d");
     private static readonly Color Firefly = new("d8f27e");
+    private static readonly Color Coin = new("f2c14e");
 
     public static void PaintVillagers(PixelCanvas canvas, int start, int width, Ambience ambience)
     {
@@ -110,29 +113,27 @@ public static class FolkPainter
         }
     }
 
-    public static void Snooze(PixelCanvas canvas, float time, int x, int y)
+    public static void PaintErrand(PixelCanvas canvas, int start, int width, Ambience ambience)
     {
-        for (int index = 0; index < 2; index++)
+        float time = ambience.Time + ErrandPhase;
+        int feet = LandscapePainter.GroundTop(canvas) + 1;
+        Patrol patrol = Patrol.At(start - ErrandReach, start + width - ErrandReach, time, WalkSpeed, PauseSeconds);
+        Walker walker = patrol.Leftward ? FolkSprites.Courier : FolkSprites.Porter;
+        PixelSprite pose = walker.Pose(patrol.Moving, time);
+        int x = (int)patrol.X;
+        canvas.Draw(patrol.Leftward ? pose.Mirrored : pose, x, feet - pose.Height + 1);
+        if (patrol is { Moving: false, Leftward: true })
         {
-            float age = (time * SnoozeSpeed + index * 0.5f) % 1;
-            canvas.Draw(FolkSprites.Snooze, x + (int)(age * 4), y - FolkSprites.Snooze.Height - (int)(age * 6), Colors.White with { A = MathF.Sin(age * MathF.PI) });
+            float lift = patrol.Pause / PauseSeconds;
+            canvas.Fill(x + 2, feet - pose.Height - 1 - (int)(lift * CoinRise), 1, 1, Coin with { A = 1 - lift });
         }
     }
 
     private static void Stroll(PixelCanvas canvas, Walker walker, int from, int to, int feet, float time)
     {
-        float travel = (to - from) / WalkSpeed;
-        float cycle = 2 * (travel + PauseSeconds);
-        float moment = (time % cycle + cycle) % cycle;
-        (float x, bool moving, bool leftward) = moment switch
-        {
-            _ when moment < travel => (from + moment * WalkSpeed, true, false),
-            _ when moment < travel + PauseSeconds => (to, false, false),
-            _ when moment < 2 * travel + PauseSeconds => (to - (moment - travel - PauseSeconds) * WalkSpeed, true, true),
-            _ => (from, false, true),
-        };
-        PixelSprite pose = walker.Pose(moving, time);
-        canvas.Draw(leftward ? pose.Mirrored : pose, (int)x, feet - pose.Height + 1);
+        Patrol patrol = Patrol.At(from, to, time, WalkSpeed, PauseSeconds);
+        PixelSprite pose = walker.Pose(patrol.Moving, time);
+        canvas.Draw(patrol.Leftward ? pose.Mirrored : pose, (int)patrol.X, feet - pose.Height + 1);
     }
 
     private static void Walk(PixelCanvas canvas, Walker walker, int x, int feet, float time)

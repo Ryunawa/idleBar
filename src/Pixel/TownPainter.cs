@@ -29,7 +29,7 @@ public static class TownPainter
         new(TownPiece.TallHouse, 58),
     ];
 
-    public static void PaintHouses(PixelCanvas canvas, int start, Ambience ambience)
+    public static void PaintHouses(PixelCanvas canvas, int start, Ambience ambience, bool errands)
     {
         int ground = LandscapePainter.GroundTop(canvas);
         bool lit = ambience.Light.Lit;
@@ -52,6 +52,10 @@ public static class TownPainter
         }
 
         FolkPainter.PaintVillagers(canvas, start, Width, ambience);
+        if (errands)
+        {
+            FolkPainter.PaintErrand(canvas, start, Width, ambience);
+        }
     }
 
     public static void PaintProgress(PixelCanvas canvas, double progress)

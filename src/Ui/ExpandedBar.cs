@@ -1,5 +1,6 @@
 using System;
 using Godot;
+using IdleBar.Pixel;
 
 namespace IdleBar.Ui;
 
@@ -7,6 +8,8 @@ public partial class ExpandedBar : MarginContainer
 {
     private const double CoinCatchUp = 5;
     private const float GlowSeconds = 1.2f;
+    private const float PurseBeat = 4f;
+    private const int PurseIconSize = 14;
 
     private static readonly Color Glow = new(1.6f, 1.5f, 1.2f);
 
@@ -14,6 +17,12 @@ public partial class ExpandedBar : MarginContainer
     private double _shownCoins = double.NaN;
     private double _targetCoins;
     private float _glow;
+    private HBoxContainer _purse = null!;
+    private Label _purseAmount = null!;
+    private bool _purseFull;
+    private bool _purseReady;
+    private bool _purseHovered;
+    private float _time;
     private Label _situation = null!;
     private TownSlot _news = null!;
     private TownSlot _slot = null!;
@@ -29,6 +38,8 @@ public partial class ExpandedBar : MarginContainer
     public event Action? NewsRequested;
 
     public event Action? SettingsRequested;
+
+    public event Action? PurseRequested;
 
     public RoadLane Lane { get; private set; } = null!;
 
@@ -49,7 +60,12 @@ public partial class ExpandedBar : MarginContainer
         _coins.TextOverrunBehavior = TextServer.OverrunBehavior.NoTrimming;
         _situation = BarLabels.Create(11, BarPalette.Muted);
         _situation.TextOverrunBehavior = TextServer.OverrunBehavior.NoTrimming;
-        stats.AddChild(_coins);
+        HBoxContainer coinsRow = new();
+        coinsRow.AddThemeConstantOverride("separation", 6);
+        coinsRow.AddChild(_coins);
+        _purse = CreatePurse();
+        coinsRow.AddChild(_purse);
+        stats.AddChild(coinsRow);
         stats.AddChild(_situation);
         row.AddChild(stats);
 
@@ -75,6 +91,9 @@ public partial class ExpandedBar : MarginContainer
 
     public override void _Process(double delta)
     {
+        _time += (float)delta;
+        _purse.Modulate = _purseFull ? Colors.White.Lerp(Glow, 0.5f + 0.5f * MathF.Sin(_time * PurseBeat)) : Colors.White;
+        _purseAmount.AddThemeColorOverride("font_color", !_purseReady ? BarPalette.Muted : _purseHovered ? BarPalette.Text : BarPalette.Gold);
         if (double.IsNaN(_shownCoins))
         {
             return;
@@ -90,6 +109,7 @@ public partial class ExpandedBar : MarginContainer
     public void Refresh(BarStatus status)
     {
         RefreshCoins(status);
+        RefreshPurse(status.Purse);
         _situation.Text = status.Situation;
         _slot.Refresh(status.Slot);
         _news.Button.Visible = status.News is not null;
@@ -101,6 +121,56 @@ public partial class ExpandedBar : MarginContainer
         Lane.SetScene(status.Scene);
     }
 
+    private void RefreshPurse(PurseView? purse)
+    {
+        _purse.Visible = purse is not null;
+        if (purse is null)
+        {
+            _purseFull = false;
+            return;
+        }
+
+        _purseAmount.Text = NumberFormat.Amount(purse.Amount);
+        _purse.TooltipText = purse.Tooltip;
+        _purseReady = purse.Amount >= 1;
+        _purseFull = purse.Full;
+    }
+
+    private HBoxContainer CreatePurse()
+    {
+        HBoxContainer purse = new()
+        {
+            Visible = false,
+            MouseFilter = MouseFilterEnum.Stop,
+            MouseDefaultCursorShape = CursorShape.PointingHand,
+            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+        };
+        purse.AddThemeConstantOverride("separation", 3);
+        purse.AddChild(new TextureRect
+        {
+            Texture = IconSprites.Pouch.Texture,
+            CustomMinimumSize = new Vector2(PurseIconSize, PurseIconSize),
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            TextureFilter = TextureFilterEnum.Nearest,
+            MouseFilter = MouseFilterEnum.Ignore,
+            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+        });
+        _purseAmount = BarLabels.Create(12, BarPalette.Gold);
+        _purseAmount.MouseFilter = MouseFilterEnum.Ignore;
+        _purseAmount.TextOverrunBehavior = TextServer.OverrunBehavior.NoTrimming;
+        purse.AddChild(_purseAmount);
+        purse.MouseEntered += () => _purseHovered = true;
+        purse.MouseExited += () => _purseHovered = false;
+        ClickBinding.OnLeftPress(purse, () =>
+        {
+            if (_purseReady)
+            {
+                PurseRequested?.Invoke();
+            }
+        });
+        return purse;
+    }
     private void RefreshCoins(BarStatus status)
     {
         if (status.CoinValue is not double coins)

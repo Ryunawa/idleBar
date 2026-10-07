@@ -9,15 +9,19 @@ public static class CounterPainter
 
     private static readonly Color Glint = new("f7d774");
 
-    public static int Paint(PixelCanvas canvas, int x, int ground, bool busy, int beat)
+    public static int Paint(PixelCanvas canvas, int x, int ground, bool busy, int beat, bool present)
     {
         canvas.Draw(CounterSprites.Sacks, x, ground - CounterSprites.Sacks.Height + 1);
         int stallX = x + 10;
         int counterTop = ground - CounterSprites.CounterFront.Height + 1;
         canvas.Draw(CounterSprites.StallTop, stallX, counterTop - CounterSprites.StallTop.Height);
 
-        PixelSprite merchant = busy && beat % 2 == 1 ? WorkerSprites.MerchantCounting : WorkerSprites.MerchantWaiting;
-        canvas.Draw(merchant, stallX + MerchantOffset, ground - merchant.Height);
+        if (present)
+        {
+            PixelSprite merchant = busy && beat % 2 == 1 ? WorkerSprites.MerchantCounting : WorkerSprites.MerchantWaiting;
+            canvas.Draw(merchant, stallX + MerchantOffset, ground - merchant.Height);
+        }
+
         canvas.Draw(CounterSprites.CounterFront, stallX, counterTop);
         canvas.Draw(CounterSprites.Scales, stallX + 2, counterTop - CounterSprites.Scales.Height);
         canvas.Draw(CounterSprites.Coins, stallX + CoinOffset, counterTop - CounterSprites.Coins.Height);

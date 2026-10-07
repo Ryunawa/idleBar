@@ -22,34 +22,30 @@ public static class WorkshopPainter
 
     public static int Anchor(PixelCanvas canvas) => Origin(canvas) + 40;
 
-    public static void Paint(PixelCanvas canvas, string craftId, Ambience ambience, bool busy, bool sleeping, IReadOnlyList<string> products, ProductPop pop)
+    public static void Paint(PixelCanvas canvas, string craftId, Ambience ambience, bool busy, bool errands, IReadOnlyList<string> products, ProductPop pop)
     {
         float time = ambience.Time;
         int ground = LandscapePainter.GroundTop(canvas);
         int origin = Origin(canvas);
         int beat = (int)(time / StepSeconds);
         bool striking = busy && beat % 2 == 1;
+        bool present = !errands;
 
-        TownPainter.PaintHouses(canvas, canvas.Width * 11 / 20, ambience);
-        (int productsX, int headX) = craftId switch
+        TownPainter.PaintHouses(canvas, canvas.Width * 11 / 20, ambience, errands);
+        int productsX = craftId switch
         {
-            "forgeron" => (PaintForge(canvas, origin, ground, busy, striking, beat), origin + 40),
-            "charron" => (PaintWheelwright(canvas, origin, ground, striking, beat), origin + 34),
-            "tisserand" => (PaintWeaver(canvas, origin, ground, busy, striking, time), origin + 31),
-            "negociant" => (CounterPainter.Paint(canvas, origin, ground, busy, beat), -1),
-            _ => (PaintHerbalist(canvas, origin, ground, busy, striking, beat), origin + 34),
+            "forgeron" => PaintForge(canvas, origin, ground, busy, striking, beat, present),
+            "charron" => PaintWheelwright(canvas, origin, ground, striking, beat, present),
+            "tisserand" => PaintWeaver(canvas, origin, ground, busy, striking, time, present),
+            "negociant" => CounterPainter.Paint(canvas, origin, ground, busy, beat, present),
+            _ => PaintHerbalist(canvas, origin, ground, busy, striking, beat, present),
         };
-        if (sleeping && headX >= 0)
-        {
-            FolkPainter.Snooze(canvas, time, headX, ground - 8);
-        }
-
         PaintProducts(canvas, productsX, ground, products, pop);
     }
 
     private static int Origin(PixelCanvas canvas) => canvas.Width / 8;
 
-    private static int PaintForge(PixelCanvas canvas, int x, int ground, bool busy, bool striking, int beat)
+    private static int PaintForge(PixelCanvas canvas, int x, int ground, bool busy, bool striking, int beat, bool present)
     {
         canvas.Draw(WorkshopSprites.OreAndCoal, x, ground - 2);
         int forgeX = x + 15;
@@ -73,7 +69,11 @@ public static class WorkshopPainter
         }
 
         int smithX = x + 36;
-        canvas.Draw(striking ? WorkerSprites.HammerStruck : WorkerSprites.HammerRaised, smithX, ground - 9);
+        if (present)
+        {
+            canvas.Draw(striking ? WorkerSprites.HammerStruck : WorkerSprites.HammerRaised, smithX, ground - 9);
+        }
+
         canvas.Draw(WorkshopSprites.Anvil, smithX + 6, ground - 3);
         if (striking)
         {
@@ -83,11 +83,15 @@ public static class WorkshopPainter
         return x + 52;
     }
 
-    private static int PaintWheelwright(PixelCanvas canvas, int x, int ground, bool striking, int beat)
+    private static int PaintWheelwright(PixelCanvas canvas, int x, int ground, bool striking, int beat, bool present)
     {
         canvas.Draw(WorkshopSprites.Logs, x, ground - 3);
         canvas.Draw(WorkshopSprites.Shed, x + 10, ground - WorkshopSprites.Shed.Height + 1);
-        canvas.Draw(striking ? WorkerSprites.HammerStruck : WorkerSprites.HammerRaised, x + 30, ground - 9);
+        if (present)
+        {
+            canvas.Draw(striking ? WorkerSprites.HammerStruck : WorkerSprites.HammerRaised, x + 30, ground - 9);
+        }
+
         canvas.Draw(WorkshopSprites.WheelStand, x + 36, ground - WorkshopSprites.WheelStand.Height + 1);
         if (striking)
         {
@@ -97,11 +101,15 @@ public static class WorkshopPainter
         return x + 48;
     }
 
-    private static int PaintWeaver(PixelCanvas canvas, int x, int ground, bool busy, bool striking, float time)
+    private static int PaintWeaver(PixelCanvas canvas, int x, int ground, bool busy, bool striking, float time, bool present)
     {
         canvas.Draw(WorkshopSprites.WoolBales, x, ground - 3);
         canvas.Draw(WorkshopSprites.Shed, x + 10, ground - WorkshopSprites.Shed.Height + 1);
-        canvas.Draw(striking ? WorkerSprites.WeaverPushing : WorkerSprites.WeaverPulling, x + 28, ground - 7);
+        if (present)
+        {
+            canvas.Draw(striking ? WorkerSprites.WeaverPushing : WorkerSprites.WeaverPulling, x + 28, ground - 7);
+        }
+
         int loomX = x + 35;
         int loomY = ground - WorkshopSprites.Loom.Height + 1;
         canvas.Draw(WorkshopSprites.Loom, loomX, loomY);
@@ -114,11 +122,15 @@ public static class WorkshopPainter
         return x + 50;
     }
 
-    private static int PaintHerbalist(PixelCanvas canvas, int x, int ground, bool busy, bool striking, int beat)
+    private static int PaintHerbalist(PixelCanvas canvas, int x, int ground, bool busy, bool striking, int beat, bool present)
     {
         canvas.Draw(WorkshopSprites.HerbRack, x, ground - WorkshopSprites.HerbRack.Height + 1);
         canvas.Draw(WorkshopSprites.Shed, x + 10, ground - WorkshopSprites.Shed.Height + 1);
-        canvas.Draw(striking ? WorkerSprites.StirrerHigh : WorkerSprites.StirrerLow, x + 30, ground - 9);
+        if (present)
+        {
+            canvas.Draw(striking ? WorkerSprites.StirrerHigh : WorkerSprites.StirrerLow, x + 30, ground - 9);
+        }
+
         int cauldronX = x + 37;
         int cauldronY = ground - WorkshopSprites.Cauldron.Height + 1;
         canvas.Draw(WorkshopSprites.Cauldron, cauldronX, cauldronY);

@@ -26,7 +26,8 @@ public sealed record GameSnapshot(
     IReadOnlyList<MasterpieceInfo> Masterpieces,
     IReadOnlyList<string> Fittings,
     TripEventInfo? TripEvent,
-    ReputationState? Reputation)
+    ReputationState? Reputation,
+    OddJobsState? OddJobs = null)
 {
     public ReputationState Standing => Reputation ?? ReputationState.None;
 

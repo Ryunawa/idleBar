@@ -27,6 +27,8 @@ Un jeu de commerce en pixel art qui vit dans une barre discrète ancrée en bas 
 | 4. Les événements | Route (bandits, orage, péage…), atelier (commande spéciale, panne…), consignes par défaut | Fait, à tester en jeu |
 | 5. La maîtrise | Apprenti → compagnon → maître, qualité, signature des chefs-d'œuvre, talents, améliorations de caravane fabriquées par les artisans | Fait, à tester en jeu |
 | 6. Réputation et personnel | Réputation par ville (5 paliers, avantages locaux), puis personnel embauché et payé chaque jour : contremaître, courtier, intendant, commis | Réputation faite, à tester en jeu ; personnel : **prochaine étape** |
+| Petits services | Tous les métiers rendent de menus services entre deux tâches : une bourse se remplit de 10, 15 ou 20 écus de l'heure selon le rang, jusqu'à 8 h, et se vide d'un clic dans la barre. Le personnage fait ses courses en ville quand son activité est à l'arrêt | Fait, à tester en jeu (script `17`) |
+| Habillage et publication | Fenêtres en pixel art (police Jersey 10, palette par ville, barre de titre maison), barre animée (jour et nuit, passants, gains), inscription, macOS, versions publiées sur GitHub à chaque tag `v…` | Fait ; export macOS à vérifier sur un Mac |
 | 7. La suite | Second métier, rencontres sur la route, carte du monde, notifications Windows | À faire |
 
 ## Étape 3 : les règles des échanges
@@ -216,6 +218,7 @@ Chaque embauche coûte 3 à 10 heures de gains du début de partie, et chaque sa
   - `14` : l'avantage du négociant, qui achète moins cher et vend plus cher au marché (`merchant_market_rate`) et tient plus d'offres au comptoir (`merchant_open_offers`).
   - `15` : une passe d'équilibrage (file d'atelier, prix du chariot, succursales, prise en charge des contrats, expérience du négociant).
   - `16` : la réputation par ville (`reputation_tiers`, `reputations`, `private.gain_reputation`), branchée sur le marché, le comptoir, les contrats et les commandes, et les durées des textes du serveur en minutes ou en heures (`private.duration_text`).
+  - `17` : les petits services (`odd_jobs_since` sur le joueur, `private.odd_jobs_state`, `public.collect_odd_jobs`), une bourse plafonnée commune à tous les métiers.
   - `tests/` : les tests SQL.
 - `src/Cloud/` : l'authentification Supabase et les appels aux fonctions SQL.
 - `src/Trade/` : le modèle de jeu.
@@ -227,7 +230,7 @@ Chaque embauche coûte 3 à 10 heures de gains du début de partie, et chaque sa
   - `BarStatusBuilder`, `CounterStatus` et `NewsSlot` : ce qu'affiche la barre.
   - `SessionBanners` : les bannières (arrivée, production, échanges, journal) ; `SeenMarker` : ce qui est marqué comme vu.
 - `assets/goods/` : une icône PNG par marchandise, nommée d'après son identifiant (`sel.png`, `chef_oeuvre.png`…), affichée par `GoodBadge`. Une marchandise sans fichier s'affiche sans icône.
-- `src/Desktop/` : l'ancrage de la barre dans Windows (`AppBar`) et la détection des écrans (`DisplayScreens`). Ne pas casser.
+- `src/Desktop/` : l'ancrage de la barre dans Windows (`AppBar`) et la détection des écrans (`DisplayScreens`), et ailleurs une barre flottante au-dessus du Dock (`FloatingDock`), derrière la même interface `IBarDock`. Ne pas casser.
 - `src/Ui/BarPlacement.cs` : le repli, la taille et l'écran de la barre ; `SettingsWindow` : la fenêtre Réglages.
 
 ## Conventions
@@ -257,6 +260,7 @@ Chaque embauche coûte 3 à 10 heures de gains du début de partie, et chaque sa
 - **Événements de route** : `road_event_minutes` = 150, soit 18 % de chances pour 30 min de route.
 - **Pannes** : `breakdown_hours` = 6, soit 15 % de chances pour une heure de fabrication.
 - **Commandes spéciales** : une toutes les 8 h en moyenne, d'environ 400 écus, payée 95 % du prix d'achat du marché, à livrer sous 6 h.
+- **Petits services** : 10 écus de l'heure pour un apprenti, 5 de plus par rang (`odd_jobs_hourly`, `odd_jobs_rank_step`), bourse plafonnée à 8 h (`odd_jobs_cap_hours`).
 - **Maîtrise** : compagnon à 600 XP, maître à 3 000 XP. Chefs-d'œuvre à 2 % et 6 % par lot, vendus 10 fois le prix de base local. Chariot du charron : prix de base 480.
 
 Tout se règle dans `private.settings` et dans les tables du monde, sans recompiler.

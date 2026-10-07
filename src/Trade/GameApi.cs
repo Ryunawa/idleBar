@@ -92,6 +92,8 @@ public sealed class GameApi
     public Task<GameSnapshot> MarkExchangesSeenAsync(string accessToken) =>
         Call(accessToken, "mark_exchanges_seen", new NoArguments());
 
+    public Task<GameSnapshot> CollectOddJobsAsync(string accessToken) => Call(accessToken, "collect_odd_jobs", new NoArguments());
+
     private Task<GameSnapshot> Call<TArguments>(string accessToken, string function, TArguments arguments) =>
         _rpc.CallAsync<TArguments, GameSnapshot>(accessToken, function, arguments);
 }

@@ -15,7 +15,7 @@ public sealed record LaneScene(
     bool Raining = false,
     CaravanLook? Look = null,
     string? Hazard = null,
-    bool Sleeping = false)
+    bool Errands = false)
 {
     public static LaneScene Idle(string caption) => new(LaneMode.Idle, Biome.Plain, 0, caption, string.Empty, false, []);
 
@@ -26,8 +26,8 @@ public sealed record LaneScene(
         new(LaneMode.Halted, biome, progress, caption, string.Empty, false, [], raining, look, hazard);
 
     public static LaneScene InTown(Biome biome, string townName, CaravanLook look) =>
-        new(LaneMode.InTown, biome, 1, townName, string.Empty, false, [], false, look);
+        new(LaneMode.InTown, biome, 1, townName, string.Empty, false, [], false, look, Errands: true);
 
-    public static LaneScene Workshop(Biome biome, string craftId, bool busy, double progress, IReadOnlyList<string> products, string caption, bool sleeping = false) =>
-        new(LaneMode.Workshop, biome, progress, caption, craftId, busy, products, Sleeping: sleeping);
+    public static LaneScene Workshop(Biome biome, string craftId, bool busy, double progress, IReadOnlyList<string> products, string caption, bool errands = false) =>
+        new(LaneMode.Workshop, biome, progress, caption, craftId, busy, products, Errands: errands);
 }

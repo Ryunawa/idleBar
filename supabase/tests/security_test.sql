@@ -56,6 +56,7 @@ select pg_temp.expect_denied('select * from public.reputations');
 select pg_temp.expect_denied('select * from private.settings');
 select pg_temp.expect_denied('select public.get_world()');
 select pg_temp.expect_denied('select public.get_state()');
+select pg_temp.expect_denied('select public.collect_odd_jobs()');
 select pg_temp.expect_denied($$select public.found_player('Intrus', 'forgeron', 'ferrenoire')$$);
 select pg_temp.expect_denied($$select public.start_production('outils', 1)$$);
 select pg_temp.expect_denied('select public.upgrade_workshop()');

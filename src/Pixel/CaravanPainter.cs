@@ -30,7 +30,7 @@ public static class CaravanPainter
 
     public static void PaintInTown(PixelCanvas canvas, CaravanLook look, Ambience ambience)
     {
-        TownPainter.PaintHouses(canvas, canvas.Width * 11 / 20, ambience);
+        TownPainter.PaintHouses(canvas, canvas.Width * 11 / 20, ambience, true);
         PaintCaravan(canvas, TownX(canvas), CaravanSprites.Wagon(true, look), RestingOx(ambience.Time));
     }
 

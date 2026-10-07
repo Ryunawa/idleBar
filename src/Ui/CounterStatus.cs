@@ -32,6 +32,6 @@ public static class CounterStatus
             situation,
             situation,
             slot,
-            LaneScene.Workshop(biome, snapshot.Player!.CraftId, busy, 0, goods, busy ? town : $"{town} · comptoir calme"));
+            LaneScene.Workshop(biome, snapshot.Player!.CraftId, busy, 0, goods, busy ? town : $"{town} · comptoir calme", !busy));
     }
 }

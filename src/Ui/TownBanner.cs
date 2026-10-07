@@ -93,7 +93,7 @@ public partial class TownBanner : Control
         PixelCanvas canvas = new(this, PixelFrame.Scale, Size);
         Ambience ambience = new(0, SkyLight.At(DateTime.Now));
         LandscapePainter.Paint(canvas, BiomeStyles.For(_biome), 0, true, ambience);
-        TownPainter.PaintHouses(canvas, canvas.Width - TownPainter.Width - 8, ambience);
+        TownPainter.PaintHouses(canvas, canvas.Width - TownPainter.Width - 8, ambience, false);
     }
 
     private static Label CreateLabel(int fontSize, Color color, HorizontalAlignment alignment)

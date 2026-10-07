@@ -19,7 +19,9 @@ public sealed class GameBridge : IDisposable
     private readonly GameSession? _session;
     private readonly GameDialogs? _dialogs;
     private readonly QuickRelaunch? _relaunch;
+    private readonly GameActions? _actions;
     private bool _relaunching;
+    private bool _collecting;
 
     public GameBridge(Node host)
     {
@@ -41,6 +43,7 @@ public sealed class GameBridge : IDisposable
         GameActions actions = new(session, api);
         _dialogs = new GameDialogs(session, actions, host);
         _relaunch = new QuickRelaunch(session, actions, RecipeMemory.Load(RecipeMemoryPath));
+        _actions = actions;
         _session = session;
     }
 
@@ -89,6 +92,22 @@ public sealed class GameBridge : IDisposable
         if (!outcome.Started)
         {
             _dialogs?.OpenFor(dialogScale);
+        }
+    }
+
+    public async void CollectPurse()
+    {
+        if (_actions is null || _collecting)
+        {
+            return;
+        }
+
+        _collecting = true;
+        string? error = await ActionFeedback.CaptureAsync(_actions.CollectOddJobsAsync);
+        _collecting = false;
+        if (error is not null)
+        {
+            Announced?.Invoke(error, RefusalBannerSeconds);
         }
     }
 

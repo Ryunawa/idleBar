@@ -54,7 +54,7 @@ public static class BarStatusBuilder
         };
         SlotContent? news = NewsSlot.For(session.Snapshot!, session.World, session.Clock.Now);
         string compact = $"{player.Name} · {coins} · {status.Situation}";
-        return status with { Compact = news is null ? compact : $"{compact} · {news.Title} {news.Detail}", News = news, CoinValue = player.Coins };
+        return status with { Compact = news is null ? compact : $"{compact} · {news.Title} {news.Detail}", News = news, CoinValue = player.Coins, Purse = PurseView.For(session.Snapshot!.OddJobs, session.Clock.Now) };
     }
 
     private static BarStatus DescribeCaravan(GameSession session, CaravanState caravan, string coins)

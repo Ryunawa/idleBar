@@ -84,6 +84,7 @@ public partial class Main : Control
         _expanded.SlotRequested += () => _game.PressSlot(_placement.DialogScale);
         _expanded.NewsRequested += () => _game.PressNews(_placement.DialogScale);
         _expanded.SettingsRequested += OpenSettings;
+        _expanded.PurseRequested += () => _game.CollectPurse();
 
         _collapsedBar = new CollapsedBar();
         AddChild(_collapsedBar);

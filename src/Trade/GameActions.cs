@@ -85,4 +85,6 @@ public sealed class GameActions
         _session.PerformAsync(token => _api.InstallFittingAsync(token, fittingId));
 
     public Task AttachWagonAsync() => _session.PerformAsync(_api.AttachWagonAsync);
+
+    public Task CollectOddJobsAsync() => _session.PerformAsync(_api.CollectOddJobsAsync);
 }

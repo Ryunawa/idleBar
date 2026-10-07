@@ -10,4 +10,13 @@ public static class IconSprites
         ".hh.hh.",
         ".hhhhh.",
         "...h...");
+
+    public static PixelSprite Pouch { get; } = PixelSprite.Parse(
+        ".B...B.",
+        "..BBB..",
+        ".ooooo.",
+        "oooLooo",
+        "ooLgLoo",
+        "oooLooo",
+        ".ooooo.");
 }
