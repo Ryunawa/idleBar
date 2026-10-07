@@ -27,8 +27,11 @@ public sealed record GameSnapshot(
     IReadOnlyList<string> Fittings,
     TripEventInfo? TripEvent,
     ReputationState? Reputation,
-    OddJobsState? OddJobs = null)
+    OddJobsState? OddJobs = null,
+    IReadOnlyList<OfferInfo>? SupplyRequests = null)
 {
+    public IReadOnlyList<OfferInfo> Supply => SupplyRequests ?? [];
+
     public ReputationState Standing => Reputation ?? ReputationState.None;
 
     public string? DefaultTownId => Caravan?.TownId ?? Player?.HomeTownId;

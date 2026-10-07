@@ -6,8 +6,6 @@ namespace IdleBar.Ui;
 
 public sealed record TownAccess(bool Itinerant, bool Crafts, bool Branches, bool Travelling)
 {
-    public bool Ships => Itinerant || Branches;
-
     public TownTab DefaultTab => this switch
     {
         { Travelling: true } => TownTab.Journal,
@@ -32,7 +30,6 @@ public sealed record TownAccess(bool Itinerant, bool Crafts, bool Branches, bool
         TownTab.Orders => !Itinerant,
         _ when Travelling => false,
         TownTab.Workshop => Crafts,
-        TownTab.Contracts => Ships,
         TownTab.Routes or TownTab.Caravan => Itinerant,
         TownTab.Branches => Branches,
         _ => true,

@@ -5,4 +5,5 @@ public enum ContractView
     Available,
     Carried,
     Shipped,
+    Supply,
 }

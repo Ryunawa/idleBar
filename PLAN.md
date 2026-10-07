@@ -29,6 +29,7 @@ Un jeu de commerce en pixel art qui vit dans une barre discrète ancrée en bas 
 | 6. Réputation et personnel | Réputation par ville (5 paliers, avantages locaux), puis personnel embauché et payé chaque jour : contremaître, courtier, intendant, commis | Réputation faite, à tester en jeu ; personnel : **prochaine étape** |
 | Petits services | Tous les métiers rendent de menus services entre deux tâches : une bourse se remplit de 10, 15 ou 20 écus de l'heure selon le rang, jusqu'à 8 h, et se vide d'un clic dans la barre. Le personnage fait ses courses en ville quand son activité est à l'arrêt | Fait, à tester en jeu (script `17`) |
 | Habillage et publication | Fenêtres en pixel art (police Jersey 10, palette par ville, barre de titre maison), barre animée (jour et nuit, passants, gains), inscription, macOS, versions publiées sur GitHub à chaque tag `v…` | Fait ; export macOS à vérifier sur un Mac |
+| Commandes d'approvisionnement | Les artisans et le négociant commandent une marchandise livrée dans leur ville (onglet Contrats) ; les caravaniers voient toutes les commandes et les livrent sur place | Fait, à tester en jeu (script `18`) |
 | 7. La suite | Second métier, rencontres sur la route, carte du monde, notifications Windows | À faire |
 
 ## Étape 3 : les règles des échanges
@@ -42,12 +43,13 @@ Un jeu de commerce en pixel art qui vit dans une barre discrète ancrée en bas 
 **Comptoir.** `post_offer` bloque ce qui est proposé (écus ou marchandise) pour `offer_hours`, avec au plus `max_open_offers` offres ouvertes. `accept_offer` fait l'échange en une seule opération. `cancel_offer` peut se faire depuis n'importe où ; la marchandise revient à l'entrepôt de la ville, s'il y a la place. Une offre expirée rend aussi ce qu'elle bloquait à l'entrepôt. Les autres joueurs ne voient que le nom du vendeur : la table `offers` n'est lisible que par son vendeur, et les offres de la ville passent par `get_state`.
 
 **Contrats de transport.**
-- **Publier.** `post_contract` prend la marchandise dans l'entrepôt de la ville. L'expéditeur bloque le plus élevé entre la récompense qu'il offre et le prix du transporteur du jeu. La destination doit être une ville où il peut récupérer la marchandise : toutes pour un caravanier, son siège et ses succursales pour un négociant. Un artisan ne peut donc pas expédier : le comptoir est son seul canal d'échange.
+- **Publier.** `post_contract` prend la marchandise dans l'entrepôt de la ville. L'expéditeur bloque le plus élevé entre la récompense qu'il offre et le prix du transporteur du jeu. La destination doit être une ville où il peut récupérer la marchandise : toutes pour un caravanier, son siège et ses succursales pour un négociant. Un artisan ne peut donc pas expédier.
 - **Accepter et charger.** Accepter vaut chargement : le caravanier doit être dans la ville d'origine, avoir la place dans sa cale et payer la caution. La caution vaut le prix de base du chargement. Le surplus bloqué est alors rendu à l'expéditeur. La marchandise sous contrat occupe la cale mais reste à part : on ne peut pas la vendre.
 - **Livrer.** La livraison est automatique quand la caravane arrive à destination avant l'échéance. L'échéance vaut le trajet le plus court, plus `contract_slack_minutes`. Le caravanier touche alors la récompense et récupère sa caution.
 - **Retard.** L'expéditeur reçoit la caution et sa récompense lui est rendue. Le caravanier garde la marchandise, qu'il a payée avec sa caution.
 - **Transporteur du jeu.** Un contrat que personne ne prend en `takeover_minutes` est confié au transporteur du jeu. Celui-ci livre en trajet × `game_carrier_slowness`, au prix de `freight_fee` (valeur × (`freight_base_rate` + `freight_hourly_rate` × heures)).
 - **Annuler.** On peut annuler tant que personne n'a pris le contrat.
+- **Commandes d'approvisionnement.** Un sédentaire (artisan ou négociant) commande une marchandise livrée dans sa ville : c'est une offre du comptoir « je donne des écus contre une marchandise », au prix unitaire et à la récompense qu'il choisit. Tout caravanier voit ces commandes depuis n'importe quelle ville (`supply_requests` dans `get_state`) et les livre sur place avec `accept_offer`, en puisant d'abord dans l'entrepôt de la ville, puis dans sa cale. Elles expirent comme les offres, et les écus reviennent alors au commanditaire.
 - **Réglé à la lecture.** Tout se règle quand l'expéditeur ou le transporteur lit son état ou agit (`private.settle_player`, appelé par `get_state` et `private.lock_player`), sans tâche planifiée.
 
 **Négociant.** Son « atelier » est son comptoir : le niveau fixe la taille de ses entrepôts. `open_branch` ouvre une succursale (300, 540, 970 écus, `max_branches` au plus). Le droit d'ouvrir des succursales vient de la colonne `crafts.opens_branches`. Le cartographe apparaît comme métier « bientôt ».
@@ -219,6 +221,7 @@ Chaque embauche coûte 3 à 10 heures de gains du début de partie, et chaque sa
   - `15` : une passe d'équilibrage (file d'atelier, prix du chariot, succursales, prise en charge des contrats, expérience du négociant).
   - `16` : la réputation par ville (`reputation_tiers`, `reputations`, `private.gain_reputation`), branchée sur le marché, le comptoir, les contrats et les commandes, et les durées des textes du serveur en minutes ou en heures (`private.duration_text`).
   - `17` : les petits services (`odd_jobs_since` sur le joueur, `private.odd_jobs_state`, `public.collect_odd_jobs`), une bourse plafonnée commune à tous les métiers.
+  - `18` : les commandes d'approvisionnement (`private.supply_requests`), visibles des caravaniers dans toutes les villes, et `accept_offer` qui puise dans l'entrepôt de la ville avant la cale.
   - `tests/` : les tests SQL.
 - `src/Cloud/` : l'authentification Supabase et les appels aux fonctions SQL.
 - `src/Trade/` : le modèle de jeu.
