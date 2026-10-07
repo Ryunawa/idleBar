@@ -98,6 +98,7 @@ public partial class JournalPanel : VBoxContainer, ITownPanel
         string title = $"{ExchangeText.Lot(world, order.GoodId, order.Quantity)} · {NumberFormat.Coins(order.UnitPrice)} pièce";
         string detail = order.Status switch
         {
+            SpecialOrderStatus.Open when order.Crafted => $"Client de {world.TownName(order.TownId)} · avant {DurationFormat.Moment(order.Deadline, now)} · fabriqué {NumberFormat.Amount(order.Produced)}/{NumberFormat.Amount(order.Quantity)} dans ton atelier",
             SpecialOrderStatus.Open => $"Client de {world.TownName(order.TownId)} · avant {DurationFormat.Moment(order.Deadline, now)} · en stock {NumberFormat.Amount(held)}/{NumberFormat.Amount(order.Quantity)}",
             SpecialOrderStatus.Delivered => $"Livrée · payée {NumberFormat.Coins(order.Quantity * order.UnitPrice)}",
             SpecialOrderStatus.Expired => "Expirée",
@@ -106,7 +107,7 @@ public partial class JournalPanel : VBoxContainer, ITownPanel
 
         long orderId = order.Id;
         bool open = order.Status == SpecialOrderStatus.Open;
-        HBoxContainer row = ActionRow.Create(title, detail, open ? "Livrer" : string.Empty, held < order.Quantity,
+        HBoxContainer row = ActionRow.Create(title, detail, open ? "Livrer" : string.Empty, !order.IsReady(held),
             () => Requested?.Invoke(actions => actions.FulfillSpecialOrderAsync(orderId)));
         if (open)
         {

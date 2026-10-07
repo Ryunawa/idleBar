@@ -11,4 +11,9 @@ public sealed record SpecialOrderInfo(
     DateTimeOffset CreatedAt,
     DateTimeOffset Deadline,
     SpecialOrderStatus Status,
-    DateTimeOffset? ClosedAt);
+    DateTimeOffset? ClosedAt,
+    bool Crafted = false,
+    int Produced = 0)
+{
+    public bool IsReady(int held) => held >= Quantity && (!Crafted || Produced >= Quantity);
+}

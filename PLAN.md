@@ -83,7 +83,7 @@ Un jeu de commerce en pixel art qui vit dans une barre discrète ancrée en bas 
 
 **Atelier.**
 - **Panne.** Elle peut être tirée au lancement d'une fabrication, puis pour chaque ajout de lots tant qu'aucune panne n'est prévue, avec une probabilité de 1 − e^(−heures / `breakdown_hours`). L'atelier renvoie l'heure de reprise (`paused_until`). Les lots finis avant la panne sont livrés. Faire réparer coûte 20 écus par niveau et arrête l'atelier 10 min. Réparer soi-même l'arrête 1 h, et c'est aussi ce qui arrive faute d'écus.
-- **Commande spéciale.** Pour tous les sédentaires, une commande arrive en moyenne toutes les `special_order_hours`, une seule à la fois. Elle demande un produit du métier (ou, pour le négociant, une marchandise rare dans sa ville), pour environ `special_order_value` écus, payé `special_order_price_ratio` (95 %) du prix d'achat du marché, sous `special_order_window_hours`. C'est bien mieux que vendre au marché, mais acheter la marchandise pour livrer fait perdre de l'argent. Avec « Livrer dès que possible », elle part toute seule dès que le stock suffit, en comptant la production faite avant l'échéance. Sinon le joueur livre ou refuse depuis le journal (`fulfill_special_order`, `decline_special_order`).
+- **Commande spéciale.** Pour tous les sédentaires, une commande arrive en moyenne toutes les `special_order_hours`, une seule à la fois. Pour un artisan, elle demande un produit du métier pour environ `special_order_minutes` (60) minutes de fabrication, payé au coût réel : les matières au prix d'achat de sa ville, plus `special_order_input_markup` (10 %), plus `special_order_labour_rate` (2 écus) par minute de fabrication, sans jamais descendre sous `special_order_price_ratio` (95 %) du prix d'achat du marché. Seules les pièces fabriquées dans l'atelier après la commande comptent (`special_orders.produced`, compté par `private.reward_production`), pour qu'on ne la remplisse pas en achetant au marché. Pour le négociant, elle demande une marchandise rare dans sa ville pour environ `special_order_value` écus, payée 95 % du prix d'achat, et se livre avec n'importe quel stock. Le délai est de `special_order_window_hours`. Avec « Livrer dès que possible », elle part toute seule dès qu'elle est prête, en comptant la production faite avant l'échéance. Sinon le joueur livre ou refuse depuis le journal (`fulfill_special_order`, `decline_special_order`).
 
 **Journal.** Chaque événement écrit une ligne dans `event_log`, gardée 7 jours. Une bannière l'annonce et un emplacement « Journal » apparaît dans la barre. Voir l'onglet Journal appelle `mark_journal_seen`.
 
@@ -222,6 +222,7 @@ Chaque embauche coûte 3 à 10 heures de gains du début de partie, et chaque sa
   - `16` : la réputation par ville (`reputation_tiers`, `reputations`, `private.gain_reputation`), branchée sur le marché, le comptoir, les contrats et les commandes, et les durées des textes du serveur en minutes ou en heures (`private.duration_text`).
   - `17` : les petits services (`odd_jobs_since` sur le joueur, `private.odd_jobs_state`, `public.collect_odd_jobs`), une bourse plafonnée commune à tous les métiers.
   - `18` : les commandes d'approvisionnement (`private.supply_requests`), visibles des caravaniers dans toutes les villes, et `accept_offer` qui puise dans l'entrepôt de la ville avant la cale.
+  - `19` : les commandes spéciales au coût réel (`private.recipe_unit_cost`, `special_orders.crafted` et `produced`), à fabriquer dans l'atelier.
   - `tests/` : les tests SQL.
 - `src/Cloud/` : l'authentification Supabase et les appels aux fonctions SQL.
 - `src/Trade/` : le modèle de jeu.
@@ -262,7 +263,7 @@ Chaque embauche coûte 3 à 10 heures de gains du début de partie, et chaque sa
 - **Succursales** : 3 au plus, à 200, 360 et 650 écus.
 - **Événements de route** : `road_event_minutes` = 150, soit 18 % de chances pour 30 min de route.
 - **Pannes** : `breakdown_hours` = 6, soit 15 % de chances pour une heure de fabrication.
-- **Commandes spéciales** : une toutes les 8 h en moyenne, d'environ 400 écus, payée 95 % du prix d'achat du marché, à livrer sous 6 h.
+- **Commandes spéciales** : une toutes les 8 h en moyenne, à livrer sous 6 h. Pour un artisan, environ 1 h de fabrication, payée matières + 10 % + 2 écus par minute, au moins 95 % du prix du marché, soit 145 à 390 écus de bénéfice selon la recette et la ville. Pour le négociant, environ 400 écus à 95 % du prix du marché.
 - **Petits services** : 10 écus de l'heure pour un apprenti, 5 de plus par rang (`odd_jobs_hourly`, `odd_jobs_rank_step`), bourse plafonnée à 8 h (`odd_jobs_cap_hours`).
 - **Maîtrise** : compagnon à 600 XP, maître à 3 000 XP. Chefs-d'œuvre à 2 % et 6 % par lot, vendus 10 fois le prix de base local. Chariot du charron : prix de base 480.
 

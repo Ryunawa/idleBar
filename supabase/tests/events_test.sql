@@ -354,16 +354,49 @@ begin
   assert v_order ->> 'good_id' in ('outils', 'ferrures'), 'the order asks for one of the smith products';
   assert (v_order ->> 'unit_price')::numeric > (select (quote ->> 'sell_price')::numeric from jsonb_array_elements(v_state -> 'market') quote
     where quote ->> 'good_id' = v_order ->> 'good_id'), 'the order pays more than the market';
-  assert (v_order ->> 'unit_price')::numeric < (select (quote ->> 'buy_price')::numeric from jsonb_array_elements(v_state -> 'market') quote
-    where quote ->> 'good_id' = v_order ->> 'good_id'), 'buying the goods to fulfil the order loses money';
+  assert (v_order ->> 'unit_price')::numeric >= floor((select (quote ->> 'buy_price')::numeric from jsonb_array_elements(v_state -> 'market') quote
+    where quote ->> 'good_id' = v_order ->> 'good_id') * 0.95), 'the order never pays less than 95 % of the market price';
+  assert (v_order ->> 'crafted')::boolean, 'an artisan order must be made in the workshop';
+  assert (v_order ->> 'produced')::int = 0, 'nothing is made for the order yet';
   assert v_state -> 'journal' -> 0 ->> 'title' = 'Commande spéciale', 'the order is written in the journal';
 end;
 $$;
 
 reset role;
+do $$
+declare
+  v_order public.special_orders;
+  v_recipe public.recipes;
+  v_minutes numeric;
+begin
+  select * into v_order from public.special_orders where player_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' and status = 'open';
+  select * into v_recipe from public.recipes where craft_id = 'forgeron' and output_good_id = v_order.good_id order by sort_order limit 1;
+  v_minutes := v_recipe.seconds / 60.0 / v_recipe.output_quantity;
+  assert v_order.unit_price >= ceil(private.recipe_unit_cost(v_recipe.id, 'ferrenoire') * 1.1 + v_minutes * 2),
+    'the order pays the inputs, a 10 % margin and 2 coins per minute of work';
+  assert v_order.quantity = least(greatest(round(60 / v_minutes), 1), 30), 'the order asks for about an hour of work';
+
+  perform private.reward_production(v_order.player_id, v_recipe, 1, 'ferrenoire');
+  assert (select produced from public.special_orders where id = v_order.id) = least(v_order.quantity, v_recipe.output_quantity),
+    'each batch made in the workshop counts towards the order';
+  update public.special_orders set produced = 0 where id = v_order.id;
+end;
+$$;
 insert into public.warehouses (player_id, town_id, good_id, quantity)
 select player_id, town_id, good_id, quantity from public.special_orders where player_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' and status = 'open'
 on conflict (player_id, town_id, good_id) do update set quantity = public.warehouses.quantity + excluded.quantity;
+set role authenticated;
+
+do $$
+begin
+  perform public.get_state();
+  assert exists (select 1 from public.special_orders where status = 'open'),
+    'goods bought elsewhere do not fill an order: only what the workshop makes counts';
+end;
+$$;
+
+reset role;
+update public.special_orders set produced = quantity where player_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' and status = 'open';
 create temp table purse as select coins from public.players where player_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 create temp table first_order as select * from public.special_orders where player_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 grant select on purse, first_order to authenticated;
@@ -373,7 +406,7 @@ do $$
 declare
   v_state jsonb := public.get_state();
 begin
-  assert (select status from public.special_orders where id = (select id from first_order)) = 'delivered', 'the order is delivered as soon as the goods are in stock';
+  assert (select status from public.special_orders where id = (select id from first_order)) = 'delivered', 'the order is delivered once the workshop has made it';
   assert (v_state -> 'player' ->> 'coins')::bigint
     >= (select coins from purse) + (select quantity * unit_price from first_order), 'the order is paid';
 end;
@@ -394,12 +427,13 @@ $$;
 
 select pg_temp.expect_refusal(
   format('select public.fulfill_special_order(%s)', (select id from public.special_orders where status = 'open')),
-  'Il te faut');
+  'Ton atelier doit encore fabriquer');
 
 reset role;
 insert into public.warehouses (player_id, town_id, good_id, quantity)
 select player_id, town_id, good_id, quantity from public.special_orders where player_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' and status = 'open'
 on conflict (player_id, town_id, good_id) do update set quantity = public.warehouses.quantity + excluded.quantity;
+update public.special_orders set produced = quantity where player_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' and status = 'open';
 set role authenticated;
 
 do $$
@@ -460,6 +494,7 @@ update public.special_orders set deadline = now() - interval '1 minute' where st
 insert into public.warehouses (player_id, town_id, good_id, quantity)
 select player_id, town_id, good_id, quantity from public.special_orders where player_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' and status = 'open'
 on conflict (player_id, town_id, good_id) do update set quantity = public.warehouses.quantity + excluded.quantity;
+update public.special_orders set produced = quantity where player_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' and status = 'open';
 create temp table last_order as select id from public.special_orders where status = 'open';
 grant select on last_order to authenticated;
 set role authenticated;
