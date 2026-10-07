@@ -161,8 +161,10 @@ declare
 begin
   select * into v_market from public.markets where town_id = 'hautecombe' and good_id = 'sel';
   assert v_market.pressure > 0, 'selling floods the market';
-  assert private.current_pressure(v_market.pressure, now() - interval '8 hours') < v_market.pressure / 5,
-    'markets recover within a few hours';
+  assert private.current_pressure(v_market.pressure, now() - interval '8 hours') > v_market.pressure / 2,
+    'a market still remembers a big sale eight hours later';
+  assert private.current_pressure(v_market.pressure, now() - interval '48 hours') < v_market.pressure / 5,
+    'markets recover within two days';
 end;
 $$;
 

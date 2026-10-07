@@ -225,6 +225,7 @@ Chaque embauche coûte 3 à 10 heures de gains du début de partie, et chaque sa
   - `19` : les commandes spéciales au coût réel (`private.recipe_unit_cost`, `special_orders.crafted` et `produced`), à fabriquer dans l'atelier.
   - `20` : le journal des achats et des ventes (`trade_log`, `private.log_trade`), alimenté par le marché, le comptoir, les commandes spéciales et les chefs-d'œuvre ; les achats répétés de la même marchandise au même endroit en moins de deux minutes (`trade_log_merge_seconds`) sont regroupés, l'historique garde `trade_log_days` (14) jours.
   - `21` : la rançon des bandits sur la bourse et la cargaison (`private.cargo_value`, `private.seize_cargo`).
+  - `22` : les marchés vivants (`markets.home_price` et `target_price`, `private.market_cycle`, `private.roll_market_trends`, `private.settle_markets`) et la mémoire des prix sur un jour (`private.current_pressure`).
   - `tests/` : les tests SQL.
 - `src/Cloud/` : l'authentification Supabase et les appels aux fonctions SQL.
 - `src/Trade/` : le modèle de jeu.
@@ -256,7 +257,8 @@ Chaque embauche coûte 3 à 10 heures de gains du début de partie, et chaque sa
 - **Caravane** : 40 places au départ, puis 20 de plus par chariot, jusqu'à 6 chariots.
 - **Atelier de niveau 1** : 60 places en entrepôt et une file de 8 fabrications (6 + 2 par niveau), soit 48 min à 4 h de travail selon la recette.
 - **Recettes** : de 6 à 15 minutes par lot, 30 pour le chariot. Le chariot vaut 560 écus pour rester rentable à fabriquer.
-- **Prix** : environ 1 % de variation par unité achetée ou vendue, avec retour à la normale en environ 4 h.
+- **Prix** : environ 1 % de variation par unité achetée ou vendue ; la marque s'efface en `market_recovery_hours` (24 h, constante de temps : 63 % en un jour, 86 % en deux).
+- **Besoins des villes** : toutes les `market_cycle_hours` (24 h), chaque ville a `market_trending_goods` (2) marchandises recherchées, à 135-160 % de leur prix habituel, et 2 surabondantes, à 55-75 %. Les prix glissent vers cette cible avec une constante de `market_drift_hours` (6 h), recalculés au plus toutes les `market_settle_minutes` (15 min) à la lecture de l'état (`private.settle_markets`). Les couleurs du marché et les icônes du bandeau suivent la situation du moment (`trend` dans les cotes du marché).
 - **Négociant** : achète 5 % moins cher et vend 5 % plus cher au marché, en plus du talent « Sens du négoce » ; 16 offres ouvertes au comptoir au lieu de 8.
 - **Expérience** : 60 par heure de fabrication ou de route ; le négociant gagne 1 point pour 10 écus vendus (`trade_xp_value`). Compagnon à 600, maître à 3 000.
 - **Entrepôt du caravanier** : 60 places par ville.

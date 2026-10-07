@@ -12,7 +12,7 @@ public partial class MarketPanel : VBoxContainer, ITownPanel
 
     private static readonly CultureInfo French = CultureInfo.GetCultureInfo("fr-FR");
 
-    private const string PriceLegend = "Prix vert : spécialité de la ville, bon marché. Prix doré : la ville en manque et paie cher.";
+    private const string PriceLegend = "Prix vert : abondant ici en ce moment, bon marché. Prix doré : la ville en manque et paie cher. Les besoins des villes changent chaque jour, et tes achats et ventes marquent les prix pendant environ un jour.";
 
     private static readonly int[] Quantities = [1, 10, MaxQuantity];
     private static readonly string[] Headers = ["Marchandise", "En stock", "Achat", string.Empty, "Vente", string.Empty];
@@ -68,8 +68,8 @@ public partial class MarketPanel : VBoxContainer, ITownPanel
         {
             int owned = context.Owned(quote.GoodId);
             int stored = context.Itinerant ? context.Storage.FirstOrDefault(line => line.GoodId == quote.GoodId)?.Quantity ?? 0 : 0;
-            bool local = town?.Produces.Contains(quote.GoodId) == true;
-            bool wanted = town?.Demands.Contains(quote.GoodId) == true;
+            bool local = quote.Trend is null ? town?.Produces.Contains(quote.GoodId) == true : quote.Cheap;
+            bool wanted = quote.Trend is null ? town?.Demands.Contains(quote.GoodId) == true : quote.Dear;
             _grid.AddChild(GoodBadge.Create(quote.GoodId, context.World.GoodName(quote.GoodId), 13, BarPalette.Text));
             _grid.AddChild(CreateCell(owned > 0 ? NumberFormat.Amount(owned) : "–", BarPalette.Muted));
             if (context.Itinerant)

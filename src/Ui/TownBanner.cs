@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Godot;
 using IdleBar.Pixel;
 using IdleBar.Trade;
@@ -14,6 +15,7 @@ public partial class TownBanner : Control
     private Biome _biome = Biome.Plain;
     private HBoxContainer _specialties = null!;
     private string? _townId;
+    private string _shown = string.Empty;
 
     public Label Heading { get; private set; } = null!;
 
@@ -64,27 +66,36 @@ public partial class TownBanner : Control
         row.AddChild(Purse);
     }
 
-    public void SetTown(WorldData world, string townId)
+    public void SetTown(WorldData world, GameSnapshot snapshot, string townId)
     {
-        if (townId == _townId)
+        MarketQuote[] quotes = snapshot.MarketAt(townId).ToArray();
+        string[] abundant = quotes.Any(quote => quote.Trend is not null)
+            ? [.. quotes.Where(quote => quote.Cheap).Select(quote => quote.GoodId)]
+            : [.. world.FindTown(townId)?.Produces ?? []];
+        string shown = $"{townId}:{string.Join(",", abundant)}";
+        if (shown == _shown)
         {
             return;
         }
 
-        _townId = townId;
-        TownInfo? town = world.FindTown(townId);
-        _biome = town?.Biome ?? Biome.Plain;
-        QueueRedraw();
+        _shown = shown;
+        if (townId != _townId)
+        {
+            _townId = townId;
+            _biome = world.FindTown(townId)?.Biome ?? Biome.Plain;
+            QueueRedraw();
+        }
+
         foreach (Node icon in _specialties.GetChildren())
         {
             icon.QueueFree();
         }
 
-        foreach (string goodId in town?.Produces ?? [])
+        foreach (string goodId in abundant)
         {
             if (GoodBadge.CreateIcon(goodId) is TextureRect icon)
             {
-                icon.TooltipText = $"Spécialité de la ville : {world.GoodName(goodId)}";
+                icon.TooltipText = $"Abondant ici en ce moment : {world.GoodName(goodId)}";
                 icon.MouseFilter = MouseFilterEnum.Pass;
                 _specialties.AddChild(icon);
             }

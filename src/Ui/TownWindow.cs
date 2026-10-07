@@ -160,7 +160,7 @@ public partial class TownWindow : Window
         string storage = context.Itinerant ? "cale" : "entrepôt";
         Title = $"IdleBar · {context.TownName}";
         Theme = WindowSkin.For(context.TownId);
-        _banner.SetTown(context.World, context.TownId);
+        _banner.SetTown(context.World, context.Snapshot, context.TownId);
         _banner.Heading.Text = _access switch
         {
             { Travelling: true } => $"En route vers {context.TownName}",
