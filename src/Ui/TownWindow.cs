@@ -9,7 +9,7 @@ namespace IdleBar.Ui;
 
 public partial class TownWindow : Window
 {
-    private static readonly Vector2I BaseSize = new(780, 640);
+    private static readonly Vector2I BaseSize = new(624, 374);
 
     private readonly List<string> _townIds = [];
     private readonly Dictionary<string, Theme> _skins = [];
@@ -35,7 +35,7 @@ public partial class TownWindow : Window
         content.AddChild(_banner);
         _banner.Picker.ItemSelected += index => ChooseTown(_townIds[(int)index]);
 
-        _tabs = new TabContainer { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
+        _tabs = new TabContainer { SizeFlagsVertical = Control.SizeFlags.ExpandFill, ClipTabs = true };
         AddPanel(new WorkshopPanel { Name = "Atelier" });
         AddPanel(new MarketPanel { Name = "Marché" });
         AddPanel(new CounterPanel { Name = "Comptoir" });
@@ -60,7 +60,7 @@ public partial class TownWindow : Window
 
     public void Open(float scale, TownAccess access, TownTab? tab)
     {
-        _message.Text = string.Empty;
+        SetMessage(string.Empty);
         SetBusy(false);
         ApplyAccess(access);
         TownTab chosen = tab is TownTab wanted && access.Shows(wanted) ? wanted : access.DefaultTab;
@@ -78,15 +78,21 @@ public partial class TownWindow : Window
         Display(new TownContext(world, snapshot, clock, townId));
     }
 
-    public void ShowError(string message) => _message.Text = message;
+    public void ShowError(string message) => SetMessage(message);
 
     public void SetBusy(bool busy)
     {
         _blocker.Visible = busy;
         if (busy)
         {
-            _message.Text = string.Empty;
+            SetMessage(string.Empty);
         }
+    }
+
+    private void SetMessage(string message)
+    {
+        _message.Text = message;
+        _message.Visible = message.Length > 0;
     }
 
     private void ApplyAccess(TownAccess access)
@@ -112,7 +118,11 @@ public partial class TownWindow : Window
         where TPanel : Control, ITownPanel
     {
         panel.Requested += command => Requested?.Invoke(command);
-        _tabs.AddChild(panel);
+        panel.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        panel.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+        ScrollContainer scroll = new() { Name = panel.Name, FollowFocus = true };
+        scroll.AddChild(panel);
+        _tabs.AddChild(scroll);
         _panels = [.. _panels, panel];
     }
 
@@ -138,7 +148,7 @@ public partial class TownWindow : Window
     {
         if (_context is { } context)
         {
-            _message.Text = string.Empty;
+            SetMessage(string.Empty);
             Display(context with { TownId = townId });
         }
     }

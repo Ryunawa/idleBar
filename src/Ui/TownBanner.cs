@@ -40,7 +40,7 @@ public partial class TownBanner : Control
         HBoxContainer row = new();
         row.AddThemeConstantOverride("separation", 10);
         overlay.AddChild(row);
-        VBoxContainer titles = new() { Alignment = BoxContainer.AlignmentMode.Center };
+        VBoxContainer titles = new() { Alignment = BoxContainer.AlignmentMode.Center, SizeFlagsHorizontal = SizeFlags.ExpandFill };
         titles.AddThemeConstantOverride("separation", 0);
         row.AddChild(titles);
 
@@ -48,15 +48,18 @@ public partial class TownBanner : Control
         name.AddThemeConstantOverride("separation", 8);
         titles.AddChild(name);
         Heading = CreateLabel(PixelFont.Title, BarPalette.Gold, HorizontalAlignment.Left);
+        Heading.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
+        Heading.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         name.AddChild(Heading);
         name.AddChild(Picker);
         _specialties = new HBoxContainer();
         _specialties.AddThemeConstantOverride("separation", 2);
         name.AddChild(_specialties);
         Standing = CreateLabel(13, BarPalette.Text, HorizontalAlignment.Left);
+        Standing.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
         titles.AddChild(Standing);
         Purse = CreateLabel(16, BarPalette.Text, HorizontalAlignment.Right);
-        Purse.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        Purse.SizeFlagsHorizontal = SizeFlags.ShrinkEnd;
         Purse.SizeFlagsVertical = SizeFlags.ShrinkBegin;
         row.AddChild(Purse);
     }
