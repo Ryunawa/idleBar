@@ -36,7 +36,7 @@ public partial class RoadLane : Control
 
     public event Action? Pressed;
 
-    public event Action<StreetBuilding>? BuildingPressed;
+    public event Action<StreetBuilding, Vector2I>? BuildingPressed;
 
     public LaneScene Scene => _scene;
 
@@ -94,7 +94,7 @@ public partial class RoadLane : Control
                 AcceptEvent();
                 if (BuildingAt(click.Position) is StreetBuilding building)
                 {
-                    BuildingPressed?.Invoke(building);
+                    BuildingPressed?.Invoke(building, ScreenAnchor(building));
                 }
                 else
                 {
@@ -191,6 +191,14 @@ public partial class RoadLane : Control
 
         PaintHover(canvas);
         PaintGains(canvas);
+    }
+
+    private Vector2I ScreenAnchor(StreetBuilding building)
+    {
+        StreetPlot plot = _plots.FirstOrDefault(each => each.Building == building);
+        Window window = GetWindow();
+        float x = (GetGlobalPosition().X + (plot.X + plot.Width / 2f) * _artScale) * window.ContentScaleFactor;
+        return new Vector2I(window.Position.X + (int)x, window.Position.Y);
     }
 
     private StreetBuilding? BuildingAt(Vector2 position)

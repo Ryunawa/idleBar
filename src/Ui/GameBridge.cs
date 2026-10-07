@@ -1,6 +1,7 @@
 using System;
 using Godot;
 using IdleBar.Cloud;
+using IdleBar.Pixel;
 using IdleBar.Trade;
 using HttpClient = System.Net.Http.HttpClient;
 
@@ -11,6 +12,7 @@ public sealed class GameBridge : IDisposable
     private const float HintBannerSeconds = 4;
     private const float RefusalBannerSeconds = 6;
     private const int HttpTimeoutSeconds = 10;
+    private const double PanelRefreshSeconds = 1;
     private const string SessionPath = "user://session.dat";
     private const string RecipeMemoryPath = "user://workshop.cfg";
     private const string MissingConfiguration = "Supabase n'est pas configuré";
@@ -22,6 +24,7 @@ public sealed class GameBridge : IDisposable
     private readonly GameActions? _actions;
     private bool _relaunching;
     private bool _collecting;
+    private double _sincePanelRefresh;
 
     public GameBridge(Node host)
     {
@@ -43,6 +46,7 @@ public sealed class GameBridge : IDisposable
         GameActions actions = new(session, api);
         _dialogs = new GameDialogs(session, actions, host);
         _relaunch = new QuickRelaunch(session, actions, RecipeMemory.Load(RecipeMemoryPath));
+        _dialogs.Relaunch = () => _relaunch.Candidate;
         _actions = actions;
         _session = session;
     }
@@ -66,13 +70,28 @@ public sealed class GameBridge : IDisposable
 
         _session.Tick(delta);
         Status = BarStatusBuilder.Describe(_session, _relaunch?.Candidate);
+        _sincePanelRefresh += delta;
+        if (_sincePanelRefresh >= PanelRefreshSeconds)
+        {
+            _sincePanelRefresh = 0;
+            _dialogs?.RefreshBuilding();
+        }
     }
 
     public void SignOut() => _session?.SignOut();
 
-    public void OpenFromLane(float dialogScale) => _dialogs?.OpenFor(dialogScale);
+    public void OpenFromLane(float dialogScale)
+    {
+        if (_dialogs?.BuildingOpen == true)
+        {
+            _dialogs.CloseBuilding();
+            return;
+        }
 
-    public void OpenTab(float dialogScale, TownTab tab) => _dialogs?.OpenFor(dialogScale, tab);
+        _dialogs?.OpenFor(dialogScale);
+    }
+
+    public void OpenBuilding(StreetBuilding building, Vector2I anchor, float dialogScale) => _dialogs?.OpenBuilding(building, anchor, dialogScale);
 
     public async void PressSlot(float dialogScale)
     {

@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Godot;
+using IdleBar.Pixel;
 using IdleBar.Trade;
 
 namespace IdleBar.Ui;
@@ -14,6 +15,7 @@ public sealed class GameDialogs
     private readonly LoginWindow _login = new();
     private readonly FoundingWindow _founding = new();
     private readonly TownWindow _town = new();
+    private readonly BuildingPanel _building = new();
     private readonly SeenMarker _seen;
     private float _scale = 1f;
 
@@ -25,17 +27,58 @@ public sealed class GameDialogs
         host.AddChild(_login);
         host.AddChild(_founding);
         host.AddChild(_town);
+        host.AddChild(_building);
 
         _login.Submitted += OnLoginSubmitted;
         _founding.Submitted += OnFoundingSubmitted;
         _town.Requested += command => RunInTown(() => command(_actions));
         _town.TabViewed += _seen.MarkTab;
         _session.Changed += RefreshTown;
+        _building.Requested += command => RunInBuilding(() => command(_actions));
+        _building.MoreRequested += tab => OpenFor(_scale, tab);
+        _session.Changed += RefreshBuilding;
+    }
+
+    public Func<RecipeInfo?>? Relaunch { get; set; }
+
+    public bool BuildingOpen => _building.Visible;
+
+    public void OpenBuilding(StreetBuilding building, Vector2I anchor, float scale)
+    {
+        _scale = scale;
+        if (_building.Visible && _building.Building == building)
+        {
+            _building.Hide();
+            return;
+        }
+
+        if (_session.Status != SessionStatus.Ready)
+        {
+            OpenFor(scale);
+            return;
+        }
+
+        if (BuildingSheets.For(building, _session, Relaunch?.Invoke()) is BuildingSheet sheet && _session.Snapshot is GameSnapshot snapshot)
+        {
+            string townId = snapshot.Caravan?.TownId ?? snapshot.Workshop?.TownId ?? snapshot.Player!.HomeTownId;
+            _building.Open(building, sheet, WindowSkin.For(townId), anchor, scale);
+        }
+    }
+
+    public void CloseBuilding() => _building.Hide();
+
+    public void RefreshBuilding()
+    {
+        if (_building is { Visible: true, Building: StreetBuilding building } && BuildingSheets.For(building, _session, Relaunch?.Invoke()) is BuildingSheet sheet)
+        {
+            _building.Refresh(sheet);
+        }
     }
 
     public void OpenFor(float scale, TownTab? tab = null)
     {
         _scale = scale;
+        _building.Hide();
         switch (_session.Status)
         {
             case SessionStatus.SignedOut:
@@ -88,6 +131,18 @@ public sealed class GameDialogs
         }
 
         _town.Hide();
+    }
+
+    private async void RunInBuilding(Func<Task> action)
+    {
+        _building.SetBusy(true);
+        string? error = await ActionFeedback.CaptureAsync(action);
+        _building.SetBusy(false);
+        RefreshBuilding();
+        if (error is not null)
+        {
+            _building.ShowError(error);
+        }
     }
 
     private async void RunInTown(Func<Task> action)

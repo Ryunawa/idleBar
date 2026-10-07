@@ -88,7 +88,7 @@ public partial class Main : Control
         _expanded.SettingsRequested += OpenSettings;
         _expanded.PurseRequested += () => _game.CollectPurse();
         _expanded.UpdateRequested += OpenDownloadPage;
-        _expanded.BuildingRequested += tab => _game.OpenTab(_placement.DialogScale, tab);
+        _expanded.BuildingRequested += (building, anchor) => _game.OpenBuilding(building, anchor, _placement.DialogScale);
 
         _collapsedBar = new CollapsedBar();
         AddChild(_collapsedBar);

@@ -12,7 +12,6 @@ public partial class TownWindow : Window
     private static readonly Vector2I BaseSize = new(624, 374);
 
     private readonly List<string> _townIds = [];
-    private readonly Dictionary<string, Theme> _skins = [];
     private TownBanner _banner = null!;
     private TabContainer _tabs = null!;
     private ITownPanel[] _panels = [];
@@ -160,7 +159,7 @@ public partial class TownWindow : Window
         GameSnapshot snapshot = context.Snapshot;
         string storage = context.Itinerant ? "cale" : "entrepôt";
         Title = $"IdleBar · {context.TownName}";
-        Theme = SkinFor(context.TownId);
+        Theme = WindowSkin.For(context.TownId);
         _banner.SetTown(context.World, context.TownId);
         _banner.Heading.Text = _access switch
         {
@@ -176,17 +175,6 @@ public partial class TownWindow : Window
         {
             _panels[(int)tab].Refresh(context);
         }
-    }
-
-    private Theme SkinFor(string townId)
-    {
-        if (!_skins.TryGetValue(townId, out Theme? skin))
-        {
-            skin = WindowSkin.Create(WindowStyles.For(townId));
-            _skins[townId] = skin;
-        }
-
-        return skin;
     }
 
     private void ReportTabViewed()
