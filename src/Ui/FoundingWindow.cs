@@ -96,7 +96,7 @@ public partial class FoundingWindow : Window
     {
         Label hint = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         hint.AddThemeColorOverride("font_color", BarPalette.Muted);
-        hint.AddThemeFontSizeOverride("font_size", 12);
+        hint.AddThemeFontSizeOverride("font_size", PixelFont.Size(12));
         return hint;
     }
 

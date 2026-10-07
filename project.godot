@@ -4,6 +4,7 @@ config_version=5
 
 config/name="IdleBar"
 run/main_scene="res://scenes/main.tscn"
+config/icon="res://assets/icon.png"
 config/use_custom_user_dir=true
 config/custom_user_dir_name="IdleBar"
 config/features=PackedStringArray("4.7", "C#", "GL Compatibility")

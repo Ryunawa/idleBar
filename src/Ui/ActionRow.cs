@@ -42,7 +42,7 @@ public static class ActionRow
     public static Label Note(string text)
     {
         Label note = new() { Text = text, AutowrapMode = TextServer.AutowrapMode.WordSmart, MouseFilter = Control.MouseFilterEnum.Ignore };
-        note.AddThemeFontSizeOverride("font_size", 11);
+        note.AddThemeFontSizeOverride("font_size", PixelFont.Size(11));
         note.AddThemeColorOverride("font_color", BarPalette.Muted);
         return note;
     }

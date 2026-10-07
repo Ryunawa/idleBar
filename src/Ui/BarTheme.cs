@@ -8,7 +8,7 @@ public static class BarTheme
 
     public static Theme Create()
     {
-        Theme theme = new() { DefaultFontSize = 13 };
+        Theme theme = new() { DefaultFont = PixelFont.Load(), DefaultFontSize = PixelFont.Size(13) };
         theme.SetStylebox("normal", ButtonType, CreateButtonBox(BarPalette.ButtonNormal));
         theme.SetStylebox("hover", ButtonType, CreateButtonBox(BarPalette.ButtonHover));
         theme.SetStylebox("pressed", ButtonType, CreateButtonBox(BarPalette.ButtonPressed));

@@ -12,4 +12,6 @@ public sealed record BiomeStyle(
     Color Road,
     Color RoadMark,
     IReadOnlyList<PixelSprite> Props,
-    int PropSpacing);
+    int PropSpacing,
+    Color? Tuft = null,
+    bool Fireflies = false);

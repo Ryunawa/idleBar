@@ -49,7 +49,7 @@ public partial class SettingsWindow : Window
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
         };
         hint.AddThemeColorOverride("font_color", BarPalette.Muted);
-        hint.AddThemeFontSizeOverride("font_size", 12);
+        hint.AddThemeFontSizeOverride("font_size", PixelFont.Size(12));
         content.AddChild(hint);
 
         Button close = new() { Text = "Fermer" };

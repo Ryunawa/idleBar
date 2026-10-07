@@ -2,19 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
+using IdleBar.Pixel;
 using IdleBar.Trade;
 
 namespace IdleBar.Ui;
 
 public partial class TownWindow : Window
 {
-    private static readonly Vector2I BaseSize = new(680, 540);
+    private static readonly Vector2I BaseSize = new(780, 640);
 
     private readonly List<string> _townIds = [];
-    private Label _town = null!;
-    private OptionButton _townPicker = null!;
-    private Label _purse = null!;
-    private Label _standing = null!;
+    private readonly Dictionary<string, Theme> _skins = [];
+    private TownBanner _banner = null!;
     private TabContainer _tabs = null!;
     private ITownPanel[] _panels = [];
     private Label _message = null!;
@@ -32,20 +31,9 @@ public partial class TownWindow : Window
     {
         VBoxContainer content = WindowFrame.Build(this, "IdleBar · Ville", 8);
 
-        HBoxContainer header = new();
-        header.AddThemeConstantOverride("separation", 10);
-        _town = BarLabels.Create(18, BarPalette.Gold);
-        _town.TextOverrunBehavior = TextServer.OverrunBehavior.NoTrimming;
-        _townPicker = new OptionButton { FocusMode = Control.FocusModeEnum.None, Visible = false };
-        _townPicker.ItemSelected += index => ChooseTown(_townIds[(int)index]);
-        _purse = BarLabels.Create(13, BarPalette.Text, HorizontalAlignment.Right);
-        _purse.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-        header.AddChild(_town);
-        header.AddChild(_townPicker);
-        header.AddChild(_purse);
-        content.AddChild(header);
-        _standing = BarLabels.Create(12, BarPalette.Muted);
-        content.AddChild(_standing);
+        _banner = new TownBanner();
+        content.AddChild(_banner);
+        _banner.Picker.ItemSelected += index => ChooseTown(_townIds[(int)index]);
 
         _tabs = new TabContainer { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
         AddPanel(new WorkshopPanel { Name = "Atelier" });
@@ -130,20 +118,20 @@ public partial class TownWindow : Window
 
     private void RefreshTownPicker(WorldData world, IReadOnlyList<string> present, string townId)
     {
-        _townPicker.Visible = present.Count > 1;
-        _town.Visible = !_townPicker.Visible;
+        _banner.Picker.Visible = present.Count > 1;
+        _banner.Heading.Visible = !_banner.Picker.Visible;
         if (!_townIds.SequenceEqual(present))
         {
             _townIds.Clear();
             _townIds.AddRange(present);
-            _townPicker.Clear();
+            _banner.Picker.Clear();
             foreach (string id in present)
             {
-                _townPicker.AddItem(world.TownName(id));
+                _banner.Picker.AddItem(world.TownName(id));
             }
         }
 
-        _townPicker.Select(_townIds.IndexOf(townId));
+        _banner.Picker.Select(_townIds.IndexOf(townId));
     }
 
     private void ChooseTown(string townId)
@@ -162,20 +150,33 @@ public partial class TownWindow : Window
         GameSnapshot snapshot = context.Snapshot;
         string storage = context.Itinerant ? "cale" : "entrepôt";
         Title = $"IdleBar · {context.TownName}";
-        _town.Text = _access switch
+        Theme = SkinFor(context.TownId);
+        _banner.SetTown(context.World, context.TownId);
+        _banner.Heading.Text = _access switch
         {
             { Travelling: true } => $"En route vers {context.TownName}",
             { Itinerant: true } => context.TownName,
             { Branches: true } => $"Comptoir de {player.Name} · {context.TownName}",
             _ => $"Atelier de {player.Name} · {context.TownName}",
         };
-        _purse.Text = $"{NumberFormat.Coins(player.Coins)} · {storage} {snapshot.HoldingsLoadAt(context.TownId)}/{snapshot.HoldingsCapacityAt(context.TownId)}";
-        _standing.Visible = snapshot.Standing.Tiers.Count > 0;
-        _standing.Text = $"Réputation à {context.TownName} : {ReputationText.Standing(snapshot.Standing, context.TownId)}";
+        _banner.Purse.Text = $"{NumberFormat.Coins(player.Coins)} · {storage} {snapshot.HoldingsLoadAt(context.TownId)}/{snapshot.HoldingsCapacityAt(context.TownId)}";
+        _banner.Standing.Visible = snapshot.Standing.Tiers.Count > 0;
+        _banner.Standing.Text = $"Réputation à {context.TownName} : {ReputationText.Standing(snapshot.Standing, context.TownId)}";
         foreach (TownTab tab in Enum.GetValues<TownTab>().Where(_access.Shows))
         {
             _panels[(int)tab].Refresh(context);
         }
+    }
+
+    private Theme SkinFor(string townId)
+    {
+        if (!_skins.TryGetValue(townId, out Theme? skin))
+        {
+            skin = WindowSkin.Create(WindowStyles.For(townId));
+            _skins[townId] = skin;
+        }
+
+        return skin;
     }
 
     private void ReportTabViewed()

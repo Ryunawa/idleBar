@@ -16,7 +16,9 @@ public static class BiomeStyles
         new Color("5a4632"),
         new Color("6e5840"),
         [ScenerySprites.LeafyTree, ScenerySprites.Bush, ScenerySprites.Bush, ScenerySprites.Fence],
-        28);
+        28,
+        new Color("3d5e2c"),
+        true);
 
     private static readonly BiomeStyle Forest = new(
         new Color("151d22"),
@@ -27,7 +29,9 @@ public static class BiomeStyles
         new Color("4e3c2a"),
         new Color("604a34"),
         [ScenerySprites.Pine, ScenerySprites.Pine, ScenerySprites.LeafyTree, ScenerySprites.Bush],
-        14);
+        14,
+        new Color("35532c"),
+        true);
 
     private static readonly BiomeStyle Mountain = new(
         new Color("171d28"),
@@ -38,7 +42,8 @@ public static class BiomeStyles
         new Color("57493b"),
         new Color("6b5b4a"),
         [ScenerySprites.Rock, ScenerySprites.Pine, ScenerySprites.Rock],
-        26);
+        26,
+        new Color("4b5236"));
 
     private static readonly BiomeStyle Coast = new(
         new Color("172233"),
@@ -71,7 +76,9 @@ public static class BiomeStyles
         new Color("4a3f2e"),
         new Color("5c4f3a"),
         [ScenerySprites.Reeds, ScenerySprites.Reeds, ScenerySprites.LeafyTree, ScenerySprites.Bush],
-        18);
+        18,
+        new Color("4a5a34"),
+        true);
 
     public static BiomeStyle For(Biome biome) => biome switch
     {

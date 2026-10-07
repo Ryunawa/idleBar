@@ -54,7 +54,7 @@ public static class BarStatusBuilder
         };
         SlotContent? news = NewsSlot.For(session.Snapshot!, session.World, session.Clock.Now);
         string compact = $"{player.Name} · {coins} · {status.Situation}";
-        return status with { Compact = news is null ? compact : $"{compact} · {news.Title} {news.Detail}", News = news };
+        return status with { Compact = news is null ? compact : $"{compact} · {news.Title} {news.Detail}", News = news, CoinValue = player.Coins };
     }
 
     private static BarStatus DescribeCaravan(GameSession session, CaravanState caravan, string coins)
@@ -135,7 +135,7 @@ public static class BarStatusBuilder
             situation,
             situation,
             DescribeIdleSlot(world, relaunch),
-            LaneScene.Workshop(biome, snapshot.Player.CraftId, false, 0, products, $"{town} · atelier à l'arrêt"));
+            LaneScene.Workshop(biome, snapshot.Player.CraftId, false, 0, products, $"{town} · atelier à l'arrêt", true));
     }
 
     private static SlotContent DescribeIdleSlot(WorldData? world, RecipeInfo? relaunch)

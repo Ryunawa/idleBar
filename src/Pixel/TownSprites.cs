@@ -1,9 +1,20 @@
+using System.Linq;
+
 namespace IdleBar.Pixel;
 
 public static class TownSprites
 {
-    public static PixelSprite House { get; } = PixelSprite.Parse(
-        "...rrrr...",
+    public const int ChimneyColumn = 7;
+    public const int LampHeadColumn = 1;
+
+    private const char Glow = 'L';
+    private const char DarkGlass = 'x';
+    private const char ColdLamp = 's';
+
+    private static readonly string[] HouseRows =
+    [
+        ".......x..",
+        "...rrrrx..",
         "..rRRRRr..",
         ".rRRRRRRr.",
         "rrrrrrrrrr",
@@ -12,9 +23,11 @@ public static class TownSprites
         ".yLLyyLLy.",
         ".yyyyyyyy.",
         ".yyyxxyyy.",
-        ".yyyxxyyy.");
+        ".yyyxxyyy.",
+    ];
 
-    public static PixelSprite TallHouse { get; } = PixelSprite.Parse(
+    private static readonly string[] TallHouseRows =
+    [
         "...RR...",
         "..RrrR..",
         ".RrrrrR.",
@@ -25,9 +38,29 @@ public static class TownSprites
         ".YLyyLY.",
         ".YyyyyY.",
         ".YyxxyY.",
-        ".YyxxyY.");
+        ".YyxxyY.",
+    ];
 
-    public static PixelSprite Stall { get; } = PixelSprite.Parse(
+    private static readonly string[] LampRows =
+    [
+        ".L.",
+        "kLk",
+        ".k.",
+        ".k.",
+        ".k.",
+        ".k.",
+        ".k.",
+        "kkk",
+    ];
+
+    private static readonly PixelSprite LitHouse = PixelSprite.Parse(HouseRows);
+    private static readonly PixelSprite DarkHouse = PixelSprite.Parse(Replace(HouseRows, DarkGlass));
+    private static readonly PixelSprite LitTallHouse = PixelSprite.Parse(TallHouseRows);
+    private static readonly PixelSprite DarkTallHouse = PixelSprite.Parse(Replace(TallHouseRows, DarkGlass));
+    private static readonly PixelSprite LitLamp = PixelSprite.Parse(LampRows);
+    private static readonly PixelSprite DarkLamp = PixelSprite.Parse(Replace(LampRows, ColdLamp));
+
+    private static readonly PixelSprite Stall = PixelSprite.Parse(
         "rwrwrwrwrw",
         "rwrwrwrwrw",
         ".b......b.",
@@ -36,13 +69,13 @@ public static class TownSprites
         ".b......b.",
         ".b......b.");
 
-    public static PixelSprite Lamp { get; } = PixelSprite.Parse(
-        ".L.",
-        "kLk",
-        ".k.",
-        ".k.",
-        ".k.",
-        ".k.",
-        ".k.",
-        "kkk");
+    public static PixelSprite For(TownPiece piece, bool lit) => piece switch
+    {
+        TownPiece.House => lit ? LitHouse : DarkHouse,
+        TownPiece.TallHouse => lit ? LitTallHouse : DarkTallHouse,
+        TownPiece.Lamp => lit ? LitLamp : DarkLamp,
+        _ => Stall,
+    };
+
+    private static string[] Replace(string[] rows, char unlit) => [.. rows.Select(row => row.Replace(Glow, unlit))];
 }

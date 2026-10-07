@@ -125,7 +125,7 @@ public sealed class GameDialogs
 
         if (awaitingConfirmation)
         {
-            _login.ShowInfo(ConfirmEmailMessage);
+            _login.ShowSignedUp(ConfirmEmailMessage);
             return;
         }
 

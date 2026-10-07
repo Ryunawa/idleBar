@@ -18,25 +18,36 @@ public static class WorkshopPainter
     private static readonly Color Bubble = new("7fb24a");
     private static readonly Color Steam = new("c9d1d9");
     private static readonly Color Shuttle = new("f2c14e");
+    private static readonly Color Glitter = new("f7d774");
 
-    public static void Paint(PixelCanvas canvas, string craftId, float time, bool busy, IReadOnlyList<string> products)
+    public static int Anchor(PixelCanvas canvas) => Origin(canvas) + 40;
+
+    public static void Paint(PixelCanvas canvas, string craftId, Ambience ambience, bool busy, bool sleeping, IReadOnlyList<string> products, ProductPop pop)
     {
+        float time = ambience.Time;
         int ground = LandscapePainter.GroundTop(canvas);
-        int origin = canvas.Width / 8;
+        int origin = Origin(canvas);
         int beat = (int)(time / StepSeconds);
         bool striking = busy && beat % 2 == 1;
 
-        TownPainter.PaintHouses(canvas, canvas.Width * 11 / 20);
-        int productsX = craftId switch
+        TownPainter.PaintHouses(canvas, canvas.Width * 11 / 20, ambience);
+        (int productsX, int headX) = craftId switch
         {
-            "forgeron" => PaintForge(canvas, origin, ground, busy, striking, beat),
-            "charron" => PaintWheelwright(canvas, origin, ground, striking, beat),
-            "tisserand" => PaintWeaver(canvas, origin, ground, busy, striking, time),
-            "negociant" => CounterPainter.Paint(canvas, origin, ground, busy, beat),
-            _ => PaintHerbalist(canvas, origin, ground, busy, striking, beat),
+            "forgeron" => (PaintForge(canvas, origin, ground, busy, striking, beat), origin + 40),
+            "charron" => (PaintWheelwright(canvas, origin, ground, striking, beat), origin + 34),
+            "tisserand" => (PaintWeaver(canvas, origin, ground, busy, striking, time), origin + 31),
+            "negociant" => (CounterPainter.Paint(canvas, origin, ground, busy, beat), -1),
+            _ => (PaintHerbalist(canvas, origin, ground, busy, striking, beat), origin + 34),
         };
-        PaintProducts(canvas, productsX, ground, products);
+        if (sleeping && headX >= 0)
+        {
+            FolkPainter.Snooze(canvas, time, headX, ground - 8);
+        }
+
+        PaintProducts(canvas, productsX, ground, products, pop);
     }
+
+    private static int Origin(PixelCanvas canvas) => canvas.Width / 8;
 
     private static int PaintForge(PixelCanvas canvas, int x, int ground, bool busy, bool striking, int beat)
     {
@@ -121,21 +132,19 @@ public static class WorkshopPainter
         return x + 50;
     }
 
-    private static void PaintProducts(PixelCanvas canvas, int x, int ground, IReadOnlyList<string> products)
+    private static void PaintProducts(PixelCanvas canvas, int x, int ground, IReadOnlyList<string> products, ProductPop pop)
     {
-        int column = 0;
-        int rowBottom = ground;
-        foreach (string goodId in products)
+        for (int index = 0; index < products.Count; index++)
         {
-            if (column == ProductsPerRow)
+            int left = x + index % ProductsPerRow * (GoodIcons.TallestIcon + 1);
+            int bottom = ground - index / ProductsPerRow * (GoodIcons.TallestIcon + 1);
+            PixelSprite icon = GoodIcons.For(products[index]);
+            int top = bottom - icon.Height + 1 - pop.Lift(index);
+            canvas.Draw(icon, left, top);
+            if (index >= pop.From && pop.Sparkling)
             {
-                column = 0;
-                rowBottom -= GoodIcons.TallestIcon + 1;
+                Sprinkle(canvas, (int)(pop.Age * 20) + index, left - 1, top - 2, icon.Width + 2, 2, Glitter);
             }
-
-            PixelSprite icon = GoodIcons.For(goodId);
-            canvas.Draw(icon, x + column * (GoodIcons.TallestIcon + 1), rowBottom - icon.Height + 1);
-            column++;
         }
     }
 

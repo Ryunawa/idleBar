@@ -27,8 +27,7 @@ public static class ContractRow
 
     private static PanelContainer Build(ContractRowContent content, Button? button)
     {
-        PanelContainer card = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
-        card.AddThemeStyleboxOverride("panel", CreateBox(BarPalette.ButtonDisabled, BarPalette.Border, 4, 10));
+        PanelContainer card = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, ThemeTypeVariation = WindowSkin.Card };
         HBoxContainer row = new();
         row.AddThemeConstantOverride("separation", 10);
         card.AddChild(row);
@@ -75,8 +74,7 @@ public static class ContractRow
         flow.AddThemeConstantOverride("v_separation", 4);
         foreach (string fact in facts)
         {
-            PanelContainer chip = new();
-            chip.AddThemeStyleboxOverride("panel", CreateBox(BarPalette.Background, BarPalette.Border, 8, 7));
+            PanelContainer chip = new() { ThemeTypeVariation = WindowSkin.Chip };
             Label label = BarLabels.Create(11, BarPalette.Muted);
             label.TextOverrunBehavior = TextServer.OverrunBehavior.NoTrimming;
             label.Text = fact;
@@ -96,27 +94,10 @@ public static class ContractRow
             Step = 0.001,
             Value = progress,
             ShowPercentage = false,
-            CustomMinimumSize = new Vector2(0, 6),
+            CustomMinimumSize = new Vector2(0, 10),
             MouseFilter = Control.MouseFilterEnum.Ignore,
+            ThemeTypeVariation = progress >= 0.8 ? WindowSkin.WarningBar : string.Empty,
         };
-        bar.AddThemeStyleboxOverride("background", CreateBox(BarPalette.Background, BarPalette.Border, 3, 0));
-        bar.AddThemeStyleboxOverride("fill", CreateBox(progress >= 0.8 ? BarPalette.Warning : BarPalette.Gold, BarPalette.Gold, 3, 0));
         return bar;
-    }
-
-    private static StyleBoxFlat CreateBox(Color background, Color border, int radius, int padding)
-    {
-        StyleBoxFlat box = new()
-        {
-            BgColor = background,
-            BorderColor = border,
-            ContentMarginLeft = padding,
-            ContentMarginRight = padding,
-            ContentMarginTop = padding / 2,
-            ContentMarginBottom = padding / 2,
-        };
-        box.SetBorderWidthAll(1);
-        box.SetCornerRadiusAll(radius);
-        return box;
     }
 }

@@ -5,7 +5,15 @@ namespace IdleBar.Ui;
 
 public partial class ExpandedBar : MarginContainer
 {
+    private const double CoinCatchUp = 5;
+    private const float GlowSeconds = 1.2f;
+
+    private static readonly Color Glow = new(1.6f, 1.5f, 1.2f);
+
     private Label _coins = null!;
+    private double _shownCoins = double.NaN;
+    private double _targetCoins;
+    private float _glow;
     private Label _situation = null!;
     private TownSlot _news = null!;
     private TownSlot _slot = null!;
@@ -65,9 +73,23 @@ public partial class ExpandedBar : MarginContainer
         row.AddChild(windowButtons);
     }
 
+    public override void _Process(double delta)
+    {
+        if (double.IsNaN(_shownCoins))
+        {
+            return;
+        }
+
+        double gap = _targetCoins - _shownCoins;
+        _shownCoins = Math.Abs(gap) < 1 ? _targetCoins : _shownCoins + gap * Math.Min(1, delta * CoinCatchUp);
+        _coins.Text = NumberFormat.Coins(_shownCoins);
+        _glow = Math.Max(0, _glow - (float)delta / GlowSeconds);
+        _coins.Modulate = Colors.White.Lerp(Glow, _glow);
+    }
+
     public void Refresh(BarStatus status)
     {
-        _coins.Text = status.Coins;
+        RefreshCoins(status);
         _situation.Text = status.Situation;
         _slot.Refresh(status.Slot);
         _news.Button.Visible = status.News is not null;
@@ -77,5 +99,28 @@ public partial class ExpandedBar : MarginContainer
         }
 
         Lane.SetScene(status.Scene);
+    }
+
+    private void RefreshCoins(BarStatus status)
+    {
+        if (status.CoinValue is not double coins)
+        {
+            _shownCoins = double.NaN;
+            _coins.Text = status.Coins;
+            _coins.Modulate = Colors.White;
+            return;
+        }
+
+        if (double.IsNaN(_shownCoins))
+        {
+            _shownCoins = coins;
+            _coins.Text = status.Coins;
+        }
+        else if (coins > _targetCoins)
+        {
+            _glow = 1;
+        }
+
+        _targetCoins = coins;
     }
 }

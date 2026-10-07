@@ -13,7 +13,7 @@ public static class BarLabels
             MouseFilter = Control.MouseFilterEnum.Ignore,
             TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis,
         };
-        label.AddThemeFontSizeOverride("font_size", fontSize);
+        label.AddThemeFontSizeOverride("font_size", PixelFont.Size(fontSize));
         label.AddThemeColorOverride("font_color", color);
         return label;
     }

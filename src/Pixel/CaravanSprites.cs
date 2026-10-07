@@ -56,24 +56,27 @@ public static class CaravanSprites
         return sprite;
     }
 
-    public static PixelSprite OxStepping { get; } = PixelSprite.Parse(
-    [
-        .. OxBody,
-        "...k.k....k.k...",
-        "..k...k..k...k..",
-    ]);
+    public static PixelSprite OxStepping { get; } = Ox(["...k.k....k.k...", "..k...k..k...k.."], false);
 
-    public static PixelSprite OxStriding { get; } = PixelSprite.Parse(
-    [
-        .. OxBody,
-        "....k.k....k.k..",
-        "....k.k....k.k..",
-    ]);
+    public static PixelSprite OxStriding { get; } = Ox(["....k.k....k.k..", "....k.k....k.k.."], true);
 
-    public static PixelSprite OxResting { get; } = PixelSprite.Parse(
-    [
-        .. OxBody,
-        "...k.k....k.k...",
-        "...k.k....k.k...",
-    ]);
+    public static PixelSprite OxResting { get; } = Ox(["...k.k....k.k...", "...k.k....k.k..."], false);
+
+    public static PixelSprite OxSwishing { get; } = Ox(["...k.k....k.k...", "...k.k....k.k..."], true);
+
+    private static PixelSprite Ox(string[] legs, bool tailOut)
+    {
+        string[] rows = [.. OxBody, .. legs];
+        (int Column, int Row, char Pixel)[] tail = tailOut
+            ? [(1, 2, 'k'), (0, 3, 'k'), (0, 4, 'B')]
+            : [(1, 2, 'k'), (1, 3, 'k'), (1, 4, 'B')];
+        foreach ((int column, int row, char pixel) in tail)
+        {
+            char[] cells = rows[row].ToCharArray();
+            cells[column] = pixel;
+            rows[row] = new string(cells);
+        }
+
+        return PixelSprite.Parse(rows);
+    }
 }

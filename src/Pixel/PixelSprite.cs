@@ -7,6 +7,8 @@ public sealed class PixelSprite
 {
     private const char Transparent = '.';
 
+    private PixelSprite? _mirrored;
+
     private PixelSprite(Texture2D texture, int width, int height)
     {
         Texture = texture;
@@ -19,6 +21,8 @@ public sealed class PixelSprite
     public int Width { get; }
 
     public int Height { get; }
+
+    public PixelSprite Mirrored => _mirrored ??= Flip();
 
     public static PixelSprite Parse(params string[] rows)
     {
@@ -37,5 +41,12 @@ public sealed class PixelSprite
         }
 
         return new PixelSprite(ImageTexture.CreateFromImage(image), width, rows.Length);
+    }
+
+    private PixelSprite Flip()
+    {
+        Image image = Texture.GetImage();
+        image.FlipX();
+        return new PixelSprite(ImageTexture.CreateFromImage(image), Width, Height) { _mirrored = this };
     }
 }

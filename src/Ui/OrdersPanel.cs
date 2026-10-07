@@ -55,7 +55,7 @@ public partial class OrdersPanel : VBoxContainer, ITownPanel
         foreach (EventKindInfo kind in kinds)
         {
             HBoxContainer row = ActionRow.Create(kind.Name, kind.Description, string.Empty, true, () => { });
-            ChoicePicker picker = new(190);
+            ChoicePicker picker = new(230);
             picker.Fill(kind.Choices.Select(choice => new PickerChoice(choice.Id, choice.Name)).ToList());
             picker.Button.SizeFlagsVertical = SizeFlags.ShrinkCenter;
             string kindId = kind.Id;

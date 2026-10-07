@@ -6,8 +6,8 @@ public static class BarPalette
 {
     public static readonly Color Background = new("1b1f24");
     public static readonly Color Border = new("2d333b");
-    public static readonly Color Text = new("e6edf3");
-    public static readonly Color Muted = new("8b949e");
+    public static readonly Color Text = new("efe6d2");
+    public static readonly Color Muted = new("a99f8c");
     public static readonly Color Success = new("56d364");
     public static readonly Color Warning = new("f0883e");
     public static readonly Color Danger = new("f85149");
