@@ -75,7 +75,7 @@ Un jeu de commerce en pixel art qui vit dans une barre discrète ancrée en bas 
   - Sans réponse à `decide_by`, la **directive du voyage** tranche. Elle est choisie au départ (`depart(destination, directive)`) et retenue d'un voyage à l'autre : Prudence (payer les bandits, s'abriter, payer le péage), Rapidité (payer, forcer l'orage, payer) ou Économie (fuir, s'abriter, contourner). Les tables sont `directives` et `directive_choices`.
   - La trouvaille n'appelle aucun choix : elle reste immédiate.
   - Les consignes permanentes (`set_standing_order`) ne concernent plus que l'atelier.
-- **Bandits.** Payer coûte 8 % de la bourse, 150 écus au plus. Fuir fait perdre un quart de la marchandise la plus précieuse et allonge le trajet de 10 %.
+- **Bandits.** Payer coûte `bandit_ransom_rate` (8 %) de ce que transporte la caravane, bourse et valeur de la marchandise au prix de base, `bandit_ransom_cap` (150) écus au plus. Les écus partent d'abord ; s'il en manque, les bandits se servent dans la cargaison, en commençant par la marchandise la plus précieuse (`private.seize_cargo`). Une caravane vide passe sans rien payer. Fuir fait perdre un quart de la marchandise la plus précieuse et allonge le trajet de 10 %.
 - **Orage.** S'abriter allonge le trajet de 30 %. Forcer le passage ne l'allonge que de 5 %, mais un dixième du plus gros chargement prend l'eau.
 - **Péage.** Payer coûte 3 écus par chariot et 1 par dizaine de marchandises. Contourner allonge le trajet de 35 %, et c'est ce qui arrive aussi quand la bourse ne suffit pas.
 - **Trouvaille.** De 3 à 8 marchandises brutes, dans la limite de la place en cale.
@@ -224,6 +224,7 @@ Chaque embauche coûte 3 à 10 heures de gains du début de partie, et chaque sa
   - `18` : les commandes d'approvisionnement (`private.supply_requests`), visibles des caravaniers dans toutes les villes, et `accept_offer` qui puise dans l'entrepôt de la ville avant la cale.
   - `19` : les commandes spéciales au coût réel (`private.recipe_unit_cost`, `special_orders.crafted` et `produced`), à fabriquer dans l'atelier.
   - `20` : le journal des achats et des ventes (`trade_log`, `private.log_trade`), alimenté par le marché, le comptoir, les commandes spéciales et les chefs-d'œuvre ; les achats répétés de la même marchandise au même endroit en moins de deux minutes (`trade_log_merge_seconds`) sont regroupés, l'historique garde `trade_log_days` (14) jours.
+  - `21` : la rançon des bandits sur la bourse et la cargaison (`private.cargo_value`, `private.seize_cargo`).
   - `tests/` : les tests SQL.
 - `src/Cloud/` : l'authentification Supabase et les appels aux fonctions SQL.
 - `src/Trade/` : le modèle de jeu.

@@ -181,14 +181,18 @@ set role authenticated;
 select public.depart('hautecombe', 'prudence') is not null;
 reset role;
 select pg_temp.trigger_road_event('99999999-9999-9999-9999-999999999999');
+create temp table ransom as
+select least(floor((coins + private.cargo_value(player_id)) * 0.08), 150)::int as amount, coins
+from public.players where player_id = '99999999-9999-9999-9999-999999999999';
+grant select on ransom to authenticated;
 set role authenticated;
 
 do $$
 declare
   v_state jsonb := public.answer_event('payer');
 begin
-  assert (v_state -> 'player' ->> 'coins')::int = 920, 'paying the bandits costs 8 % of the purse';
-  assert v_state -> 'journal' -> 0 ->> 'detail' like '%80 écus%', 'the journal tells what was paid';
+  assert (v_state -> 'player' ->> 'coins')::int = (select coins - amount from ransom), 'paying the bandits costs 8 % of the purse and the cargo';
+  assert v_state -> 'journal' -> 0 ->> 'detail' like '%' || (select amount from ransom) || ' écus%', 'the journal tells what was paid';
 end;
 $$;
 
