@@ -6,4 +6,5 @@ public enum TownPiece
     TallHouse,
     Stall,
     Lamp,
+    Tree,
 }

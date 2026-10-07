@@ -20,9 +20,9 @@ public static class WorkshopPainter
     private static readonly Color Shuttle = new("f2c14e");
     private static readonly Color Glitter = new("f7d774");
 
-    public const int StationHeight = 13;
+    public const int StationHeight = 11;
 
-    private const int HallOverhang = 2;
+    private const int HallGap = 3;
 
     public static int StationWidth(string craftId) => craftId switch
     {
@@ -31,6 +31,10 @@ public static class WorkshopPainter
         "negociant" => 32,
         _ => 50,
     };
+
+    public static int Width(StreetState street) => HallPainter.Width(street.WorkshopLevel) + HallGap + StationWidth(street.CraftId);
+
+    public static int Height(StreetState street) => Math.Max(HallPainter.Height(street.WorkshopLevel), StationHeight);
 
     public static int ProductsWidth(int count) => Math.Min(count, ProductsPerRow) * (GoodIcons.TallestIcon + 1);
 
@@ -42,7 +46,8 @@ public static class WorkshopPainter
         bool striking = busy && beat % 2 == 1;
         bool present = !errands;
 
-        HallPainter.Paint(canvas, x - HallOverhang, StationWidth(street.CraftId) + HallOverhang * 2, street.WorkshopLevel, ambience);
+        HallPainter.Paint(canvas, x, street.WorkshopLevel, ambience);
+        x += HallPainter.Width(street.WorkshopLevel) + HallGap;
         switch (street.CraftId)
         {
             case "forgeron":

@@ -8,7 +8,7 @@ namespace IdleBar.Ui;
 
 public partial class RoadLane : Control
 {
-    private const float TargetArtRows = 23f;
+    private const float TargetArtRows = 15f;
     private const float ScrollSpeed = 7f;
     private const int CaptionFontSize = 12;
     private const float CaptionHeight = 18f;
@@ -16,7 +16,7 @@ public partial class RoadLane : Control
     private const float GainStagger = 0.45f;
     private const float GainFadeIn = 0.15f;
     private const float GainFadeOut = 0.7f;
-    private const float GainRise = 5f;
+    private const float GainRise = 3f;
     private const float SparkSeconds = 0.6f;
     private const int Sparks = 6;
     private const int LabelLift = 7;
@@ -243,7 +243,7 @@ public partial class RoadLane : Control
         Font font = GetThemeDefaultFont();
         int fontSize = PixelFont.Size(CaptionFontSize);
         int anchor = GainAnchor(canvas);
-        int baseline = LandscapePainter.GroundTop(canvas) - 14;
+        int baseline = Math.Max(LandscapePainter.GroundTop(canvas) - 10, 1);
         foreach (FloatingGain floating in _gains.Where(floating => floating.Age >= 0))
         {
             float age = floating.Age;

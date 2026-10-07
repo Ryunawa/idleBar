@@ -3,8 +3,6 @@ namespace IdleBar.Pixel;
 public static class WorkshopSprites
 {
     public static PixelSprite Forge { get; } = PixelSprite.Parse(
-        "...........tt.....",
-        "...........St.....",
         "..RRRRRRRRRStRRR..",
         ".RRRRRRRRRRRRRRRR.",
         "RRRRRRRRRRRRRRRRRR",

@@ -83,13 +83,12 @@ public static class StreetSprites
     {
         for (int tier = 0; tier < BarnTiers; tier++)
         {
-            yield return PixelSprite.Parse([.. BarnRows(MinBarnWidth + tier * BarnStep, 7 + tier)]);
+            yield return PixelSprite.Parse([.. BarnRows(MinBarnWidth + tier * BarnStep, 5 + tier, 3 + tier / 2)]);
         }
     }
 
-    private static IEnumerable<string> BarnRows(int width, int wallRows)
+    private static IEnumerable<string> BarnRows(int width, int wallRows, int roofRows)
     {
-        int roofRows = width / 4;
         for (int row = 0; row < roofRows; row++)
         {
             int inset = (roofRows - 1 - row) * 2;

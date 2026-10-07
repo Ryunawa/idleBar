@@ -5,7 +5,7 @@ namespace IdleBar.Pixel;
 
 public static class LandscapePainter
 {
-    public const int GroundRows = 5;
+    public const int GroundRows = 4;
 
     private const float PropParallax = 0.75f;
     private const int RoadMarkSpacing = 7;
@@ -14,6 +14,7 @@ public static class LandscapePainter
     private const float WindSpeed = 1.8f;
     private const float WindWavelength = 0.12f;
     private const float GustSeconds = 9f;
+    private const float DesignSky = 18f;
 
     public static int GroundTop(PixelCanvas canvas) => canvas.Height - GroundRows;
 
@@ -42,12 +43,13 @@ public static class LandscapePainter
     {
         Color fill = light.Shade(layer.Fill);
         Color rim = light.Shade(layer.Rim);
+        float vertical = Math.Min(1f, ground / DesignSky);
         int shift = (int)(distance * layer.Parallax);
         for (int x = 0; x < canvas.Width; x++)
         {
             float u = x + shift;
-            int height = layer.Height
-                + (int)MathF.Round(layer.Amplitude * MathF.Sin(u / layer.Period) + layer.Detail * MathF.Sin(u / layer.DetailPeriod));
+            int height = (int)MathF.Round((layer.Height
+                + layer.Amplitude * MathF.Sin(u / layer.Period) + layer.Detail * MathF.Sin(u / layer.DetailPeriod)) * vertical);
             if (height <= 0)
             {
                 continue;

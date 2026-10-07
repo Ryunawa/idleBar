@@ -18,24 +18,44 @@ public static class TownPainter
     private static readonly Color Smoke = new("9aa3ad");
     private static readonly Color LampLight = new("f7d774");
 
-    private static readonly TownPlot[] Layout =
+    private static readonly TownPlot[][] Layouts =
     [
-        new(TownPiece.House, 0),
-        new(TownPiece.Lamp, 12),
-        new(TownPiece.TallHouse, 17),
-        new(TownPiece.Stall, 28),
-        new(TownPiece.House, 41),
-        new(TownPiece.Lamp, 53),
-        new(TownPiece.TallHouse, 58),
+        [
+            new(TownPiece.House, 0),
+            new(TownPiece.Lamp, 12),
+            new(TownPiece.TallHouse, 17),
+            new(TownPiece.Stall, 28),
+            new(TownPiece.House, 41),
+            new(TownPiece.Lamp, 53),
+            new(TownPiece.TallHouse, 58),
+        ],
+        [
+            new(TownPiece.TallHouse, 0),
+            new(TownPiece.House, 10),
+            new(TownPiece.Tree, 22),
+            new(TownPiece.Lamp, 31),
+            new(TownPiece.House, 36),
+            new(TownPiece.TallHouse, 48),
+            new(TownPiece.Tree, 58),
+        ],
+        [
+            new(TownPiece.House, 0),
+            new(TownPiece.House, 11),
+            new(TownPiece.Lamp, 23),
+            new(TownPiece.Tree, 28),
+            new(TownPiece.TallHouse, 38),
+            new(TownPiece.Stall, 48),
+            new(TownPiece.Lamp, 60),
+        ],
     ];
 
-    public static void PaintHouses(PixelCanvas canvas, int start, Ambience ambience, bool errands)
+    public static void PaintHouses(PixelCanvas canvas, int start, Ambience ambience, bool errands, int block = 0)
     {
         int ground = LandscapePainter.GroundTop(canvas);
         bool lit = ambience.Light.Lit;
-        foreach (TownPlot plot in Layout)
+        foreach (TownPlot plot in Layouts[block % Layouts.Length])
         {
-            PixelSprite sprite = TownSprites.For(plot.Piece, lit);
+            PixelSprite sprite = TownSprites.For(plot.Piece, lit, block / Layouts.Length + block);
             int x = start + plot.Offset;
             int top = ground - sprite.Height + 1;
             switch (plot.Piece)

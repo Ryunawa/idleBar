@@ -19,6 +19,10 @@ public static class StreetPainter
     private const float RingSeconds = 0.4f;
     private const float BlinkSeconds = 0.6f;
     private const int HouseRoom = 8;
+    private const int StallGap = 2;
+    private const float BlockPhase = 0.37f;
+
+    private static readonly int MarketWidth = TownSprites.For(TownPiece.Stall, false).Width * 2 + StallGap;
 
     private static readonly Color Note = new("e6dcc3");
     private static readonly Color Pin = new("a8473b");
@@ -49,11 +53,11 @@ public static class StreetPainter
         }
         else
         {
-            Add(StreetBuilding.Workshop, WorkshopPainter.StationWidth(street.CraftId), Math.Max(HallPainter.Height(street.WorkshopLevel), WorkshopPainter.StationHeight));
+            Add(StreetBuilding.Workshop, WorkshopPainter.Width(street), WorkshopPainter.Height(street));
         }
 
         Add(StreetBuilding.Warehouse, WarehouseWidth(street, products), Barn(street).Height);
-        Add(StreetBuilding.Market, TownSprites.For(TownPiece.Stall, false).Width, TownSprites.For(TownPiece.Stall, false).Height);
+        Add(StreetBuilding.Market, MarketWidth, TownSprites.For(TownPiece.Stall, false).Height);
         Add(StreetBuilding.Counter, StreetSprites.Board.Width, StreetSprites.Board.Height);
         Add(StreetBuilding.Relay, StreetSprites.Relay.Width, StreetSprites.Relay.Height);
         Add(StreetBuilding.Crier, StreetSprites.CrierWaiting.Width, StreetSprites.CrierWaiting.Height);
@@ -66,10 +70,10 @@ public static class StreetPainter
     public static void Paint(PixelCanvas canvas, IReadOnlyList<StreetPlot> plots, StreetScene scene, Ambience ambience)
     {
         int ground = LandscapePainter.GroundTop(canvas);
-        int end = plots.Count == 0 ? Margin : plots[^1].Right + HouseRoom;
-        if (canvas.Width - end >= TownPainter.Width)
+        int start = plots.Count == 0 ? Margin : plots[^1].Right + HouseRoom;
+        for (int block = 0; start + TownPainter.Width <= canvas.Width; block++, start += TownPainter.Width + HouseRoom)
         {
-            TownPainter.PaintHouses(canvas, end, ambience, false);
+            TownPainter.PaintHouses(canvas, start, ambience with { Time = ambience.Time + start * BlockPhase }, false, block);
         }
 
         foreach (StreetPlot plot in plots)
@@ -101,7 +105,9 @@ public static class StreetPainter
                 PaintWarehouse(canvas, plot.X, ground, street, scene.Products, scene.Pop);
                 break;
             case StreetBuilding.Market:
-                DrawOnGround(canvas, TownSprites.For(TownPiece.Stall, false), plot.X, ground);
+                PixelSprite stall = TownSprites.For(TownPiece.Stall, false);
+                DrawOnGround(canvas, stall, plot.X, ground);
+                DrawOnGround(canvas, stall, plot.X + stall.Width + StallGap, ground);
                 break;
             case StreetBuilding.Counter:
                 PaintBoard(canvas, plot.X, ground, street.OpenOffers);

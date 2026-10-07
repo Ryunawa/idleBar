@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 
 namespace IdleBar.Pixel;
@@ -53,10 +54,9 @@ public static class TownSprites
         "kkk",
     ];
 
-    private static readonly PixelSprite LitHouse = PixelSprite.Parse(HouseRows);
-    private static readonly PixelSprite DarkHouse = PixelSprite.Parse(Replace(HouseRows, DarkGlass));
-    private static readonly PixelSprite LitTallHouse = PixelSprite.Parse(TallHouseRows);
-    private static readonly PixelSprite DarkTallHouse = PixelSprite.Parse(Replace(TallHouseRows, DarkGlass));
+    private static readonly (char Light, char Dark)[] Roofs = [('r', 'R'), ('s', 'S'), ('o', 'B')];
+    private static readonly Dictionary<(TownPiece Piece, bool Lit, int Roof), PixelSprite> Houses = [];
+
     private static readonly PixelSprite LitLamp = PixelSprite.Parse(LampRows);
     private static readonly PixelSprite DarkLamp = PixelSprite.Parse(Replace(LampRows, ColdLamp));
 
@@ -69,13 +69,27 @@ public static class TownSprites
         ".b......b.",
         ".b......b.");
 
-    public static PixelSprite For(TownPiece piece, bool lit) => piece switch
+    public static PixelSprite For(TownPiece piece, bool lit, int roof = 0) => piece switch
     {
-        TownPiece.House => lit ? LitHouse : DarkHouse,
-        TownPiece.TallHouse => lit ? LitTallHouse : DarkTallHouse,
+        TownPiece.House or TownPiece.TallHouse => House(piece, lit, roof % Roofs.Length),
         TownPiece.Lamp => lit ? LitLamp : DarkLamp,
+        TownPiece.Tree => ScenerySprites.LeafyTree,
         _ => Stall,
     };
+
+    private static PixelSprite House(TownPiece piece, bool lit, int roof)
+    {
+        if (!Houses.TryGetValue((piece, lit, roof), out PixelSprite? sprite))
+        {
+            string[] rows = piece == TownPiece.House ? HouseRows : TallHouseRows;
+            (char light, char dark) = Roofs[roof];
+            IEnumerable<string> painted = rows.Select(row => row.Replace('r', light).Replace('R', dark));
+            sprite = PixelSprite.Parse([.. lit ? painted : Replace([.. painted], DarkGlass)]);
+            Houses[(piece, lit, roof)] = sprite;
+        }
+
+        return sprite;
+    }
 
     private static string[] Replace(string[] rows, char unlit) => [.. rows.Select(row => row.Replace(Glow, unlit))];
 }
