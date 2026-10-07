@@ -49,7 +49,7 @@ public sealed class GameApi
         Call(accessToken, "open_branch", new BranchArguments(townId));
 
     public Task<GameSnapshot> PostOfferAsync(string accessToken, OfferDraft draft, string townId) =>
-        Call(accessToken, "post_offer", new OfferArguments(draft.GiveGoodId, draft.GiveQuantity, draft.WantGoodId, draft.WantQuantity, townId));
+        Call(accessToken, "post_offer", new OfferArguments(draft.GiveGoodId, draft.GiveQuantity, draft.WantGoodId, draft.WantQuantity, townId, draft.FromWarehouse));
 
     public Task<GameSnapshot> CancelOfferAsync(string accessToken, long offerId) =>
         Call(accessToken, "cancel_offer", new OfferIdArguments(offerId));

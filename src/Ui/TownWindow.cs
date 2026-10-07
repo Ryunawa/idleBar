@@ -34,6 +34,7 @@ public partial class TownWindow : Window
         HBoxContainer header = new();
         header.AddThemeConstantOverride("separation", 10);
         _town = BarLabels.Create(18, BarPalette.Gold);
+        _town.TextOverrunBehavior = TextServer.OverrunBehavior.NoTrimming;
         _townPicker = new OptionButton { FocusMode = Control.FocusModeEnum.None, Visible = false };
         _townPicker.ItemSelected += index => ChooseTown(_townIds[(int)index]);
         _purse = BarLabels.Create(13, BarPalette.Text, HorizontalAlignment.Right);
@@ -165,7 +166,7 @@ public partial class TownWindow : Window
             { Branches: true } => $"Comptoir de {player.Name} · {context.TownName}",
             _ => $"Atelier de {player.Name} · {context.TownName}",
         };
-        _purse.Text = $"{NumberFormat.Amount(player.Coins)} écus · {storage} {snapshot.HoldingsLoadAt(context.TownId)}/{snapshot.HoldingsCapacity}";
+        _purse.Text = $"{NumberFormat.Coins(player.Coins)} · {storage} {snapshot.HoldingsLoadAt(context.TownId)}/{snapshot.HoldingsCapacity}";
         foreach (TownTab tab in Enum.GetValues<TownTab>().Where(_access.Shows))
         {
             _panels[(int)tab].Refresh(context);

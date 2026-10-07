@@ -16,6 +16,8 @@ public static class NumberFormat
 
     public static string Count(int count, string one, string many) => $"{Amount(count)} {(count > 1 ? many : one)}";
 
+    public static string Coins(double value) => $"{Amount(value)} {(value < 2 ? "écu" : "écus")}";
+
     private static string WithSuffix(double value)
     {
         int tier = Math.Min((int)Math.Floor(Math.Log10(value) / 3), Suffixes.Length - 1);

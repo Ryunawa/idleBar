@@ -25,6 +25,7 @@ public partial class RoutesPanel : VBoxContainer, ITownPanel
         HBoxContainer directiveRow = new();
         directiveRow.AddThemeConstantOverride("separation", 8);
         Label caption = BarLabels.Create(13, BarPalette.Muted);
+        caption.TextOverrunBehavior = TextServer.OverrunBehavior.NoTrimming;
         caption.Text = "Directive du voyage :";
         directiveRow.AddChild(caption);
         directiveRow.AddChild(_directive.Button);

@@ -37,7 +37,7 @@ public partial class CaravanPanel : VBoxContainer, ITownPanel
         wagons.AddChild(_wagon);
         wagons.AddChild(_attach);
         AddChild(wagons);
-        AddChild(ActionRow.Note("Chaque chariot ajoute 20 places dans la cale. Un chariot du charron s'attelle sans payer le prix fort de la ville."));
+        AddChild(ActionRow.Note("Chaque chariot ajoute 20 places dans la cale. Un chariot du charron s'attelle sans payer le prix fort de la ville : il est pris d'abord dans l'entrepôt de la ville, puis dans la cale."));
 
         AddChild(ActionRow.Heading("Équipements fabriqués par les artisans"));
         ScrollContainer scroll = new() { SizeFlagsVertical = SizeFlags.ExpandFill, HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
@@ -58,14 +58,15 @@ public partial class CaravanPanel : VBoxContainer, ITownPanel
         string cargo = snapshot.Cargo.Count == 0
             ? "La cale est vide."
             : "Cargaison : " + string.Join(", ", snapshot.Cargo.Select(line => $"{context.World.GoodName(line.GoodId)} × {NumberFormat.Amount(line.Quantity)}"));
-        _cargo.Text = carried > 0 ? $"{cargo} Contrats : {NumberFormat.Amount(carried)} places." : cargo;
+        _cargo.Text = carried > 0 ? $"{cargo} Contrats : {NumberFormat.Count(carried, "place", "places")}." : cargo;
 
         bool full = caravan.NextWagonPrice is not int;
-        _wagon.Text = caravan.NextWagonPrice is int price ? $"Acheter un chariot · {NumberFormat.Amount(price)} écus" : "Nombre maximal de chariots atteint";
+        _wagon.Text = caravan.NextWagonPrice is int price ? $"Acheter un chariot · {NumberFormat.Coins(price)}" : "Nombre maximal de chariots atteint";
         _wagon.Disabled = caravan.NextWagonPrice is not int cost || player.Coins < cost;
-        int built = context.Owned(WagonGood);
-        _attach.Text = $"Atteler un chariot du charron · {NumberFormat.Amount(built)} en cale";
-        _attach.Disabled = full || built == 0;
+        int loaded = context.Owned(WagonGood);
+        int stored = context.Storage.FirstOrDefault(line => line.GoodId == WagonGood)?.Quantity ?? 0;
+        _attach.Text = $"Atteler un chariot du charron · {NumberFormat.Amount(loaded)} en cale, {NumberFormat.Amount(stored)} à l'entrepôt";
+        _attach.Disabled = full || loaded + stored == 0;
 
         ActionRow.Clear(_fittings);
         foreach (FittingInfo fitting in context.World.Fittings)

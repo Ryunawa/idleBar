@@ -55,7 +55,7 @@ public partial class BranchesPanel : VBoxContainer, ITownPanel
         GameSnapshot snapshot = context.Snapshot;
         WorkshopState counter = snapshot.Workshop!;
         _level.Text = $"Comptoir niveau {counter.Level} · {NumberFormat.Amount(counter.StorageCapacity)} places d'entrepôt par ville";
-        _upgrade.Text = counter.NextLevelPrice is int price ? $"Agrandir · {NumberFormat.Amount(price)} écus" : "Niveau maximal";
+        _upgrade.Text = counter.NextLevelPrice is int price ? $"Agrandir · {NumberFormat.Coins(price)}" : "Niveau maximal";
         _upgrade.Disabled = counter.NextLevelPrice is not int cost || context.Player.Coins < cost;
 
         ActionRow.Clear(_list);
@@ -65,12 +65,12 @@ public partial class BranchesPanel : VBoxContainer, ITownPanel
             int stored = snapshot.StorageAt(townId).Sum(line => line.Quantity);
             int offers = snapshot.MyOffers.Count(offer => offer.TownId == townId && offer.Status == OfferStatus.Open);
             string role = townId == context.Player.HomeTownId ? "Siège" : "Succursale";
-            _list.AddChild(ActionRow.Create($"{world.TownName(townId)} · {role}", $"entrepôt {NumberFormat.Amount(stored)}/{NumberFormat.Amount(counter.StorageCapacity)} · {offers} offres au comptoir", string.Empty, true, () => { }));
+            _list.AddChild(ActionRow.Create($"{world.TownName(townId)} · {role}", $"entrepôt {NumberFormat.Amount(stored)}/{NumberFormat.Amount(counter.StorageCapacity)} · {NumberFormat.Count(offers, "offre", "offres")} au comptoir", string.Empty, true, () => { }));
         }
 
         _town.Fill(world.Towns.Where(town => !towns.Contains(town.Id)).Select(town => new PickerChoice(town.Id, town.Name)).ToList());
         int? next = context.Player.NextBranchPrice;
-        _open.Text = next is int branchPrice ? $"Ouvrir · {NumberFormat.Amount(branchPrice)} écus" : "Toutes les succursales sont ouvertes";
+        _open.Text = next is int branchPrice ? $"Ouvrir · {NumberFormat.Coins(branchPrice)}" : "Toutes les succursales sont ouvertes";
         _open.Disabled = next is not int affordable || context.Player.Coins < affordable || !_town.HasSelection;
     }
 }

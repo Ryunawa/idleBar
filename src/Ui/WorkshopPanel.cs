@@ -74,13 +74,13 @@ public partial class WorkshopPanel : VBoxContainer, ITownPanel
         }
 
         _level.Text = $"Atelier niveau {workshop.Level} · vitesse ×{workshop.Speed.ToString("0.##", French)} · entrepôt {workshop.StorageCapacity} · file de {workshop.MaxQueue}";
-        _upgrade.Text = workshop.NextLevelPrice is int price ? $"Agrandir · {NumberFormat.Amount(price)} écus" : "Niveau maximal";
+        _upgrade.Text = workshop.NextLevelPrice is int price ? $"Agrandir · {NumberFormat.Coins(price)}" : "Niveau maximal";
         _upgrade.Disabled = workshop.NextLevelPrice is not int cost || snapshot.Player.Coins < cost;
         RefreshStatus(world, workshop, context.Clock.Now);
     }
 
     private static string Describe(WorldData world, StockLine line) =>
-        $"{NumberFormat.Amount(line.Quantity)} {world.GoodName(line.GoodId).ToLower(French)}";
+        ExchangeText.Lot(world, line.GoodId, line.Quantity);
 
     private HBoxContainer CreateRecipeRow(TownContext context, WorkshopState workshop, RecipeInfo recipe)
     {

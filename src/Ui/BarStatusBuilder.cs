@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using IdleBar.Pixel;
 using IdleBar.Trade;
@@ -14,8 +13,6 @@ public static class BarStatusBuilder
     private const string TarpFitting = "bachage";
     private const string IronWheelsFitting = "roues_cerclees";
     private const string MasterpieceIcon = "chef_oeuvre";
-
-    private static readonly CultureInfo French = CultureInfo.GetCultureInfo("fr-FR");
 
     private static readonly SlotContent SignInSlot =
         new("Compte", "Se connecter", BarPalette.Gold, "Connecte-toi ou crée un compte pour commencer.");
@@ -48,7 +45,7 @@ public static class BarStatusBuilder
     private static BarStatus DescribePlayer(GameSession session, RecipeInfo? relaunch)
     {
         PlayerState player = session.Player!;
-        string coins = $"{NumberFormat.Amount(player.Coins)} écus";
+        string coins = $"{NumberFormat.Coins(player.Coins)}";
         BarStatus status = session switch
         {
             { Caravan: CaravanState caravan } => DescribeCaravan(session, caravan, coins),
@@ -123,13 +120,13 @@ public static class BarStatusBuilder
         if (workshop.IsProducing && world?.FindRecipe(workshop.RecipeId!) is RecipeInfo recipe)
         {
             int units = workshop.RemainingBatches(now) * recipe.OutputQuantity;
-            string good = world.GoodName(recipe.OutputGoodId).ToLower(French);
+            string lot = ExchangeText.Lot(world, recipe.OutputGoodId, units);
             string finish = DurationFormat.ClockTime(workshop.FinishesAt!.Value);
             return new BarStatus(
                 coins,
                 situation,
                 situation,
-                new SlotContent("Atelier", $"{units} {good} · {finish}", BarPalette.Success, $"Ton atelier fabrique encore {units} {good}, fini à {finish}."),
+                new SlotContent("Atelier", $"{lot} · {finish}", BarPalette.Success, $"Ton atelier fabrique encore {lot}, fini à {finish}."),
                 LaneScene.Workshop(biome, snapshot.Player.CraftId, true, workshop.BatchProgress(now), products, town));
         }
 
@@ -148,7 +145,7 @@ public static class BarStatusBuilder
             return new SlotContent("Atelier", "À l'arrêt", BarPalette.Warning, "Ton atelier ne produit rien. Clique pour lancer une fabrication.");
         }
 
-        string good = world.GoodName(relaunch.OutputGoodId).ToLower(French);
+        string good = world.GoodNoun(relaunch.OutputGoodId, 2);
         return new SlotContent(
             "Atelier à l'arrêt",
             $"Relancer : {good}",

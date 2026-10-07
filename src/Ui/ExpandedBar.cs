@@ -38,7 +38,9 @@ public partial class ExpandedBar : MarginContainer
         VBoxContainer stats = new() { CustomMinimumSize = new Vector2(170, 0), Alignment = BoxContainer.AlignmentMode.Center };
         stats.AddThemeConstantOverride("separation", 0);
         _coins = BarLabels.Create(19, BarPalette.Gold);
+        _coins.TextOverrunBehavior = TextServer.OverrunBehavior.NoTrimming;
         _situation = BarLabels.Create(11, BarPalette.Muted);
+        _situation.TextOverrunBehavior = TextServer.OverrunBehavior.NoTrimming;
         stats.AddChild(_coins);
         stats.AddChild(_situation);
         row.AddChild(stats);

@@ -19,6 +19,13 @@ public sealed record WorldData(
 {
     public string GoodName(string goodId) => FindGood(goodId)?.Name ?? goodId;
 
+    public string GoodNoun(string goodId, double quantity)
+    {
+        GoodInfo? good = FindGood(goodId);
+        string? noun = quantity < 2 ? good?.OneName : good?.ManyName;
+        return noun ?? GoodName(goodId).ToLowerInvariant();
+    }
+
     public GoodInfo? FindGood(string goodId) => Goods.FirstOrDefault(good => good.Id == goodId);
 
     public bool IsCrafted(string goodId) => FindGood(goodId)?.Crafted == true;

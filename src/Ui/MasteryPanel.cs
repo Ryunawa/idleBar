@@ -94,7 +94,7 @@ public partial class MasteryPanel : VBoxContainer, ITownPanel
             long pieceId = piece.Id;
             string title = $"{world.GoodName(piece.GoodId)} de {piece.Maker}";
             string detail = $"Fait le {piece.CreatedAt.ToLocalTime():dd/MM} · à {world.TownName(piece.TownId)}";
-            _list.AddChild(ActionRow.Create(title, detail, $"Vendre · {NumberFormat.Amount(piece.Price)} écus", piece.TownId != context.TownId,
+            _list.AddChild(ActionRow.Create(title, detail, $"Vendre · {NumberFormat.Coins(piece.Price)}", piece.TownId != context.TownId,
                 () => Requested?.Invoke(actions => actions.SellMasterpieceAsync(pieceId))));
         }
     }

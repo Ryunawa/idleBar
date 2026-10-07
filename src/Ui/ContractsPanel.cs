@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Godot;
 using IdleBar.Trade;
@@ -7,73 +8,66 @@ namespace IdleBar.Ui;
 
 public partial class ContractsPanel : VBoxContainer, ITownPanel
 {
-    private VBoxContainer _list = null!;
-    private ContractForm _form = null!;
-    private string _townId = string.Empty;
+    private readonly AvailableContractsView _available = new() { SizeFlagsVertical = SizeFlags.ExpandFill };
+    private readonly CarriedContractsView _carried = new() { SizeFlagsVertical = SizeFlags.ExpandFill };
+    private readonly ShippedContractsView _shipped = new() { SizeFlagsVertical = SizeFlags.ExpandFill };
+    private readonly Dictionary<ContractView, Button> _buttons = [];
+    private readonly ButtonGroup _group = new();
+    private HBoxContainer _bar = null!;
+    private ContractView? _chosen;
 
     public event Action<TownCommand>? Requested;
 
     public override void _Ready()
     {
         AddThemeConstantOverride("separation", 8);
-        ScrollContainer scroll = new() { SizeFlagsVertical = SizeFlags.ExpandFill, HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
-        _list = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
-        _list.AddThemeConstantOverride("separation", 6);
-        scroll.AddChild(_list);
-        AddChild(scroll);
+        _bar = new HBoxContainer();
+        _bar.AddThemeConstantOverride("separation", 6);
+        AddChild(_bar);
+        foreach (ContractView view in Enum.GetValues<ContractView>())
+        {
+            Button button = new() { ToggleMode = true, ButtonGroup = _group, FocusMode = FocusModeEnum.None, SizeFlagsHorizontal = SizeFlags.ExpandFill };
+            button.AddThemeColorOverride("font_pressed_color", BarPalette.Gold);
+            button.Pressed += () => Show(view);
+            _bar.AddChild(button);
+            _buttons[view] = button;
+        }
 
-        AddChild(new HSeparator());
-        _form = new ContractForm();
-        _form.Submitted += draft => Requested?.Invoke(actions => actions.PostContractAsync(draft, _townId));
-        AddChild(_form);
+        _available.Requested += command => Requested?.Invoke(command);
+        _shipped.Requested += command => Requested?.Invoke(command);
+        AddChild(_available);
+        AddChild(_carried);
+        AddChild(_shipped);
     }
 
     public void Refresh(TownContext context)
     {
-        _townId = context.TownId;
-        _form.Refresh(context);
-        ActionRow.Clear(_list);
-        if (context.Itinerant)
-        {
-            AddAvailable(context);
-        }
+        IReadOnlyList<ContractInfo> mine = context.Snapshot.MyContracts;
+        _buttons[ContractView.Available].Text = $"À prendre · {context.Snapshot.Contracts.Count}";
+        _buttons[ContractView.Carried].Text = $"Je transporte · {mine.Count(contract => contract is { Role: ContractRole.Carrier, IsUnderway: true })}";
+        _buttons[ContractView.Shipped].Text = $"J'expédie · {mine.Count(contract => contract is { Role: ContractRole.Shipper, IsUnderway: true })}";
+        _bar.Visible = context.Itinerant;
 
-        _list.AddChild(ActionRow.Heading("Mes contrats"));
-        if (context.Snapshot.MyContracts.Count == 0)
-        {
-            _list.AddChild(ActionRow.Note("Aucun contrat en cours."));
-        }
-
-        DateTimeOffset now = context.Clock.Now;
-        foreach (ContractInfo contract in context.Snapshot.MyContracts)
-        {
-            long contractId = contract.Id;
-            bool cancellable = contract is { Status: ContractStatus.Open, Role: ContractRole.Shipper };
-            _list.AddChild(ActionRow.Create(ExchangeText.Journey(context.World, contract), ExchangeText.ContractState(contract, now), cancellable ? "Annuler" : string.Empty, false,
-                () => Requested?.Invoke(actions => actions.CancelContractAsync(contractId))));
-        }
+        _available.Refresh(context);
+        _carried.Refresh(context);
+        _shipped.Refresh(context);
+        Show(context.Itinerant ? _chosen ?? ContractView.Available : ContractView.Shipped);
     }
 
-    private void AddAvailable(TownContext context)
+    private void Show(ContractView view)
     {
-        WorldData world = context.World;
-        _list.AddChild(ActionRow.Heading("Contrats à prendre"));
-        ContractInfo[] available = context.Snapshot.Contracts.OrderByDescending(contract => contract.OriginTownId == context.TownId).ToArray();
-        if (available.Length == 0)
+        if (_bar.Visible)
         {
-            _list.AddChild(ActionRow.Note("Aucun marchand ne cherche de caravane pour l'instant."));
+            _chosen = view;
         }
 
-        foreach (ContractInfo contract in available)
+        foreach ((ContractView each, Button button) in _buttons)
         {
-            bool here = contract.OriginTownId == context.TownId;
-            int seconds = world.FindJourney(contract.OriginTownId, contract.DestinationTownId)?.Seconds ?? 0;
-            string detail = $"{contract.Shipper} · {NumberFormat.Amount(contract.Reward)} écus · caution {NumberFormat.Amount(contract.Deposit)} · "
-                + $"{DurationFormat.Span(TimeSpan.FromSeconds(seconds))} de route"
-                + (here ? string.Empty : $" · à charger à {world.TownName(contract.OriginTownId)}");
-            long contractId = contract.Id;
-            _list.AddChild(ActionRow.Create(ExchangeText.Journey(world, contract), detail, "Accepter", !here || context.Player.Coins < contract.Deposit,
-                () => Requested?.Invoke(actions => actions.AcceptContractAsync(contractId))));
+            button.SetPressedNoSignal(each == view);
         }
+
+        _available.Visible = view == ContractView.Available;
+        _carried.Visible = view == ContractView.Carried;
+        _shipped.Visible = view == ContractView.Shipped;
     }
 }

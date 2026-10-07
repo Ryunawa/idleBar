@@ -81,6 +81,10 @@ begin
     where journey ->> 'from_town_id' = 'port-sable' and journey ->> 'to_town_id' = 'rocheclaire') = 70,
     'Port-Sable to Rocheclaire goes through Hautecombe';
   assert (v_world -> 'rules' ->> 'offer_hours')::int = 48, 'offers last 48 hours';
+  assert (select good ->> 'one_name' from jsonb_array_elements(v_world -> 'goods') good where good ->> 'id' = 'outils') = 'outil',
+    'the world names one unit of a good';
+  assert (select good ->> 'many_name' from jsonb_array_elements(v_world -> 'goods') good where good ->> 'id' = 'chariot') = 'chariots',
+    'the world names several units of a good';
   assert v_state -> 'player' ->> 'craft_id' = 'negociant', 'the merchant is playable';
   assert (v_state -> 'workshop' ->> 'storage_capacity')::int = 60, 'the counter stores like a level 1 workshop';
   assert (v_state -> 'player' ->> 'next_branch_price')::int = 300, 'the first branch costs 300 coins';
@@ -270,6 +274,19 @@ begin
   assert pg_temp.loaded(v_state, 'sel') = 5 and pg_temp.stored(v_state, 'rocheclaire', 'sel') = 0, 'goods are withdrawn into the hold';
   v_state := public.deposit_goods('sel', 3);
   assert pg_temp.loaded(v_state, 'sel') = 2 and pg_temp.stored(v_state, 'rocheclaire', 'sel') = 3, 'goods are deposited in the warehouse';
+end;
+$$;
+
+select pg_temp.expect_refusal($$select public.post_offer('sel', 4, null, 30, null, true)$$, 'pas assez dans ton entrepôt');
+
+do $$
+declare
+  v_state jsonb := public.post_offer('sel', 3, null, 30, null, true);
+begin
+  assert pg_temp.stored(v_state, 'rocheclaire', 'sel') = 0, 'a caravan offers goods from its town warehouse';
+  assert pg_temp.loaded(v_state, 'sel') = 2, 'offering from the warehouse leaves the hold untouched';
+  v_state := public.cancel_offer((v_state -> 'my_offers' -> 0 ->> 'id')::bigint);
+  assert pg_temp.stored(v_state, 'rocheclaire', 'sel') = 3, 'withdrawn goods go back to the warehouse';
 end;
 $$;
 
@@ -489,6 +506,21 @@ set role authenticated;
 
 select public.buy_goods('sel', 1000);
 select pg_temp.expect_refusal(format('select public.accept_contract(%s)', pg_temp.id_of('refused')), 'n''a pas la place');
+
+do $$
+declare
+  v_before jsonb := public.deposit_goods('sel', 5);
+  v_after jsonb := public.sell_goods('sel', 3);
+begin
+  assert pg_temp.stored(v_after, 'hautecombe', 'sel') = 2, 'a caravan sells from its town warehouse first';
+  assert pg_temp.loaded(v_after, 'sel') = pg_temp.loaded(v_before, 'sel'), 'the hold is kept while the warehouse has stock';
+  assert pg_temp.coins(v_after) > pg_temp.coins(v_before), 'the warehouse goods are paid';
+
+  v_after := public.sell_goods('sel', 4);
+  assert pg_temp.stored(v_after, 'hautecombe', 'sel') = 0, 'the warehouse is emptied';
+  assert pg_temp.loaded(v_after, 'sel') = pg_temp.loaded(v_before, 'sel') - 2, 'the rest of the sale comes from the hold';
+end;
+$$;
 
 do $$
 begin

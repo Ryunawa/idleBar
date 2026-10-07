@@ -5,7 +5,7 @@ Un jeu de commerce en pixel art qui vit dans une barre discrète ancrée en bas 
 ## Décisions validées
 
 - **La barre reste discrète, en bas de l'écran.** C'est la seule chose à garder à tout prix. Elle se replie à 24 px ; les fenêtres ne s'ouvrent qu'à la demande.
-- **Tout est en pixel art.** Les sprites sont des grilles de caractères dans le code, sans fichier image.
+- **Tout est en pixel art.** Les sprites de la barre sont des grilles de caractères dans le code, sans fichier image. Les icônes des marchandises dans les fenêtres sont des PNG 32×32 générés avec PixelLab.
 - **Supabase a le dernier mot.** Le compte est obligatoire, chaque action est une fonction SQL `security definer` qui vérifie tout, et le RLS est activé sur toutes les tables.
 - **Deux familles de métiers.**
   - Sédentaires : forgeron, charron, tisserand, herboriste, négociant. Ils ont un atelier et ne voyagent jamais. Ils peuvent déménager, mais c'est payant et rare.
@@ -139,7 +139,7 @@ Un jeu de commerce en pixel art qui vit dans une barre discrète ancrée en bas 
    ```bash
    git config user.email "robin.douet@gmail.com"
    ```
-3. **Mettre Supabase à jour** : dans l'éditeur SQL, exécuter `supabase/01_world.sql` puis tous les suivants jusqu'à `11_mastery.sql`, dans l'ordre. Ils peuvent être rejoués sans risque, et ils migrent une base de l'étape 1. Le client ne fonctionne qu'avec ces scripts à jour.
+3. **Mettre Supabase à jour** : dans l'éditeur SQL, exécuter `supabase/01_world.sql` puis tous les suivants jusqu'au dernier numéro, dans l'ordre. Ils peuvent être rejoués sans risque, et ils migrent une base de l'étape 1. Le client ne fonctionne qu'avec ces scripts à jour.
    - Pour tester vite :
      ```sql
      update private.settings set travel_time_factor = 0.02, craft_time_factor = 0.02;
@@ -174,6 +174,7 @@ Un jeu de commerce en pixel art qui vit dans une barre discrète ancrée en bas 
   - `09` : les contrats de transport et les nouvelles vues.
   - `10` : les événements (route, panne, commandes spéciales), les consignes et le journal. Leurs tables sont dans `01` (types, réactions, chances par biome) et `02` (consignes, événements à venir, commandes, journal).
   - `11` : la maîtrise (rangs, talents, chefs-d'œuvre, équipements et attelage de la caravane). Ses tables sont dans `01` (talents, équipements) et `02` (expérience, talents choisis, chefs-d'œuvre, équipements installés).
+  - `12` : le caravanier puise aussi dans l'entrepôt de la ville pour vendre au marché, publier au comptoir et atteler un chariot du charron (entrepôt d'abord, puis cale).
   - `tests/` : les tests SQL.
 - `src/Cloud/` : l'authentification Supabase et les appels aux fonctions SQL.
 - `src/Trade/` : le modèle de jeu.
@@ -184,6 +185,7 @@ Un jeu de commerce en pixel art qui vit dans une barre discrète ancrée en bas 
   - `TownWindow` : une page par onglet (`ITownPanel`), qui reçoit un `TownContext` (monde, état, horloge, ville choisie) et émet des `TownCommand` exécutées par `GameDialogs`.
   - `BarStatusBuilder`, `CounterStatus` et `NewsSlot` : ce qu'affiche la barre.
   - `SessionBanners` : les bannières (arrivée, production, échanges, journal) ; `SeenMarker` : ce qui est marqué comme vu.
+- `assets/goods/` : une icône PNG par marchandise, nommée d'après son identifiant (`sel.png`, `chef_oeuvre.png`…), affichée par `GoodBadge`. Une marchandise sans fichier s'affiche sans icône.
 - `src/Desktop/` : l'ancrage de la barre dans Windows (`AppBar`) et la détection des écrans (`DisplayScreens`). Ne pas casser.
 - `src/Ui/BarPlacement.cs` : le repli, la taille et l'écran de la barre ; `SettingsWindow` : la fenêtre Réglages.
 
@@ -195,7 +197,7 @@ Un jeu de commerce en pixel art qui vit dans une barre discrète ancrée en bas 
   - types explicites et records pour les données ;
   - textes du jeu en français.
 - **Règles du jeu** : elles vivent toutes côté serveur. Toute nouvelle table reçoit le RLS, un `revoke` pour `anon` et `authenticated`, et un test dans `security_test.sql`.
-- **Scripts SQL** : ils doivent pouvoir être rejoués (`if not exists`, `on conflict`, `create or replace`).
+- **Scripts SQL** : ils doivent pouvoir être rejoués (`if not exists`, `on conflict`, `create or replace`). Chaque changement va dans un nouveau script numéroté : on ne modifie jamais un script déjà écrit, pour savoir exactement quoi exécuter sur Supabase.
 - **Sprites** : chaque symbole utilisé doit exister dans `PixelPalette`, sinon la barre plante au chargement.
 
 ## Équilibrage à revoir après les premières parties

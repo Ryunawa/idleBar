@@ -95,11 +95,11 @@ public partial class JournalPanel : VBoxContainer, ITownPanel
     {
         WorldData world = context.World;
         int held = context.Snapshot.StorageAt(order.TownId).FirstOrDefault(line => line.GoodId == order.GoodId)?.Quantity ?? 0;
-        string title = $"{ExchangeText.Lot(world, order.GoodId, order.Quantity)} · {NumberFormat.Amount(order.UnitPrice)} écus pièce";
+        string title = $"{ExchangeText.Lot(world, order.GoodId, order.Quantity)} · {NumberFormat.Coins(order.UnitPrice)} pièce";
         string detail = order.Status switch
         {
             SpecialOrderStatus.Open => $"Client de {world.TownName(order.TownId)} · avant {DurationFormat.Moment(order.Deadline, now)} · en stock {NumberFormat.Amount(held)}/{NumberFormat.Amount(order.Quantity)}",
-            SpecialOrderStatus.Delivered => $"Livrée · {NumberFormat.Amount(order.Quantity * order.UnitPrice)} écus reçus",
+            SpecialOrderStatus.Delivered => $"Livrée · payée {NumberFormat.Coins(order.Quantity * order.UnitPrice)}",
             SpecialOrderStatus.Expired => "Expirée",
             _ => "Refusée",
         };

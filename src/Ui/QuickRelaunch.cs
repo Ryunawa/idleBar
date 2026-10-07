@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using IdleBar.Trade;
@@ -8,8 +7,6 @@ namespace IdleBar.Ui;
 public sealed class QuickRelaunch
 {
     private const int MaxBatches = 99;
-
-    private static readonly CultureInfo French = CultureInfo.GetCultureInfo("fr-FR");
 
     private readonly GameSession _session;
     private readonly GameActions _actions;
@@ -46,10 +43,10 @@ public sealed class QuickRelaunch
         }
 
         WorkshopState? workshop = _session.Workshop;
-        string good = _session.World?.GoodName(recipe.OutputGoodId).ToLower(French) ?? recipe.OutputGoodId;
         int units = (workshop?.Queued ?? 0) * recipe.OutputQuantity;
+        string lot = _session.World is WorldData world ? ExchangeText.Lot(world, recipe.OutputGoodId, units) : $"{NumberFormat.Amount(units)} {recipe.OutputGoodId}";
         string finish = workshop?.FinishesAt is { } finishesAt ? $", fini à {DurationFormat.ClockTime(finishesAt)}" : string.Empty;
-        return new RelaunchOutcome(true, $"Atelier relancé : {NumberFormat.Amount(units)} {good}{finish}");
+        return new RelaunchOutcome(true, $"Atelier relancé : {lot}{finish}");
     }
 
     private void RememberRecipe()

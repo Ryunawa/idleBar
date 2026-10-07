@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
@@ -10,10 +10,11 @@ public partial class OfferForm : VBoxContainer
 {
     private const int MaxAmount = 99999;
     private const float CaptionWidth = 70;
-    private const float PickerWidth = 170;
+    private const float PickerWidth = 200;
 
     private readonly ChoicePicker _give = new(PickerWidth);
     private readonly ChoicePicker _want = new(PickerWidth);
+    private readonly List<OfferStock> _stocks = [];
     private SpinBox _giveQuantity = null!;
     private SpinBox _wantQuantity = null!;
 
@@ -26,6 +27,7 @@ public partial class OfferForm : VBoxContainer
 
         _giveQuantity = AmountBox.Create(10, MaxAmount);
         AddChild(CreateLine("Je donne", _giveQuantity, _give.Button, null));
+        _give.Button.ItemSelected += _ => LimitQuantity();
 
         _wantQuantity = AmountBox.Create(100, MaxAmount);
         Button publish = new() { Text = "Publier", FocusMode = FocusModeEnum.None };
@@ -35,15 +37,38 @@ public partial class OfferForm : VBoxContainer
 
     public void Refresh(TownContext context)
     {
-        PickerChoice coins = new(null, "écus");
-        List<PickerChoice> owned = [coins];
-        owned.AddRange(context.Holdings.Select(line => new PickerChoice(line.GoodId, $"{context.World.GoodName(line.GoodId)} ({NumberFormat.Amount(line.Quantity)})")));
-        _give.Fill(owned);
+        WorldData world = context.World;
+        string? holdingsPlace = context.Itinerant ? "cale" : null;
+        _stocks.Clear();
+        _stocks.Add(new OfferStock(null, false, "écus", context.Player.Coins));
+        _stocks.AddRange(context.Holdings.Select(line => new OfferStock(line.GoodId, false, Describe(world, line, holdingsPlace), line.Quantity)));
+        if (context.Itinerant)
+        {
+            _stocks.AddRange(context.Storage.Select(line => new OfferStock(line.GoodId, true, Describe(world, line, "entrepôt"), line.Quantity)));
+        }
 
+        _give.Fill(_stocks.Select(stock => new PickerChoice(stock.PickerId, stock.Label)).ToList());
+        LimitQuantity();
+
+        PickerChoice coins = new(null, "écus");
         List<PickerChoice> goods = [coins];
         goods.AddRange(context.World.Goods.Select(good => new PickerChoice(good.Id, good.Name)));
         _want.Fill(goods);
     }
+
+    private void LimitQuantity()
+    {
+        long available = SelectedStock()?.Available ?? 1;
+        _giveQuantity.MaxValue = Math.Clamp(available, 1, MaxAmount);
+    }
+
+    private OfferStock? SelectedStock() =>
+        _give.HasSelection ? _stocks.FirstOrDefault(stock => stock.PickerId == _give.SelectedId) : null;
+
+    private static string Describe(WorldData world, StockLine line, string? place) =>
+        place is null
+            ? $"{world.GoodName(line.GoodId)} ({NumberFormat.Amount(line.Quantity)})"
+            : $"{world.GoodName(line.GoodId)} · {place} ({NumberFormat.Amount(line.Quantity)})";
 
     private static HBoxContainer CreateLine(string caption, SpinBox quantity, OptionButton picker, Button? action)
     {
@@ -65,11 +90,11 @@ public partial class OfferForm : VBoxContainer
 
     private void Submit()
     {
-        if (!_give.HasSelection || !_want.HasSelection)
+        if (!_want.HasSelection || SelectedStock() is not OfferStock stock)
         {
             return;
         }
 
-        Submitted?.Invoke(new OfferDraft(_give.SelectedId, (int)_giveQuantity.Value, _want.SelectedId, (int)_wantQuantity.Value));
+        Submitted?.Invoke(new OfferDraft(stock.GoodId, (int)_giveQuantity.Value, _want.SelectedId, (int)_wantQuantity.Value, stock.FromWarehouse));
     }
 }

@@ -268,6 +268,22 @@ begin
 end;
 $$;
 
+reset role;
+insert into public.warehouses (player_id, town_id, good_id, quantity)
+select player_id, town_id, 'chariot', 1 from public.caravans where player_id = 'dddddddd-dddd-dddd-dddd-dddddddddddd';
+select pg_temp.give_cargo('dddddddd-dddd-dddd-dddd-dddddddddddd', 'chariot', 1);
+set role authenticated;
+
+do $$
+declare
+  v_state jsonb := public.attach_wagon();
+begin
+  assert (v_state -> 'caravan' ->> 'wagons')::int = 3, 'a wagon waiting in the town warehouse is attached';
+  assert pg_temp.stored(v_state, 'chariot') = 0, 'the warehouse wagon goes first';
+  assert pg_temp.loaded(v_state, 'chariot') = 1, 'the wagon in the hold stays for later';
+end;
+$$;
+
 select pg_temp.expect_refusal($$select public.install_fitting('bachage')$$, 'déjà cet équipement');
 
 select public.buy_goods('sel', 20) is not null;

@@ -26,7 +26,7 @@ public partial class CounterPanel : VBoxContainer, ITownPanel
         _form = new OfferForm();
         _form.Submitted += draft => Requested?.Invoke(actions => actions.PostOfferAsync(draft, _townId));
         AddChild(_form);
-        AddChild(ActionRow.Note("Ce que tu reçois arrive à l'entrepôt de la ville. Une offre reste 48 h au comptoir, puis te revient."));
+        AddChild(ActionRow.Note("Ce que tu reçois arrive à l'entrepôt de la ville. Une offre reste 48 h au comptoir ; retirée ou expirée, elle revient à ton entrepôt."));
     }
 
     public void Refresh(TownContext context)

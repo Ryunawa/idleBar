@@ -1,18 +1,15 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using IdleBar.Trade;
 
 namespace IdleBar.Ui;
 
 public static class ExchangeText
 {
-    private static readonly CultureInfo French = CultureInfo.GetCultureInfo("fr-FR");
-
     public static string Lot(WorldData world, string? goodId, int quantity) =>
         goodId is null
-            ? $"{NumberFormat.Amount(quantity)} écus"
-            : $"{NumberFormat.Amount(quantity)} {world.GoodName(goodId).ToLower(French)}";
+            ? NumberFormat.Coins(quantity)
+            : $"{NumberFormat.Amount(quantity)} {world.GoodNoun(goodId, quantity)}";
 
     public static string Offer(WorldData world, OfferInfo offer) =>
         $"{Lot(world, offer.GiveGoodId, offer.GiveQuantity)} contre {Lot(world, offer.WantGoodId, offer.WantQuantity)}";
@@ -31,13 +28,13 @@ public static class ExchangeText
     public static string ContractState(ContractInfo contract, DateTimeOffset now) => (contract.Status, contract.Role) switch
     {
         (ContractStatus.Open, _) => $"en attente d'un caravanier · sinon transporteur du jeu à {DurationFormat.Moment(contract.TakeoverAt, now)}",
-        (ContractStatus.Carried, ContractRole.Carrier) => $"à livrer avant {DurationFormat.Moment(contract.Deadline!.Value, now)} · {NumberFormat.Amount(contract.Reward)} écus + caution",
+        (ContractStatus.Carried, ContractRole.Carrier) => $"à livrer avant {DurationFormat.Moment(contract.Deadline!.Value, now)} · {NumberFormat.Coins(contract.Reward)} + caution",
         (ContractStatus.Carried, _) => $"{contract.Carrier ?? "un caravanier"} transporte · avant {DurationFormat.Moment(contract.Deadline!.Value, now)}",
         (ContractStatus.Shipped, _) => $"transporteur du jeu · arrivée vers {DurationFormat.Moment(contract.GameArrivesAt, now)}",
-        (ContractStatus.Delivered, ContractRole.Carrier) => $"livré · {NumberFormat.Amount(contract.Reward)} écus gagnés, caution rendue",
+        (ContractStatus.Delivered, ContractRole.Carrier) => $"livré · gain de {NumberFormat.Coins(contract.Reward)}, caution rendue",
         (ContractStatus.Delivered, _) => "livré à l'entrepôt",
         (ContractStatus.Failed, ContractRole.Carrier) => "en retard · caution perdue, marchandise gardée",
-        (ContractStatus.Failed, _) => $"en retard · caution de {NumberFormat.Amount(contract.Deposit)} écus reçue",
+        (ContractStatus.Failed, _) => $"en retard · caution de {NumberFormat.Coins(contract.Deposit)} reçue",
         _ => "annulé",
     };
 

@@ -10,6 +10,7 @@ public static class BatchPicker
         HBoxContainer picker = new();
         picker.AddThemeConstantOverride("separation", 6);
         Label label = BarLabels.Create(12, BarPalette.Muted);
+        label.TextOverrunBehavior = TextServer.OverrunBehavior.NoTrimming;
         label.Text = caption;
         picker.AddChild(label);
 

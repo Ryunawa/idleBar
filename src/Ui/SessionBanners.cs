@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Linq;
 using IdleBar.Trade;
 
@@ -11,8 +10,6 @@ public sealed class SessionBanners
     private const float ProductionBannerSeconds = 6;
     private const float NewsBannerSeconds = 8;
     private const float DecisionBannerSeconds = 12;
-
-    private static readonly CultureInfo French = CultureInfo.GetCultureInfo("fr-FR");
 
     private readonly GameSession _session;
 
@@ -39,8 +36,7 @@ public sealed class SessionBanners
         int delivered = current.BatchesDeliveredSince(previous);
         if (delivered > 0 && world.FindRecipe(previous.Workshop!.RecipeId!) is RecipeInfo recipe)
         {
-            string good = world.GoodName(recipe.OutputGoodId).ToLower(French);
-            Announced?.Invoke($"+{NumberFormat.Amount(delivered * recipe.OutputQuantity)} {good} à l'entrepôt", ProductionBannerSeconds);
+            Announced?.Invoke($"+{ExchangeText.Lot(world, recipe.OutputGoodId, delivered * recipe.OutputQuantity)} à l'entrepôt", ProductionBannerSeconds);
         }
 
         if (current.News.Total > previous.News.Total)
