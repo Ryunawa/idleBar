@@ -19,6 +19,7 @@ public partial class RoadLane : Control
     private const float GainRise = 5f;
     private const float SparkSeconds = 0.6f;
     private const int Sparks = 6;
+    private const int LabelLift = 7;
 
     private readonly List<FloatingGain> _gains = [];
     private LaneScene _scene = LaneScene.Idle(string.Empty);
@@ -28,8 +29,16 @@ public partial class RoadLane : Control
     private string _banner = string.Empty;
     private float _bannerRemaining;
     private ProductPop _pop = ProductPop.None;
+    private IReadOnlyList<StreetPlot> _plots = [];
+    private StreetBuilding? _hovered;
+    private float _artScale = 1;
+    private int _ground;
 
     public event Action? Pressed;
+
+    public event Action<StreetBuilding>? BuildingPressed;
+
+    public LaneScene Scene => _scene;
 
     public void SetScene(LaneScene scene)
     {
@@ -76,10 +85,31 @@ public partial class RoadLane : Control
 
     public override void _GuiInput(InputEvent @event)
     {
-        if (@event is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left })
+        switch (@event)
         {
-            AcceptEvent();
-            Pressed?.Invoke();
+            case InputEventMouseMotion motion:
+                _hovered = BuildingAt(motion.Position);
+                break;
+            case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } click:
+                AcceptEvent();
+                if (BuildingAt(click.Position) is StreetBuilding building)
+                {
+                    BuildingPressed?.Invoke(building);
+                }
+                else
+                {
+                    Pressed?.Invoke();
+                }
+
+                break;
+        }
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationMouseExit)
+        {
+            _hovered = null;
         }
     }
 
@@ -113,7 +143,9 @@ public partial class RoadLane : Control
     {
         float contentScale = GetWindow().ContentScaleFactor;
         float physicalPixel = Math.Max(1, MathF.Round(Size.Y * contentScale / TargetArtRows, MidpointRounding.AwayFromZero));
-        PixelCanvas canvas = new(this, physicalPixel / contentScale, Size);
+        _artScale = physicalPixel / contentScale;
+        PixelCanvas canvas = new(this, _artScale, Size);
+        _ground = LandscapePainter.GroundTop(canvas);
         Ambience ambience = new(_time, SkyLight.At(DateTime.Now));
         BiomeStyle style = BiomeStyles.For(_scene.Biome);
         CaravanLook look = _scene.Look ?? CaravanLook.Plain;
@@ -124,20 +156,25 @@ public partial class RoadLane : Control
             FolkPainter.PaintBirds(canvas, ambience);
         }
 
+        _plots = [];
         switch (_scene.Mode)
         {
             case LaneMode.Travelling:
                 FolkPainter.PaintTraffic(canvas, _time, ScrollSpeed);
                 CaravanPainter.PaintTravelling(canvas, _time, _scene.Progress, look);
+                _plots = [StreetPainter.TravelPlot(canvas, look)];
                 break;
             case LaneMode.Halted:
                 CaravanPainter.PaintHalted(canvas, _scene.Progress, look, _scene.Hazard, _time);
+                _plots = [StreetPainter.TravelPlot(canvas, look)];
                 break;
-            case LaneMode.InTown:
-                CaravanPainter.PaintInTown(canvas, look, ambience);
+            case LaneMode.InTown when _scene.Street is StreetState street:
+                _plots = StreetPainter.Layout(canvas, street, look, 0);
+                StreetPainter.Paint(canvas, _plots, new StreetScene(street, false, _scene.Errands, [], ProductPop.None, look), ambience);
                 break;
-            case LaneMode.Workshop:
-                WorkshopPainter.Paint(canvas, _scene.CraftId, ambience, _scene.Busy, _scene.Errands, _scene.Products, _pop);
+            case LaneMode.Workshop when _scene.Street is StreetState street:
+                _plots = StreetPainter.Layout(canvas, street, null, _scene.Products.Count);
+                StreetPainter.Paint(canvas, _plots, new StreetScene(street, _scene.Busy, _scene.Errands, _scene.Products, _pop, null), ambience);
                 if (_scene.Busy && _scene.Progress > 0)
                 {
                     TownPainter.PaintProgress(canvas, _scene.Progress);
@@ -152,7 +189,40 @@ public partial class RoadLane : Control
             WeatherPainter.PaintRain(canvas, _time);
         }
 
+        PaintHover(canvas);
         PaintGains(canvas);
+    }
+
+    private StreetBuilding? BuildingAt(Vector2 position)
+    {
+        int x = (int)(position.X / _artScale);
+        int y = (int)(position.Y / _artScale);
+        foreach (StreetPlot plot in _plots)
+        {
+            if (plot.Contains(x, y, _ground))
+            {
+                return plot.Building;
+            }
+        }
+
+        return null;
+    }
+
+    private void PaintHover(PixelCanvas canvas)
+    {
+        if (_hovered is not StreetBuilding hovered || _plots.FirstOrDefault(plot => plot.Building == hovered) is not { Width: > 0 } plot)
+        {
+            return;
+        }
+
+        canvas.Fill(plot.X, _ground + LandscapePainter.GroundRows - 2, plot.Width, 1, BarPalette.Gold);
+        Font font = GetThemeDefaultFont();
+        int fontSize = PixelFont.Size(CaptionFontSize);
+        string name = StreetNames.Of(hovered, _scene);
+        int width = canvas.TextWidth(font, fontSize, name);
+        int x = Math.Clamp(plot.X + (plot.Width - width) / 2, 1, Math.Max(canvas.Width - width - 1, 1));
+        int y = Math.Max(_ground - plot.Height - LabelLift, 0);
+        canvas.Text(font, fontSize, name, x, y, BarPalette.Gold, BarPalette.Shadow);
     }
 
     private void PaintGains(PixelCanvas canvas)
@@ -203,13 +273,8 @@ public partial class RoadLane : Control
         }
     }
 
-    private int GainAnchor(PixelCanvas canvas) => _scene.Mode switch
-    {
-        LaneMode.Workshop => WorkshopPainter.Anchor(canvas),
-        LaneMode.Travelling or LaneMode.Halted => CaravanPainter.RoadX(canvas) + 18,
-        LaneMode.InTown => CaravanPainter.TownX(canvas) + 18,
-        _ => canvas.Width / 2,
-    };
+    private int GainAnchor(PixelCanvas canvas) =>
+        _plots.Count > 0 ? _plots[0].X + _plots[0].Width / 2 : canvas.Width / 2;
 
     private void RefreshCaption()
     {

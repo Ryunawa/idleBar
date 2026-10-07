@@ -113,11 +113,11 @@ public static class FolkPainter
         }
     }
 
-    public static void PaintErrand(PixelCanvas canvas, int start, int width, Ambience ambience)
+    public static void PaintErrand(PixelCanvas canvas, int from, int to, Ambience ambience)
     {
         float time = ambience.Time + ErrandPhase;
         int feet = LandscapePainter.GroundTop(canvas) + 1;
-        Patrol patrol = Patrol.At(start - ErrandReach, start + width - ErrandReach, time, WalkSpeed, PauseSeconds);
+        Patrol patrol = Patrol.At(from, Math.Max(from + 1, to - ErrandReach), time, WalkSpeed, PauseSeconds);
         Walker walker = patrol.Leftward ? FolkSprites.Courier : FolkSprites.Porter;
         PixelSprite pose = walker.Pose(patrol.Moving, time);
         int x = (int)patrol.X;

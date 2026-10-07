@@ -89,7 +89,7 @@ public static class BarStatusBuilder
             inTown,
             inTown,
             new SlotContent(town, "Ouvrir la ville", BarPalette.Success, $"Ta caravane est à {town}. Clique pour commercer ou repartir."),
-            LaneScene.InTown(world?.FindTown(caravan.TownId)?.Biome ?? Biome.Plain, town, LookOf(session.Snapshot!)));
+            LaneScene.InTown(world?.FindTown(caravan.TownId)?.Biome ?? Biome.Plain, town, LookOf(session.Snapshot!), StreetStates.ForCaravan(session.Snapshot!, world, caravan.TownId)));
     }
 
     private static BarStatus DescribeWorkshop(GameSession session, WorkshopState workshop, string coins, RecipeInfo? relaunch)
@@ -105,6 +105,7 @@ public static class BarStatusBuilder
             .Take(ShownProducts)
             .ToList();
         Biome biome = world?.FindTown(workshop.TownId)?.Biome ?? Biome.Plain;
+        StreetState street = StreetStates.ForWorkshop(snapshot, workshop);
 
         if (workshop.IsPaused(now))
         {
@@ -114,7 +115,7 @@ public static class BarStatusBuilder
                 situation,
                 situation,
                 new SlotContent("Atelier", $"en réparation · {resume}", BarPalette.Warning, $"Une panne arrête ton atelier jusqu'à {resume}."),
-                LaneScene.Workshop(biome, snapshot.Player.CraftId, false, 0, products, $"{town} · atelier en réparation"));
+                LaneScene.Workshop(biome, snapshot.Player.CraftId, false, 0, products, $"{town} · atelier en réparation", street));
         }
 
         if (workshop.IsProducing && world?.FindRecipe(workshop.RecipeId!) is RecipeInfo recipe)
@@ -127,7 +128,7 @@ public static class BarStatusBuilder
                 situation,
                 situation,
                 new SlotContent("Atelier", $"{lot} · {finish}", BarPalette.Success, $"Ton atelier fabrique encore {lot}, fini à {finish}."),
-                LaneScene.Workshop(biome, snapshot.Player.CraftId, true, workshop.BatchProgress(now), products, town));
+                LaneScene.Workshop(biome, snapshot.Player.CraftId, true, workshop.BatchProgress(now), products, town, street));
         }
 
         return new BarStatus(
@@ -135,7 +136,7 @@ public static class BarStatusBuilder
             situation,
             situation,
             DescribeIdleSlot(world, relaunch),
-            LaneScene.Workshop(biome, snapshot.Player.CraftId, false, 0, products, $"{town} · atelier à l'arrêt", true));
+            LaneScene.Workshop(biome, snapshot.Player.CraftId, false, 0, products, $"{town} · atelier à l'arrêt", street, true));
     }
 
     private static SlotContent DescribeIdleSlot(WorldData? world, RecipeInfo? relaunch)
@@ -154,7 +155,7 @@ public static class BarStatusBuilder
     }
 
     private static CaravanLook LookOf(GameSnapshot snapshot) =>
-        new(snapshot.Fittings.Contains(TarpFitting), snapshot.Fittings.Contains(IronWheelsFitting));
+        new(snapshot.Fittings.Contains(TarpFitting), snapshot.Fittings.Contains(IronWheelsFitting), snapshot.Caravan?.Wagons ?? 1);
 
     private static IReadOnlyList<string> ListProducts(WorldData? world, IReadOnlyList<StockLine> storage) =>
         storage

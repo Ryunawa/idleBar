@@ -1,13 +1,17 @@
+using System;
 using Godot;
 
 namespace IdleBar.Pixel;
 
 public static class CaravanPainter
 {
+    public const int TrainHeight = 10;
+
     private const float StepSeconds = 0.2f;
     private const float SwishSeconds = 0.25f;
     private const int SwishCycle = 14;
     private const float BobSeconds = 0.5f;
+    private const int Coupling = 1;
     private const string BanditsHazard = "bandits";
     private const string TollHazard = "peage";
 
@@ -15,31 +19,24 @@ public static class CaravanPainter
 
     public static int RoadX(PixelCanvas canvas) => canvas.Width * 3 / 10;
 
-    public static int TownX(PixelCanvas canvas) => canvas.Width / 5;
+    public static int TrainWidth(int wagons) =>
+        Math.Max(wagons, 1) * (CaravanSprites.Wagon(true, CaravanLook.Plain).Width + Coupling) + CaravanSprites.OxResting.Width;
 
     public static void PaintTravelling(PixelCanvas canvas, float time, double progress, CaravanLook look)
     {
         bool stepping = (int)(time / StepSeconds) % 2 == 0;
-        PaintCaravan(
-            canvas,
-            RoadX(canvas),
-            CaravanSprites.Wagon(stepping, look),
-            stepping ? CaravanSprites.OxStepping : CaravanSprites.OxStriding);
+        PaintTrain(canvas, RoadX(canvas), look, CaravanSprites.Wagon(stepping, look), stepping ? CaravanSprites.OxStepping : CaravanSprites.OxStriding);
         TownPainter.PaintProgress(canvas, progress);
     }
 
-    public static void PaintInTown(PixelCanvas canvas, CaravanLook look, Ambience ambience)
-    {
-        TownPainter.PaintHouses(canvas, canvas.Width * 11 / 20, ambience, true);
-        PaintCaravan(canvas, TownX(canvas), CaravanSprites.Wagon(true, look), RestingOx(ambience.Time));
-    }
+    public static void PaintParked(PixelCanvas canvas, int x, CaravanLook look, Ambience ambience) =>
+        PaintTrain(canvas, x, look, CaravanSprites.Wagon(true, look), RestingOx(ambience.Time));
 
     public static void PaintHalted(PixelCanvas canvas, double progress, CaravanLook look, string? hazard, float time)
     {
         int x = RoadX(canvas);
-        PixelSprite wagon = CaravanSprites.Wagon(true, look);
-        PaintCaravan(canvas, x, wagon, RestingOx(time));
-        int front = x + wagon.Width + CaravanSprites.OxResting.Width + 4;
+        PaintTrain(canvas, x, look, CaravanSprites.Wagon(true, look), RestingOx(time));
+        int front = x + TrainWidth(look.Wagons) + 4;
         int bottom = LandscapePainter.GroundTop(canvas) + 2;
         int bob = (int)(time / BobSeconds) % 2;
         switch (hazard)
@@ -59,11 +56,17 @@ public static class CaravanPainter
     private static PixelSprite RestingOx(float time) =>
         (int)(time / SwishSeconds) % SwishCycle is 0 or 2 ? CaravanSprites.OxSwishing : CaravanSprites.OxResting;
 
-    private static void PaintCaravan(PixelCanvas canvas, int x, PixelSprite wagon, PixelSprite ox)
+    private static void PaintTrain(PixelCanvas canvas, int x, CaravanLook look, PixelSprite wagon, PixelSprite ox)
     {
         int wheelsBottom = LandscapePainter.GroundTop(canvas) + 2;
-        canvas.Draw(wagon, x, wheelsBottom - wagon.Height + 1);
-        canvas.Fill(x + wagon.Width - 2, wheelsBottom - 4, 4, 1, Harness);
-        canvas.Draw(ox, x + wagon.Width + 1, wheelsBottom - ox.Height + 1);
+        int wagons = Math.Max(look.Wagons, 1);
+        for (int index = 0; index < wagons; index++)
+        {
+            int wagonX = x + index * (wagon.Width + Coupling);
+            canvas.Draw(wagon, wagonX, wheelsBottom - wagon.Height + 1);
+            canvas.Fill(wagonX + wagon.Width - 2, wheelsBottom - 4, 2 + Coupling + 1, 1, Harness);
+        }
+
+        canvas.Draw(ox, x + wagons * (wagon.Width + Coupling), wheelsBottom - ox.Height + 1);
     }
 }

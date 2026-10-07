@@ -72,6 +72,8 @@ public sealed class GameBridge : IDisposable
 
     public void OpenFromLane(float dialogScale) => _dialogs?.OpenFor(dialogScale);
 
+    public void OpenTab(float dialogScale, TownTab tab) => _dialogs?.OpenFor(dialogScale, tab);
+
     public async void PressSlot(float dialogScale)
     {
         if (_relaunch?.Candidate is not RecipeInfo recipe)

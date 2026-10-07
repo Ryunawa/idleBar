@@ -20,30 +20,48 @@ public static class WorkshopPainter
     private static readonly Color Shuttle = new("f2c14e");
     private static readonly Color Glitter = new("f7d774");
 
-    public static int Anchor(PixelCanvas canvas) => Origin(canvas) + 40;
+    public const int StationHeight = 13;
 
-    public static void Paint(PixelCanvas canvas, string craftId, Ambience ambience, bool busy, bool errands, IReadOnlyList<string> products, ProductPop pop)
+    private const int HallOverhang = 2;
+
+    public static int StationWidth(string craftId) => craftId switch
+    {
+        "forgeron" => 52,
+        "charron" => 48,
+        "negociant" => 32,
+        _ => 50,
+    };
+
+    public static int ProductsWidth(int count) => Math.Min(count, ProductsPerRow) * (GoodIcons.TallestIcon + 1);
+
+    public static void PaintStation(PixelCanvas canvas, int x, StreetState street, Ambience ambience, bool busy, bool errands)
     {
         float time = ambience.Time;
         int ground = LandscapePainter.GroundTop(canvas);
-        int origin = Origin(canvas);
         int beat = (int)(time / StepSeconds);
         bool striking = busy && beat % 2 == 1;
         bool present = !errands;
 
-        TownPainter.PaintHouses(canvas, canvas.Width * 11 / 20, ambience, errands);
-        int productsX = craftId switch
+        HallPainter.Paint(canvas, x - HallOverhang, StationWidth(street.CraftId) + HallOverhang * 2, street.WorkshopLevel, ambience);
+        switch (street.CraftId)
         {
-            "forgeron" => PaintForge(canvas, origin, ground, busy, striking, beat, present),
-            "charron" => PaintWheelwright(canvas, origin, ground, striking, beat, present),
-            "tisserand" => PaintWeaver(canvas, origin, ground, busy, striking, time, present),
-            "negociant" => CounterPainter.Paint(canvas, origin, ground, busy, beat, present),
-            _ => PaintHerbalist(canvas, origin, ground, busy, striking, beat, present),
-        };
-        PaintProducts(canvas, productsX, ground, products, pop);
+            case "forgeron":
+                PaintForge(canvas, x, ground, busy, striking, beat, present);
+                break;
+            case "charron":
+                PaintWheelwright(canvas, x, ground, striking, beat, present);
+                break;
+            case "tisserand":
+                PaintWeaver(canvas, x, ground, busy, striking, time, present);
+                break;
+            case "negociant":
+                CounterPainter.Paint(canvas, x, ground, busy, beat, present, street.Branches);
+                break;
+            default:
+                PaintHerbalist(canvas, x, ground, busy, striking, beat, present);
+                break;
+        }
     }
-
-    private static int Origin(PixelCanvas canvas) => canvas.Width / 8;
 
     private static int PaintForge(PixelCanvas canvas, int x, int ground, bool busy, bool striking, int beat, bool present)
     {
@@ -144,7 +162,7 @@ public static class WorkshopPainter
         return x + 50;
     }
 
-    private static void PaintProducts(PixelCanvas canvas, int x, int ground, IReadOnlyList<string> products, ProductPop pop)
+    public static void PaintProducts(PixelCanvas canvas, int x, int ground, IReadOnlyList<string> products, ProductPop pop)
     {
         for (int index = 0; index < products.Count; index++)
         {

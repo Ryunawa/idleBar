@@ -44,6 +44,8 @@ public partial class ExpandedBar : MarginContainer
 
     public event Action? UpdateRequested;
 
+    public event Action<TownTab>? BuildingRequested;
+
     public RoadLane Lane { get; private set; } = null!;
 
     public override void _Ready()
@@ -74,6 +76,7 @@ public partial class ExpandedBar : MarginContainer
 
         Lane = new RoadLane { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         Lane.Pressed += () => ActionRequested?.Invoke();
+        Lane.BuildingPressed += building => BuildingRequested?.Invoke(StreetNames.TabOf(building, Lane.Scene));
         row.AddChild(Lane);
 
         _news = new TownSlot();

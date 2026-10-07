@@ -54,7 +54,7 @@ public static class TownPainter
         FolkPainter.PaintVillagers(canvas, start, Width, ambience);
         if (errands)
         {
-            FolkPainter.PaintErrand(canvas, start, Width, ambience);
+            FolkPainter.PaintErrand(canvas, start, start + Width, ambience);
         }
     }
 
