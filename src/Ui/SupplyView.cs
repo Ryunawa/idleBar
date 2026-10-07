@@ -8,7 +8,7 @@ namespace IdleBar.Ui;
 
 public partial class SupplyView : VBoxContainer, ITownPanel
 {
-    private const string DeliverHelp = "Des artisans et des marchands paient pour qu'on leur apporte des marchandises. Achète-les là où elles sont bon marché, puis livre-les dans leur ville : tu es payé tout de suite. Livrer prend d'abord dans l'entrepôt de la ville, puis dans ta cale.";
+    private const string DeliverHelp = "Des artisans et des marchands paient pour qu'on leur apporte des marchandises. Trouve où les acheter, puis livre-les dans leur ville : tu es payé tout de suite. Livrer prend d'abord dans l'entrepôt de la ville, puis dans ta cale.";
     private const string OrderHelp = "Commande une marchandise livrée dans ta ville : tes écus sont bloqués, le premier caravanier qui l'apporte est payé et la marchandise arrive dans ton entrepôt.";
 
     private Label _help = null!;
@@ -123,25 +123,12 @@ public partial class SupplyView : VBoxContainer, ITownPanel
 
     private static string UnitText(OfferInfo order) => $"{NumberFormat.Rate(Math.Floor(order.GiveQuantity * 10.0 / order.WantQuantity) / 10)} écus l'unité";
 
-    private static IReadOnlyList<string> ListFacts(TownContext context, OfferInfo order)
-    {
-        List<string> facts =
-        [
-            $"Paie {NumberFormat.Coins(order.GiveQuantity)}",
-            UnitText(order),
-            $"Jusqu'à {DurationFormat.Moment(order.ExpiresAt, context.Clock.Now)}",
-        ];
-        string[] producers = context.World.Towns
-            .Where(town => town.Produces.Contains(order.WantGoodId!) && town.Id != order.TownId)
-            .Select(town => town.Name)
-            .ToArray();
-        if (producers.Length > 0)
-        {
-            facts.Add($"Bon marché à {string.Join(", ", producers)}");
-        }
-
-        return facts;
-    }
+    private static IReadOnlyList<string> ListFacts(TownContext context, OfferInfo order) =>
+    [
+        $"Paie {NumberFormat.Coins(order.GiveQuantity)}",
+        UnitText(order),
+        $"Jusqu'à {DurationFormat.Moment(order.ExpiresAt, context.Clock.Now)}",
+    ];
 
     private static string? FindBlocker(TownContext context, OfferInfo order)
     {

@@ -58,19 +58,11 @@ public partial class RoutesPanel : VBoxContainer, ITownPanel
         foreach (RouteInfo route in world.RoutesFrom(context.TownId))
         {
             string title = $"{world.TownName(route.ToTownId)} · {DurationFormat.Span(TimeSpan.FromSeconds(route.Seconds * (1 - swift)))} de {BiomeText.Describe(route.Biome)}";
-            string trade = world.FindTown(route.ToTownId) is TownInfo destination
-                ? $"Vend : {ListGoods(world, destination.Produces)} · Paie cher : {ListGoods(world, destination.Demands)}"
-                : string.Empty;
+            string standing = $"Ta réputation là-bas : {ReputationText.Standing(context.Snapshot.Standing, route.ToTownId)}";
             string destinationId = route.ToTownId;
-            _list.AddChild(ActionRow.Create(title, trade, "Partir", false,
+            _list.AddChild(ActionRow.Create(title, standing, "Partir", false,
                 () => Requested?.Invoke(actions => actions.DepartAsync(destinationId, _directive.SelectedId))));
         }
-    }
-
-    private static string ListGoods(WorldData world, IEnumerable<string> goodIds)
-    {
-        string list = string.Join(", ", goodIds.Select(goodId => world.GoodName(goodId).ToLower(French)));
-        return list.Length == 0 ? "rien de particulier" : list;
     }
 
     private void RefreshDirectiveNote()
