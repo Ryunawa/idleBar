@@ -223,6 +223,7 @@ Chaque embauche coûte 3 à 10 heures de gains du début de partie, et chaque sa
   - `17` : les petits services (`odd_jobs_since` sur le joueur, `private.odd_jobs_state`, `public.collect_odd_jobs`), une bourse plafonnée commune à tous les métiers.
   - `18` : les commandes d'approvisionnement (`private.supply_requests`), visibles des caravaniers dans toutes les villes, et `accept_offer` qui puise dans l'entrepôt de la ville avant la cale.
   - `19` : les commandes spéciales au coût réel (`private.recipe_unit_cost`, `special_orders.crafted` et `produced`), à fabriquer dans l'atelier.
+  - `20` : le journal des achats et des ventes (`trade_log`, `private.log_trade`), alimenté par le marché, le comptoir, les commandes spéciales et les chefs-d'œuvre ; les achats répétés de la même marchandise au même endroit en moins de deux minutes (`trade_log_merge_seconds`) sont regroupés, l'historique garde `trade_log_days` (14) jours.
   - `tests/` : les tests SQL.
 - `src/Cloud/` : l'authentification Supabase et les appels aux fonctions SQL.
 - `src/Trade/` : le modèle de jeu.

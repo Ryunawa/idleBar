@@ -28,8 +28,11 @@ public sealed record GameSnapshot(
     TripEventInfo? TripEvent,
     ReputationState? Reputation,
     OddJobsState? OddJobs = null,
-    IReadOnlyList<OfferInfo>? SupplyRequests = null)
+    IReadOnlyList<OfferInfo>? SupplyRequests = null,
+    IReadOnlyList<TradeLogEntry>? Trades = null)
 {
+    public IReadOnlyList<TradeLogEntry> TradeLog => Trades ?? [];
+
     public IReadOnlyList<OfferInfo> Supply => SupplyRequests ?? [];
 
     public ReputationState Standing => Reputation ?? ReputationState.None;

@@ -53,6 +53,7 @@ select pg_temp.expect_denied('select * from public.directive_choices');
 select pg_temp.expect_denied('select * from public.trip_events');
 select pg_temp.expect_denied('select * from public.reputation_tiers');
 select pg_temp.expect_denied('select * from public.reputations');
+select pg_temp.expect_denied('select * from public.trade_log');
 select pg_temp.expect_denied('select * from private.settings');
 select pg_temp.expect_denied('select public.get_world()');
 select pg_temp.expect_denied('select public.get_state()');

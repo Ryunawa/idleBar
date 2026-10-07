@@ -49,6 +49,37 @@ public partial class JournalPanel : VBoxContainer, ITownPanel
         {
             _list.AddChild(CreateEntry(entry, now));
         }
+
+        _list.AddChild(ActionRow.Heading("Achats et ventes"));
+        if (context.Snapshot.TradeLog.Count == 0)
+        {
+            _list.AddChild(ActionRow.Note("Tes achats et tes ventes s'afficheront ici, avec leurs prix."));
+        }
+
+        foreach (TradeLogEntry trade in context.Snapshot.TradeLog)
+        {
+            _list.AddChild(CreateTrade(context.World, trade, now));
+        }
+    }
+
+    private static VBoxContainer CreateTrade(WorldData world, TradeLogEntry trade, DateTimeOffset now)
+    {
+        VBoxContainer box = new();
+        box.AddThemeConstantOverride("separation", 0);
+        Label title = BarLabels.Create(13, trade.Bought ? BarPalette.Text : BarPalette.Success);
+        string verb = trade.Bought ? "Acheté" : "Vendu";
+        string sign = trade.Bought ? "−" : "+";
+        title.Text = $"{DurationFormat.Moment(trade.UpdatedAt, now)} · {verb} {ExchangeText.Lot(world, trade.GoodId, trade.Quantity)} · {sign}{NumberFormat.Coins(trade.Total)}";
+        box.AddChild(title);
+        string place = trade.Source switch
+        {
+            "comptoir" => "au comptoir",
+            "commande" => "commande spéciale",
+            "chef_oeuvre" => "chef-d'œuvre",
+            _ => "au marché",
+        };
+        box.AddChild(ActionRow.Note($"{world.TownName(trade.TownId)} · {place} · {NumberFormat.Rate(Math.Round(trade.UnitPrice, 1))} écus pièce"));
+        return box;
     }
 
     private void AddTripEvent(TownContext context, TripEventInfo tripEvent, DateTimeOffset now)
