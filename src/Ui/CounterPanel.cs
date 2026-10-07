@@ -8,7 +8,8 @@ namespace IdleBar.Ui;
 public partial class CounterPanel : VBoxContainer, ITownPanel
 {
     private VBoxContainer _list = null!;
-    private OfferForm _form = null!;
+    private Label _heading = null!;
+    private OfferDialog _dialog = null!;
     private string _townId = string.Empty;
 
     public event Action<TownCommand>? Requested;
@@ -16,28 +17,40 @@ public partial class CounterPanel : VBoxContainer, ITownPanel
     public override void _Ready()
     {
         AddThemeConstantOverride("separation", 8);
+        HBoxContainer top = new();
+        top.AddThemeConstantOverride("separation", 8);
+        _heading = ActionRow.Heading(string.Empty);
+        _heading.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        top.AddChild(_heading);
+        Button publish = new() { Text = "Publier une offre…", FocusMode = FocusModeEnum.None };
+        publish.Pressed += () => _dialog.Open(GetWindow().Theme, GetWindow().ContentScaleFactor);
+        top.AddChild(publish);
+        AddChild(top);
+
         ScrollContainer scroll = new() { SizeFlagsVertical = SizeFlags.ExpandFill, HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
         _list = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         _list.AddThemeConstantOverride("separation", 6);
         scroll.AddChild(_list);
         AddChild(scroll);
 
-        AddChild(new HSeparator());
-        _form = new OfferForm();
-        _form.Submitted += draft => Requested?.Invoke(actions => actions.PostOfferAsync(draft, _townId));
-        AddChild(_form);
-        AddChild(ActionRow.Note("Ce que tu reçois arrive à l'entrepôt de la ville. Une offre reste 48 h au comptoir ; retirée ou expirée, elle revient à ton entrepôt."));
+        _dialog = new OfferDialog();
+        AddChild(_dialog);
+        _dialog.Form.Submitted += draft =>
+        {
+            _dialog.Hide();
+            Requested?.Invoke(actions => actions.PostOfferAsync(draft, _townId));
+        };
     }
 
     public void Refresh(TownContext context)
     {
         _townId = context.TownId;
-        _form.Refresh(context);
+        _dialog.Form.Refresh(context);
         ActionRow.Clear(_list);
         WorldData world = context.World;
         DateTimeOffset now = context.Clock.Now;
 
-        _list.AddChild(ActionRow.Heading($"Offres des autres marchands à {context.TownName}"));
+        _heading.Text = $"Offres des autres marchands à {context.TownName}";
         OfferInfo[] offers = context.Snapshot.OffersAt(context.TownId).ToArray();
         if (offers.Length == 0)
         {

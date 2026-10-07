@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
@@ -23,7 +23,6 @@ public partial class OfferForm : VBoxContainer
     public override void _Ready()
     {
         AddThemeConstantOverride("separation", 4);
-        AddChild(ActionRow.Heading("Publier une offre au comptoir"));
 
         _giveQuantity = AmountBox.Create(10, MaxAmount);
         AddChild(CreateLine("Je donne", _giveQuantity, _give.Button, null));
