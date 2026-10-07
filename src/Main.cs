@@ -28,6 +28,7 @@ public partial class Main : Control
         _game = new GameBridge(this);
         BuildInterface();
         _game.Announced += (message, seconds) => _expanded.Lane.ShowBanner(message, seconds);
+        _game.Gained += gain => _expanded.Lane.ShowGain(gain);
 
         BarPreferences preferences = BarPreferences.Load(PreferencesPath);
         _placement = new BarPlacement(GetWindow(), preferences);
@@ -117,15 +118,8 @@ public partial class Main : Control
         _tray.SetCollapsed(collapsed);
     }
 
-    private void OpenSettings()
-    {
-        DisplayScreen[] noScreens = [];
-        _settings.Open(
-            _placement.DialogScale,
-            _placement.Size,
-            _placement.ScreenDevice,
-            OperatingSystem.IsWindows() ? DisplayScreens.Detect() : noScreens);
-    }
+    private void OpenSettings() =>
+        _settings.Open(_placement.DialogScale, _placement.Size, _placement.ScreenDevice, _placement.DetectScreens());
 
     private void Quit()
     {

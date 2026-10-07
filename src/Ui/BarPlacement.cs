@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Godot;
 using IdleBar.Desktop;
 
@@ -13,23 +14,18 @@ public sealed class BarPlacement : IDisposable
 
     private readonly Window _window;
     private readonly BarPreferences _preferences;
-    private readonly AppBar? _appBar;
+    private readonly IBarDock _dock;
 
     public BarPlacement(Window window, BarPreferences preferences)
     {
         _window = window;
         _preferences = preferences;
-        if (!OperatingSystem.IsWindows())
-        {
-            GD.PushWarning("La barre réservée n'est disponible que sous Windows.");
-            return;
-        }
-
-        AppBar appBar = new(new IntPtr(DisplayServer.WindowGetNativeHandle(DisplayServer.HandleType.WindowHandle)));
-        appBar.Docked += () => _window.ContentScaleFactor = appBar.Scale;
-        appBar.FullscreenAppChanged += _ => UpdateFrameRate();
-        appBar.Place(preferences.ScreenDevice, preferences.Size);
-        _appBar = appBar;
+        _dock = OperatingSystem.IsWindows()
+            ? new AppBar(new IntPtr(DisplayServer.WindowGetNativeHandle(DisplayServer.HandleType.WindowHandle)))
+            : new FloatingDock(window);
+        _dock.Docked += () => _window.ContentScaleFactor = _dock.Scale;
+        _dock.FullscreenAppChanged += _ => UpdateFrameRate();
+        _dock.Place(preferences.ScreenDevice, preferences.Size);
     }
 
     public event Action<bool>? CollapsedChanged;
@@ -40,14 +36,16 @@ public sealed class BarPlacement : IDisposable
 
     public string? ScreenDevice => _preferences.ScreenDevice;
 
-    public float DialogScale => _appBar?.DpiScale ?? 1f;
+    public float DialogScale => _dock.DpiScale;
 
-    public void Update() => _appBar?.Update();
+    public IReadOnlyList<DisplayScreen> DetectScreens() => _dock.DetectScreens();
+
+    public void Update() => _dock.Update();
 
     public void ApplyCollapsed(bool collapsed)
     {
         _preferences.Collapsed = collapsed;
-        _appBar?.Dock(collapsed ? CollapsedHeight : ExpandedHeight);
+        _dock.Dock(collapsed ? CollapsedHeight : ExpandedHeight);
         UpdateFrameRate();
         CollapsedChanged?.Invoke(collapsed);
     }
@@ -62,21 +60,21 @@ public sealed class BarPlacement : IDisposable
     {
         _preferences.Size = BarSizes.Nearest(size);
         _preferences.Save();
-        _appBar?.Place(_preferences.ScreenDevice, _preferences.Size);
+        _dock.Place(_preferences.ScreenDevice, _preferences.Size);
     }
 
     public void MoveTo(string screenDevice)
     {
         _preferences.ScreenDevice = screenDevice;
         _preferences.Save();
-        _appBar?.Place(screenDevice, _preferences.Size);
+        _dock.Place(screenDevice, _preferences.Size);
     }
 
-    public void Dispose() => _appBar?.Dispose();
+    public void Dispose() => _dock.Dispose();
 
     private void UpdateFrameRate()
     {
-        bool inBackground = _preferences.Collapsed || _appBar?.FullscreenAppActive == true;
+        bool inBackground = _preferences.Collapsed || _dock.FullscreenAppActive;
         Engine.MaxFps = inBackground ? BackgroundFramesPerSecond : ActiveFramesPerSecond;
     }
 }

@@ -1,9 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace IdleBar.Desktop;
 
-public sealed class AppBar : IDisposable
+public sealed class AppBar : IBarDock
 {
     private const string CallbackMessageName = "IdleBar.AppBar.Callback";
 
@@ -46,6 +47,8 @@ public sealed class AppBar : IDisposable
     public string? ScreenDevice { get; private set; }
 
     public bool FullscreenAppActive { get; private set; }
+
+    public IReadOnlyList<DisplayScreen> DetectScreens() => DisplayScreens.Detect();
 
     public void Dock(int logicalHeight)
     {

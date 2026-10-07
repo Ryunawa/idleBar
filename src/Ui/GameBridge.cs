@@ -24,7 +24,7 @@ public sealed class GameBridge : IDisposable
     public GameBridge(Node host)
     {
         SupabaseSettings? settings = SupabaseSettings.FromProjectSettings();
-        if (settings is null || !OperatingSystem.IsWindows())
+        if (settings is null)
         {
             return;
         }
@@ -35,6 +35,8 @@ public sealed class GameBridge : IDisposable
         GameSession session = new(keeper, api, new ServerClock());
         SessionBanners banners = new(session);
         banners.Announced += (message, seconds) => Announced?.Invoke(message, seconds);
+        SessionGains gains = new(session);
+        gains.Gained += gain => Gained?.Invoke(gain);
 
         GameActions actions = new(session, api);
         _dialogs = new GameDialogs(session, actions, host);
@@ -43,6 +45,8 @@ public sealed class GameBridge : IDisposable
     }
 
     public event Action<string, float>? Announced;
+
+    public event Action<LaneGain>? Gained;
 
     public BarStatus Status { get; private set; } = BarStatusBuilder.Unavailable(MissingConfiguration);
 

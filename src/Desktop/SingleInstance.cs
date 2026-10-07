@@ -29,8 +29,7 @@ public sealed class SingleInstance : IDisposable
         if (!owned)
         {
             using Process? previous = FindPreviousInstance(processIdPath);
-            RequestClose(previous);
-            owned = TryWait(mutex, GracefulExitTimeout);
+            owned = RequestClose(previous) && TryWait(mutex, GracefulExitTimeout);
             if (!owned && previous is not null)
             {
                 previous.Kill();
@@ -95,17 +94,14 @@ public sealed class SingleInstance : IDisposable
         return null;
     }
 
-    private static void RequestClose(Process? previous)
+    private static bool RequestClose(Process? previous)
     {
         if (previous is null || !OperatingSystem.IsWindows())
         {
-            return;
+            return false;
         }
 
         IntPtr window = previous.MainWindowHandle;
-        if (window != IntPtr.Zero)
-        {
-            Win32.PostMessage(window, Win32.WmClose, IntPtr.Zero, IntPtr.Zero);
-        }
+        return window != IntPtr.Zero && Win32.PostMessage(window, Win32.WmClose, IntPtr.Zero, IntPtr.Zero);
     }
 }
