@@ -3,7 +3,7 @@ config_version=5
 [application]
 
 config/name="IdleBar"
-config/version="0.1.3"
+config/version="0.2.0"
 run/main_scene="res://scenes/main.tscn"
 config/icon="res://assets/icon.png"
 config/use_custom_user_dir=true
@@ -34,6 +34,7 @@ project/assembly_name="IdleBar"
 cloud/supabase_url="https://pusnaxrfxjqzwjzipnlq.supabase.co"
 cloud/supabase_publishable_key="sb_publishable_xO_91va-nUB8KihgfmML_g_DpmJbfR9"
 updates/latest_release_url="https://api.github.com/repos/Ryunawa/idleBar/releases/latest"
+updates/download_url="https://github.com/Ryunawa/idleBar/releases/latest"
 
 [rendering]
 

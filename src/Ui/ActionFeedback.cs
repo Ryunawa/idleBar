@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Godot;
 using IdleBar.Cloud;
+using IdleBar.Online;
 
 namespace IdleBar.Ui;
 
@@ -21,6 +22,10 @@ public static class ActionFeedback
             return exception.Message;
         }
         catch (CloudAuthException exception)
+        {
+            return exception.Message;
+        }
+        catch (OutdatedClientException exception)
         {
             return exception.Message;
         }

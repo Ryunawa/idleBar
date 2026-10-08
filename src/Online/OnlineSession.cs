@@ -17,6 +17,7 @@ public sealed class OnlineSession
     private readonly TavernApi _api;
     private readonly Doorbell _doorbell;
     private readonly ServiceLedger _ledger = new();
+    private readonly SessionAccess _access;
     private long _lastRequest;
     private long _appliedRequest;
     private bool _syncing;
@@ -28,6 +29,7 @@ public sealed class OnlineSession
         _keeper = keeper;
         _api = api;
         _doorbell = doorbell;
+        _access = new SessionAccess(keeper, api, doorbell);
         _doorbell.Rang += () => _sincePoll = PollSeconds;
     }
 
@@ -79,7 +81,7 @@ public sealed class OnlineSession
     public void Tick(double delta)
     {
         _doorbell.Drain();
-        if (!_keeper.SignedIn || _syncing)
+        if (!_keeper.SignedIn || _syncing || Status == SessionStatus.UpdateRequired)
         {
             return;
         }
@@ -104,7 +106,7 @@ public sealed class OnlineSession
     {
         try
         {
-            string token = await TokenAsync();
+            string token = await _access.TokenAsync();
             World ??= await _api.GetWorldAsync(token);
             long number = ++_lastRequest;
             Apply(number, await request(token));
@@ -116,6 +118,13 @@ public sealed class OnlineSession
             Reset();
             throw;
         }
+        catch (OutdatedClientException)
+        {
+            _doorbell.Stop();
+            Status = SessionStatus.UpdateRequired;
+            Changed?.Invoke();
+            throw;
+        }
         catch (Exception exception) when (TransportFailure.Matches(exception))
         {
             GD.PushWarning($"Serveur injoignable : {exception.Message}");
@@ -125,18 +134,7 @@ public sealed class OnlineSession
         }
     }
 
-    public async Task SendAsync(Func<string, Task<EmptyResult>> request) => await request(await TokenAsync());
-
-    private async Task<string> TokenAsync()
-    {
-        string token = await _keeper.GetAccessTokenAsync();
-        if (_keeper.UserId is string userId)
-        {
-            _doorbell.Listen(userId, token);
-        }
-
-        return token;
-    }
+    public async Task SendAsync(Func<string, Task<EmptyResult>> request) => await request(await _access.TokenAsync());
 
     private async Task ReportAsync()
     {
@@ -167,7 +165,7 @@ public sealed class OnlineSession
             GD.PushWarning($"État non rafraîchi : {exception.Message}");
             return false;
         }
-        catch (Exception exception) when (exception is CloudAuthException || TransportFailure.Matches(exception))
+        catch (Exception exception) when (exception is CloudAuthException or OutdatedClientException || TransportFailure.Matches(exception))
         {
             return false;
         }

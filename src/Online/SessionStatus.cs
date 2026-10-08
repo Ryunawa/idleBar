@@ -7,4 +7,5 @@ public enum SessionStatus
     NeedsFounding,
     Ready,
     Offline,
+    UpdateRequired,
 }

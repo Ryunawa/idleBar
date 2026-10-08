@@ -191,6 +191,7 @@ Premiers habitués envisagés :
 | 5. Passants et tournées | Joueurs connectés dans la rue, salut, invitation, demande d'ami, tournée générale | Fait, à tester en jeu (scripts `10` et `11`) |
 | 6. Saisons | Météo, saisons, fêtes et leurs objets | Fait, à tester en jeu (sur le PC, sans script) |
 | Easter eggs | Le Sceau du dragon, tampon exclusif du livre d'or | Fait, à tester en jeu (script `12`) |
+| Mises à jour | Version minimale imposée par le serveur, procédure de publication | Fait (script `13`) |
 
 ## Étape 1 : le comptoir tel qu'il est
 
@@ -441,6 +442,24 @@ La capitaine Ysolde vient sous la pluie comme sous la neige.
   - un client ordinaire sur trois en bonnet rouge.
 
 **À vérifier en jeu.** Les chauves-souris, la neige et le rythme des feuilles sur un vrai écran.
+
+## Mises à jour
+
+**Pour les joueurs.**
+- Le jeu interroge les versions de GitHub 5 secondes après le lancement, puis toutes les 6 heures (`UpdateNotice`). Une version plus récente fait apparaître la case « Mise à jour », qui ouvre la page de téléchargement.
+- Le joueur remplace son dossier à la main. Sa taverne est sur le serveur ; sa session et ses réglages sont dans `%APPDATA%\IdleBar` (ou son équivalent sur macOS).
+
+**Le garde-fou** (`13_client_version.sql`).
+- `get_requirements` renvoie `min_client_version`, qui vaut `0.2.0` au départ. Cette fonction ne doit jamais changer de forme.
+- Le jeu la consulte une fois par session, avant toute autre fonction (`SessionAccess`). S'il est plus ancien, il s'arrête sur « Mise à jour requise », et un clic ouvre `updates/download_url`.
+- La version du jeu est `config/version` dans `project.godot`, remplacée par le numéro du tag lors de la publication (`GameVersion`).
+
+**Publier.**
+1. Exécuter les nouveaux scripts SQL. Ils doivent laisser jouer la version précédente : on ajoute, on ne retire ni ne renomme rien de ce qu'elle appelle.
+2. Pousser le tag `vX.Y.Z` : GitHub construit et publie.
+3. Seulement si l'ancienne version ne peut vraiment plus jouer : `update private.settings set min_client_version = 'X.Y.Z';`.
+
+Les joueurs en 0.1.3 (le jeu de commerce) n'ont pas ce garde-fou. Ils verront la case « Mise à jour » dès que la 0.2.0 sera publiée, mais leur jeu ne fonctionnera plus d'ici là.
 
 ## Easter eggs
 

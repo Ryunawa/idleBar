@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Godot;
+using IdleBar.Cloud;
 using IdleBar.Desktop;
 
 namespace IdleBar.Ui;
@@ -22,7 +23,7 @@ public partial class SettingsWindow : Window
 
     public override void _Ready()
     {
-        VBoxContainer content = WindowFrame.Build(this, $"IdleBar {UpdateNotice.CurrentName} · Réglages", 8);
+        VBoxContainer content = WindowFrame.Build(this, $"IdleBar {GameVersion.Name} · Réglages", 8);
 
         content.AddChild(CreateHeading("Taille de la barre"));
         HBoxContainer sizeRow = new() { Alignment = BoxContainer.AlignmentMode.Center };

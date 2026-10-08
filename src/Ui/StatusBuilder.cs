@@ -21,6 +21,7 @@ public static class StatusBuilder
                 SessionStatus.SignedOut => Waiting("Bienvenue !", "Clique ici pour te connecter"),
                 SessionStatus.NeedsFounding => Waiting("Ta taverne", "Clique ici pour l'ouvrir"),
                 SessionStatus.Offline => Waiting("Hors ligne", "Serveur injoignable"),
+                SessionStatus.UpdateRequired => Waiting("Mise à jour requise", "Clique ici pour la télécharger"),
                 _ => Waiting("Connexion…", string.Empty),
             };
         }

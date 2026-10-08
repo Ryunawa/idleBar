@@ -89,7 +89,20 @@ public sealed class GameBridge : IDisposable
 
     public Task FlushAsync() => _session?.FlushAsync() ?? Task.CompletedTask;
 
-    public void OpenMenu(float scale) => _dialogs?.Open(scale);
+    public void OpenMenu(float scale)
+    {
+        if (_session?.Status == SessionStatus.UpdateRequired)
+        {
+            if (GameVersion.DownloadUrl.StartsWith("https://github.com/", StringComparison.Ordinal))
+            {
+                OS.ShellOpen(GameVersion.DownloadUrl);
+            }
+
+            return;
+        }
+
+        _dialogs?.Open(scale);
+    }
 
     public void SignOut() => _account?.SignOut();
 

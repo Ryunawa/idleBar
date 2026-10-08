@@ -13,6 +13,9 @@ public sealed class TavernApi
         _rpc = rpc;
     }
 
+    public Task<RequirementsData> GetRequirementsAsync(string token) =>
+        _rpc.CallAsync<NoArguments, RequirementsData>(token, "get_requirements", new NoArguments());
+
     public Task<WorldData> GetWorldAsync(string token) => _rpc.CallAsync<NoArguments, WorldData>(token, "get_world", new NoArguments());
 
     public Task<StateData> GetStateAsync(string token) => _rpc.CallAsync<NoArguments, StateData>(token, "get_state", new NoArguments());

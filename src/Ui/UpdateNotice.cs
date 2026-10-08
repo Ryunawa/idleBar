@@ -7,7 +7,6 @@ namespace IdleBar.Ui;
 
 public partial class UpdateNotice : Node
 {
-    private const string VersionSetting = "application/config/version";
     private const double FirstCheckSeconds = 5;
     private const double CheckIntervalSeconds = 6 * 3600;
     private const int TimeoutSeconds = 10;
@@ -22,12 +21,10 @@ public partial class UpdateNotice : Node
 
     public ReleaseInfo? Latest { get; private set; }
 
-    public static string CurrentName => ProjectSettings.GetSetting(VersionSetting, string.Empty).AsString();
-
     public override void _Ready()
     {
         _feed = ReleaseFeed.FromProjectSettings(_http);
-        _current = Version.TryParse(CurrentName, out Version? current) ? current : new Version(0, 0, 0);
+        _current = GameVersion.Current;
     }
 
     public override void _Process(double delta)

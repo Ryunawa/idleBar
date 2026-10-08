@@ -23,6 +23,7 @@ select pg_temp.expect_denied('select public.found_tavern(''Chez moi'')');
 select pg_temp.expect_denied('select public.report_service(''{}'')');
 select pg_temp.expect_denied('select public.buy_upgrade(''tabouret-5'')');
 select pg_temp.expect_denied('select public.collect_tip_jar()');
+select pg_temp.expect_denied('select public.get_requirements()');
 select pg_temp.expect_denied('select public.request_friend(''AAAAAA'')');
 select pg_temp.expect_denied('select public.start_visit(gen_random_uuid(), ''heart'')');
 select pg_temp.expect_denied('select public.send_emote(1, ''cheers'')');

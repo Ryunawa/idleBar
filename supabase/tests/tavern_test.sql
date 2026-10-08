@@ -102,3 +102,7 @@ update public.taverns set reported_at = now() - interval '3 days' where player_i
 set role authenticated;
 select pg_temp.check((public.get_state() #>> '{tavern,tip_jar,amount}')::integer = 400, 'pot plafonné à 8 heures');
 reset role;
+
+set role authenticated;
+select pg_temp.check(public.get_requirements() ->> 'min_client_version' = '0.2.0', 'version minimale du jeu');
+reset role;
