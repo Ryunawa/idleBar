@@ -13,6 +13,8 @@ public partial class VisitSlot : HBoxContainer
 
     public event Action<string>? EmoteRequested;
 
+    public event Action? LeaveRequested;
+
     public override void _Ready()
     {
         Visible = false;
@@ -39,6 +41,18 @@ public partial class VisitSlot : HBoxContainer
             ClickBinding.OnLeftPress(button, () => EmoteRequested?.Invoke(emote));
             AddChild(button);
         }
+
+        Button leave = new()
+        {
+            Text = "Rentrer",
+            FocusMode = FocusModeEnum.None,
+            MouseDefaultCursorShape = CursorShape.PointingHand,
+            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+            TooltipText = "Quitter cette taverne et rentrer dans la tienne",
+        };
+        leave.AddThemeFontSizeOverride("font_size", PixelFont.Size(12));
+        ClickBinding.OnLeftPress(leave, () => LeaveRequested?.Invoke());
+        AddChild(leave);
     }
 
     public void Display(VisitView? visit)

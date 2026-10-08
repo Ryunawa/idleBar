@@ -30,4 +30,7 @@ public sealed record TavernData(
     IReadOnlyList<InvitationData> Invitations,
     IReadOnlyList<RoundData> Rounds,
     int RoundPrice,
-    DateTimeOffset? RoundReadyAt);
+    DateTimeOffset? RoundReadyAt,
+    RoomData? Room,
+    IReadOnlyList<MutedData>? Muted,
+    string? Stamp);

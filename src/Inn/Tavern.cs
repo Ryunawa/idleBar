@@ -9,16 +9,15 @@ public sealed class Tavern
     private const int StartingSeats = 4;
     private const float MinDrinking = 10f;
     private const float MaxDrinking = 18f;
-    private const float QuickService = 20f;
     private const double SecondRoundChance = 0.3;
     private const int MaxRounds = 2;
-    private const double FavoriteChance = 0.7;
 
     private readonly Random _random;
     private readonly List<Patron> _patrons = [];
     private readonly List<Station> _stations = [];
     private readonly ServiceDesk _desk = new();
     private readonly Arrivals _arrivals;
+    private readonly HashSet<long> _served = [];
     private int _seats = StartingSeats;
     private float _boost;
     private int _width = TavernLayout.MinWidth;
@@ -27,6 +26,7 @@ public sealed class Tavern
     {
         _random = random;
         _arrivals = new Arrivals(random);
+        Helper = new CounterHelper(random);
         Configure(StartingSeats, DrinkMenu.Starters, 0);
     }
 
@@ -44,9 +44,13 @@ public sealed class Tavern
 
     public TavernLayout Layout { get; private set; } = null!;
 
-    public int Helper { get; private set; }
+    public CounterHelper Helper { get; }
 
     public bool Open { get; set; } = true;
+
+    public bool Interactive { get; init; } = true;
+
+    public bool AutoServe { get; init; }
 
     public IRegularBook? Book { get; set; }
 
@@ -56,7 +60,7 @@ public sealed class Tavern
 
     public void Configure(int seats, IReadOnlyList<Drink> menu, int helper)
     {
-        Helper = helper;
+        Helper.Hire(helper);
         _seats = seats;
         _stations.RemoveAll(station => !menu.Contains(station.Drink));
         foreach (Drink drink in menu.Where(drink => _stations.All(station => station.Drink != drink)))
@@ -74,7 +78,12 @@ public sealed class Tavern
     public void Expect(IReadOnlyList<GuestVisit> guests)
     {
         _arrivals.Expect(guests, _patrons);
-        Dismiss(_patrons.Where(patron => patron.Visit is long visit && patron.Awaited && guests.All(guest => guest.Visit != visit)).ToList());
+        _served.Clear();
+        _served.UnionWith(guests.Where(guest => guest.Served).Select(guest => guest.Visit));
+        Dismiss(_patrons.Where(patron =>
+            patron.Visit is long visit
+            && patron.Phase is not (PatronPhase.Leaving or PatronPhase.Gone)
+            && guests.All(guest => guest.Visit != visit)).ToList());
     }
 
     public void Arrange(int width)
@@ -108,30 +117,13 @@ public sealed class Tavern
 
         UpdatePatrons(delta);
         _desk.Dispatch(_stations, _patrons);
-        _desk.Help(Helper, _stations, _patrons);
-        _desk.Update(delta, Deliver);
+        _desk.ServeUnattended(_patrons, _stations, _served, AutoServe);
+        Helper.Update(delta, Layout, _stations, _patrons, Deliver);
+        _desk.Update(delta, slide => Deliver(slide.Patron, slide.Drink));
         _patrons.RemoveAll(patron => patron.Phase == PatronPhase.Gone);
     }
 
-    public Drink OrderFor(string? regular)
-    {
-        if (regular is not null && Book?.Favorite(regular) is Drink favorite && _stations.Any(station => station.Drink == favorite) && _random.NextDouble() < FavoriteChance)
-        {
-            return favorite;
-        }
-
-        int roll = _random.Next(_stations.Sum(station => DrinkMenu.Appetite(station.Drink)));
-        foreach (Station station in _stations)
-        {
-            roll -= DrinkMenu.Appetite(station.Drink);
-            if (roll < 0)
-            {
-                return station.Drink;
-            }
-        }
-
-        return _stations[0].Drink;
-    }
+    public Drink OrderFor(string? regular) => Orders.Pick(regular, Book, _stations, _random);
 
     private void Dismiss(IEnumerable<Patron> patrons)
     {
@@ -157,33 +149,47 @@ public sealed class Tavern
             {
                 FinishRound(patron);
             }
+            else if (patron.DoneMingling)
+            {
+                Lounge.Part(patron);
+            }
         }
     }
 
     private void FinishRound(Patron patron)
     {
-        if (patron.Visit is null && patron.Rounds + 1 < MaxRounds && _random.NextDouble() < SecondRoundChance)
+        if (patron.Visit is not null)
+        {
+            patron.KeepDrinking();
+            return;
+        }
+
+        if (patron.Rounds + 1 < MaxRounds && _random.NextDouble() < SecondRoundChance)
         {
             patron.OrderAgain(OrderFor(patron.Regular));
             return;
         }
 
-        patron.Leave();
+        if (!Lounge.TryMingle(patron, Layout, _patrons, _random))
+        {
+            patron.Leave();
+        }
     }
 
-    private void Deliver(SlidingDrink slide)
+    private void Deliver(Patron patron, PreparedDrink drink)
     {
-        Patron patron = slide.Patron;
-        PreparedDrink drink = slide.Drink;
         patron.Serve(drink, MinDrinking + (float)_random.NextDouble() * (MaxDrinking - MinDrinking));
         if (patron.Visit is long visit)
         {
-            GuestServed?.Invoke(new GuestService(visit, drink.Perfect, (int)MathF.Round(patron.X)));
+            if (!drink.Helped)
+            {
+                GuestServed?.Invoke(new GuestService(visit, drink.Perfect, (int)MathF.Round(patron.X)));
+            }
+
             return;
         }
 
-        bool quick = !drink.Helped && patron.Waited < QuickService;
-        int amount = DrinkMenu.Price(drink.Drink) + (drink.Perfect ? DrinkMenu.PerfectTip : 0) + (quick ? DrinkMenu.QuickTip : 0);
+        int amount = DrinkMenu.Bill(drink, patron.Waited);
         Pay(Boosted ? amount * 2 : amount, patron, drink.Perfect, drink.Drink);
     }
 

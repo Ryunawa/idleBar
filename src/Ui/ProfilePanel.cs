@@ -21,6 +21,7 @@ public partial class ProfilePanel : VBoxContainer
     private OptionButton _drinks = null!;
     private OptionButton _colors = null!;
     private Label _specialty = null!;
+    private StampPicker _stamps = null!;
     private IReadOnlyList<string> _baseWords = [];
     private IReadOnlyList<string> _complementWords = [];
     private IReadOnlyList<string> _menu = [];
@@ -30,6 +31,8 @@ public partial class ProfilePanel : VBoxContainer
     public event Action<AvatarData>? AvatarSaved;
 
     public event Action<SpecialtyArguments>? SpecialtySaved;
+
+    public event Action<string>? StampSaved;
 
     private static int[] Counts => [PatronSprites.HeadCount, PatronLook.SkinCount, PatronLook.HairCount, PatronLook.ClothesCount, PatronLook.AccentCount];
 
@@ -63,6 +66,9 @@ public partial class ProfilePanel : VBoxContainer
             _avatarEdited = false;
             AvatarSaved?.Invoke(new AvatarData(_avatar[0], _avatar[1], _avatar[2], _avatar[3], _avatar[4]));
         }));
+        _stamps = new StampPicker();
+        _stamps.Chosen += stamp => StampSaved?.Invoke(stamp);
+        content.AddChild(_stamps);
         content.AddChild(WindowRows.Heading("Ta spécialité"));
         content.AddChild(WindowRows.Muted("Tes amis la goûtent quand ils viennent boire un verre chez toi, et l'ajoutent à leur carte des spécialités."));
         _bases = Choice(content, "Nom :");
@@ -71,9 +77,7 @@ public partial class ProfilePanel : VBoxContainer
         _colors = Choice(content, "Couleur :");
         for (int color = 0; color < ColorNames.Length; color++)
         {
-            Image swatch = Image.CreateEmpty(12, 12, false, Image.Format.Rgba8);
-            swatch.Fill(SpecialtyColors.Of(color));
-            _colors.AddIconItem(ImageTexture.CreateFromImage(swatch), ColorNames[color]);
+            _colors.AddIconItem(SpecialtyColors.Swatch(color), ColorNames[color]);
         }
 
         _specialty = WindowRows.Heading(string.Empty);
@@ -107,6 +111,7 @@ public partial class ProfilePanel : VBoxContainer
             _specialtyEdited = false;
         }
 
+        _stamps.Show(world, tavern.Stamp ?? "heart");
         if (!_avatarEdited)
         {
             int[] values = [tavern.Avatar.Head, tavern.Avatar.Skin, tavern.Avatar.Hair, tavern.Avatar.Clothes, tavern.Avatar.Accent];
@@ -116,9 +121,9 @@ public partial class ProfilePanel : VBoxContainer
 
         if (!_specialtyEdited)
         {
-            _bases.Selected = Math.Max(0, IndexOf(_baseWords, tavern.Specialty.Base));
-            _complements.Selected = Math.Max(0, IndexOf(_complementWords, tavern.Specialty.Complement));
-            _drinks.Selected = Math.Max(0, IndexOf(_menu, tavern.Specialty.Drink));
+            _bases.Selected = Math.Max(0, _baseWords.ToList().IndexOf(tavern.Specialty.Base));
+            _complements.Selected = Math.Max(0, _complementWords.ToList().IndexOf(tavern.Specialty.Complement));
+            _drinks.Selected = Math.Max(0, _menu.ToList().IndexOf(tavern.Specialty.Drink));
             _colors.Selected = tavern.Specialty.Color;
             ShowSpecialty();
         }
@@ -184,8 +189,6 @@ public partial class ProfilePanel : VBoxContainer
             choice.AddItem(item);
         }
     }
-
-    private static int IndexOf(IReadOnlyList<string> items, string value) => items.ToList().IndexOf(value);
 
     private static Button Save(string text, Action pressed)
     {

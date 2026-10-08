@@ -7,7 +7,7 @@ public static class StatusBuilder
 {
     private const string Title = "IdleBar";
 
-    public static BarStatus Describe(OnlineSession? session, Tavern tavern)
+    public static BarStatus Describe(OnlineSession? session, Tavern tavern, RoomDesk? rooms)
     {
         if (session is null)
         {
@@ -26,14 +26,15 @@ public static class StatusBuilder
             };
         }
 
-        string situation = Situation(tavern) + (session.Status == SessionStatus.Offline ? " · hors ligne" : string.Empty);
+        string situation = (rooms?.Room is { Mine: false } room ? Visiting(room) : Situation(tavern)) + (session.Status == SessionStatus.Offline ? " · hors ligne" : string.Empty);
         return new BarStatus(
             data.Name,
             session.Coins,
             situation,
             $"{data.Name} · {NumberFormat.Coins(session.Coins)} · {situation}",
             TipJar(data.TipJar),
-            Outing(data.Outing));
+            Outing(data.Outing),
+            rooms?.CanSpeak == true);
     }
 
     private static VisitView? Outing(OutingData? outing) => outing switch
@@ -43,6 +44,9 @@ public static class StatusBuilder
         { Perfect: true } => new VisitView($"Chez {outing.Host}", "Servi, parfait !"),
         _ => new VisitView($"Chez {outing.Host}", "Servi"),
     };
+
+    private static string Visiting(RoomData room) =>
+        room.HostHome ? $"En visite : {room.Host}" : $"En visite : {room.Host}, hôte sorti";
 
     private static BarStatus Waiting(string headline, string situation) =>
         new(headline, null, situation, $"{Title} · {headline} {situation}".Trim(), null);

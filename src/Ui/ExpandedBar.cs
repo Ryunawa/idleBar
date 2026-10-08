@@ -10,6 +10,8 @@ public partial class ExpandedBar : MarginContainer
     private const float GlowSeconds = 1.2f;
     private const float JarBeat = 4f;
     private const int StatsWidth = 190;
+    private const int SituationLines = 2;
+    private const int SituationLineSpacing = -3;
 
     private static readonly Color Glow = new(1.6f, 1.5f, 1.2f);
 
@@ -22,6 +24,8 @@ public partial class ExpandedBar : MarginContainer
     private TipJarButton _jar = null!;
     private VisitSlot _visit = null!;
     private BarSlot _update = null!;
+    private Button _chat = null!;
+    private Color _situationColor = BarPalette.Muted;
 
     public event Action? ToggleRequested;
 
@@ -36,6 +40,10 @@ public partial class ExpandedBar : MarginContainer
     public event Action? TipJarRequested;
 
     public event Action<string>? EmoteRequested;
+
+    public event Action<Vector2I>? ChatRequested;
+
+    public event Action? LeaveRequested;
 
     public TavernLane Lane { get; private set; } = null!;
 
@@ -70,6 +78,10 @@ public partial class ExpandedBar : MarginContainer
         coinsRow.AddChild(_jar);
         _situation = BarLabels.Create(11, BarPalette.Muted);
         _situation.CustomMinimumSize = new Vector2(StatsWidth, 0);
+        _situation.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        _situation.TextOverrunBehavior = TextServer.OverrunBehavior.NoTrimming;
+        _situation.MaxLinesVisible = SituationLines;
+        _situation.AddThemeConstantOverride("line_spacing", SituationLineSpacing);
         stats.AddChild(coinsRow);
         stats.AddChild(_situation);
         row.AddChild(stats);
@@ -77,8 +89,22 @@ public partial class ExpandedBar : MarginContainer
         Lane = new TavernLane { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         row.AddChild(Lane);
 
+        _chat = new Button
+        {
+            Text = "Parler",
+            Visible = false,
+            FocusMode = FocusModeEnum.None,
+            MouseDefaultCursorShape = CursorShape.PointingHand,
+            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+            TooltipText = "Écrire un message à ceux qui sont dans la même taverne que toi",
+        };
+        _chat.AddThemeFontSizeOverride("font_size", PixelFont.Size(12));
+        ClickBinding.OnLeftPress(_chat, () => ChatRequested?.Invoke(ScreenPoint(_chat)));
+        row.AddChild(_chat);
+
         _visit = new VisitSlot();
         _visit.EmoteRequested += emote => EmoteRequested?.Invoke(emote);
+        _visit.LeaveRequested += () => LeaveRequested?.Invoke();
         row.AddChild(_visit);
 
         _update = new BarSlot();
@@ -94,7 +120,10 @@ public partial class ExpandedBar : MarginContainer
         row.AddChild(windowButtons);
     }
 
-    public void Attach(Tavern tavern) => Lane.Attach(tavern);
+    public void Attach(Tavern tavern, bool payments = true) => Lane.Attach(tavern, payments);
+
+    private Vector2I ScreenPoint(Control control) =>
+        GetWindow().Position + (Vector2I)((control.GetGlobalPosition() + new Vector2(control.Size.X / 2, 0)) * GetWindow().ContentScaleFactor);
 
     public override void _Process(double delta)
     {
@@ -126,9 +155,15 @@ public partial class ExpandedBar : MarginContainer
     {
         string? hint = Lane.Hint;
         _situation.Text = hint ?? status.Situation;
-        _situation.AddThemeColorOverride("font_color", hint is null ? BarPalette.Muted : BarPalette.Text);
+        Color situationColor = hint is null ? BarPalette.Muted : BarPalette.Text;
+        if (situationColor != _situationColor)
+        {
+            _situationColor = situationColor;
+            _situation.AddThemeColorOverride("font_color", situationColor);
+        }
         _jar.Display(status.TipJar);
         _visit.Display(status.Visit);
+        _chat.Visible = status.CanChat;
         if (status.Coins is not double coins)
         {
             _shownCoins = double.NaN;

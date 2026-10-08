@@ -17,6 +17,7 @@ public sealed class VisitDesk
     private readonly GameActions _actions;
     private readonly Dictionary<long, PatronLook> _looks = [];
     private readonly Dictionary<long, string> _names = [];
+    private readonly Dictionary<long, Guid> _players = [];
     private OutingData? _outing;
 
     public VisitDesk(Tavern tavern, GameActions actions, Doorbell doorbell)
@@ -43,24 +44,43 @@ public sealed class VisitDesk
 
     public void Sync(TavernData? tavern)
     {
-        IReadOnlyList<GuestData> guests = tavern?.Guests ?? [];
-        foreach (GuestData guest in guests)
+        IReadOnlyList<GuestData> waiting = tavern?.Guests ?? [];
+        foreach (GuestData guest in waiting)
         {
             _looks[guest.Visit] = Look(guest.Avatar);
             _names[guest.Visit] = guest.Name;
         }
 
-        _tavern.Expect(guests.Select(guest => new GuestVisit(guest.Visit, guest.Name, DrinkMenu.FromId(guest.Drink) ?? Drink.Beer)).ToList());
+        IReadOnlyList<RoomGuest> present = tavern?.Room?.Guests ?? [];
+        foreach (RoomGuest guest in present)
+        {
+            _looks[guest.Visit] = Look(guest.Avatar);
+            _names[guest.Visit] = guest.Name;
+            _players[guest.Visit] = guest.Id;
+        }
+
+        _tavern.Expect(tavern?.Room is { Mine: true }
+            ? present.Select(guest => new GuestVisit(guest.Visit, guest.Name, DrinkMenu.FromId(guest.Drink) ?? Drink.Beer, guest.Served)).ToList()
+            : waiting.Select(guest => new GuestVisit(guest.Visit, guest.Name, DrinkMenu.FromId(guest.Drink) ?? Drink.Beer)).ToList());
         _outing = tavern?.Outing;
     }
 
     public PatronLook? LookOf(Patron patron) =>
         patron.Visit is long visit && _looks.TryGetValue(visit, out PatronLook? look) ? look : RegularLooks.For(patron.Regular);
 
-    public string? Describe(Patron patron) =>
-        patron.Visit is long visit && _names.TryGetValue(visit, out string? name)
-            ? $"{name}, en visite · commande : {DrinkMenu.Name(patron.Order)} · clique pour trinquer"
-            : null;
+    public Guid? PlayerOf(Patron patron) => patron.Visit is long visit && _players.TryGetValue(visit, out Guid player) ? player : null;
+
+    public string? Describe(Patron patron, bool hosting)
+    {
+        if (patron.Visit is not long visit || !_names.TryGetValue(visit, out string? name))
+        {
+            return null;
+        }
+
+        return hosting
+            ? $"{name}, en visite · commande : {DrinkMenu.Name(patron.Order)} · clic : trinquer · clic droit : options"
+            : $"{name}, en visite · clic droit : options";
+    }
 
     public void Cheer(Patron patron)
     {

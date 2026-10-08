@@ -29,6 +29,7 @@ select pg_temp.expect_denied('select public.start_visit(gen_random_uuid(), ''hea
 select pg_temp.expect_denied('select public.send_emote(1, ''cheers'')');
 select pg_temp.expect_denied('select public.offer_round()');
 select pg_temp.expect_denied('select public.greet_passerby(gen_random_uuid())');
+select pg_temp.expect_denied('select public.show_door(1)');
 reset role;
 
 select set_config('request.jwt.claim.sub', '33333333-3333-3333-3333-333333333333', false);
@@ -37,6 +38,9 @@ select pg_temp.expect_denied('select * from private.settings');
 select pg_temp.expect_denied('select private.state(auth.uid())');
 select pg_temp.expect_denied('select * from public.renown_tiers');
 select pg_temp.expect_denied('select * from public.drinks');
+select pg_temp.expect_denied('select * from public.chat_messages');
+select pg_temp.expect_denied('select * from public.chat_mutes');
+select pg_temp.expect_denied('select * from private.chat_words');
 select pg_temp.expect_denied('select * from public.upgrades');
 select pg_temp.expect_denied('select * from public.goal_kinds');
 select pg_temp.expect_denied('select * from public.taverns');

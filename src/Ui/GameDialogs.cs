@@ -12,22 +12,41 @@ public sealed class GameDialogs
     private readonly OnlineSession _session;
     private readonly Account _account;
     private readonly GameActions _actions;
+    private readonly Journal _journal;
     private readonly LoginWindow _login = new();
     private readonly FoundingWindow _founding = new();
     private readonly TavernWindow _tavern = new();
+    private readonly FriendProfileWindow _profile = new();
     private float _scale = 1f;
 
-    public GameDialogs(OnlineSession session, Account account, GameActions actions, Node host)
+    public GameDialogs(OnlineSession session, Account account, GameActions actions, Journal journal, Node host)
     {
         _session = session;
         _account = account;
         _actions = actions;
+        _journal = journal;
+        journal.Changed += () =>
+        {
+            if (_tavern.Visible)
+            {
+                _tavern.Journal.Refresh(journal);
+            }
+        };
         host.AddChild(_login);
         host.AddChild(_founding);
         host.AddChild(_tavern);
         _login.Submitted += OnLoginSubmitted;
         _founding.Submitted += OnFoundingSubmitted;
-        _tavern.BuyRequested += id => RunInTavern(() => _actions.BuyAsync(id));
+        host.AddChild(_profile);
+        _tavern.BuyRequested += id => RunInTavern(async () =>
+        {
+            await _session.FlushAsync();
+            await _actions.BuyAsync(id);
+        });
+        _tavern.Friends.ProfileRequested += OpenProfile;
+        _tavern.Friends.Unmuted += player => RunInTavern(() => _actions.MuteAsync(player, false));
+        _tavern.Profile.StampSaved += stamp => RunInTavern(() => _actions.SetStampAsync(stamp));
+        _profile.MuteRequested += (player, muted) => RunInTavern(() => _actions.MuteAsync(player, muted));
         _tavern.Friends.FriendRequested += code => RunInTavern(() => _actions.RequestFriendAsync(code));
         _tavern.Friends.Answered += (from, accept) => RunInTavern(() => _actions.AnswerFriendAsync(from, accept));
         _tavern.Friends.Removed += friend => RunInTavern(() => _actions.RemoveFriendAsync(friend));
@@ -56,6 +75,22 @@ public sealed class GameDialogs
         }
     }
 
+    public async void OpenProfile(Guid friend)
+    {
+        FriendProfile? profile = null;
+        string? error = await ActionFeedback.CaptureAsync(async () => profile = await _actions.GetFriendProfileAsync(friend));
+        if (error is not null)
+        {
+            _tavern.ShowError(error);
+            return;
+        }
+
+        if (profile is not null && _session.World is WorldData world)
+        {
+            _profile.Open(_scale, profile, world);
+        }
+    }
+
     private void ToggleTavern()
     {
         if (_tavern.Visible)
@@ -65,6 +100,7 @@ public sealed class GameDialogs
         }
 
         _tavern.Open(_scale);
+        _tavern.Journal.Refresh(_journal);
         RefreshTavern();
     }
 

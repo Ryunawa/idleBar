@@ -32,6 +32,9 @@ select pg_temp.check(
   'Gaspard : amitié 3, premier chapitre');
 select pg_temp.check((public.get_state() #>> '{tavern,goals,0,done}')::boolean, 'objectif « servir un habitué » rempli');
 select pg_temp.check((public.get_state() #>> '{tavern,coins}')::integer = 15 + 80, 'récompense de l''objectif');
+reset role;
+update public.taverns set reported_at = now() - interval '10 seconds' where player_id = '55555555-5555-5555-5555-555555555555';
+set role authenticated;
 select public.report_service('{"drinks": {"beer": 1}, "regulars": {"gaspard": {"served": 9}}}');
 select pg_temp.check((public.get_state() #>> '{tavern,regulars,0,visits}')::integer = 3, 'habitué plafonné aux services acceptés');
 reset role;

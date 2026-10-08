@@ -6,7 +6,7 @@ namespace IdleBar.Ui;
 
 public sealed class Street
 {
-    private const float WalkSeconds = 5f;
+    private const float WalkSeconds = 14f;
     private const float MinPause = 8f;
     private const float MaxPause = 25f;
 

@@ -4,6 +4,26 @@ namespace IdleBar.Online;
 
 public static class RealtimeMessages
 {
+    public static (RealtimeSignal Signal, RealtimeEvent? Event) Read(string text, string topic)
+    {
+        JsonNode? node = JsonNode.Parse(text);
+        if (node?["topic"]?.GetValue<string>() != topic)
+        {
+            return (RealtimeSignal.Ignored, null);
+        }
+
+        string? status = node["payload"]?["status"]?.GetValue<string>();
+        return node["event"]?.GetValue<string>() switch
+        {
+            "phx_reply" when status == "ok" => (RealtimeSignal.Joined, null),
+            "phx_reply" or "phx_error" or "phx_close" => (RealtimeSignal.Dropped, null),
+            "broadcast" when node["payload"] is JsonObject payload => (RealtimeSignal.Received, new RealtimeEvent(
+                payload["event"]?.GetValue<string>() ?? string.Empty,
+                payload["payload"]?.ToJsonString() ?? "{}")),
+            _ => (RealtimeSignal.Ignored, null),
+        };
+    }
+
     public static string Join(string topic, string token, string reference) => new JsonObject
     {
         ["topic"] = topic,

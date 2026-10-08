@@ -18,11 +18,11 @@ public sealed class RoundMemory
         _last = DateTimeOffset.FromUnixTimeSeconds(file.GetValue(Section, Key, 0L).AsInt64());
     }
 
-    public bool IsNew(DateTimeOffset at) => at > _last;
+    public bool IsNew(DateTimeOffset at) => at.ToUnixTimeSeconds() > _last.ToUnixTimeSeconds();
 
     public void Remember(DateTimeOffset at)
     {
-        if (at <= _last)
+        if (!IsNew(at))
         {
             return;
         }

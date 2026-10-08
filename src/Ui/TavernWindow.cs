@@ -20,6 +20,8 @@ public partial class TavernWindow : Window
 
     public ProfilePanel Profile { get; private set; } = null!;
 
+    public JournalPanel Journal { get; private set; } = null!;
+
     public override void _Ready()
     {
         VBoxContainer content = WindowFrame.Build(this, "IdleBar · Ta taverne", 6);
@@ -35,8 +37,11 @@ public partial class TavernWindow : Window
         tabs.AddChild(_goals);
         tabs.AddChild(_regulars);
         tabs.AddChild(Friends);
+        Journal = new JournalPanel();
+        tabs.AddChild(Journal);
         tabs.AddChild(Profile);
         tabs.AddChild(_tavern);
+        tabs.AddChild(new FaqPanel());
         content.AddChild(tabs);
         _message = WindowFrame.CreateMessage();
         content.AddChild(_message);

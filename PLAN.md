@@ -12,7 +12,7 @@ Une petite taverne en pixel art qui vit dans une barre discrète en bas de l'éc
 - **Interactions entre amis et avec des passants.**
   - Les interactions voulues (visites, tournées, spécialités) se font entre amis, ajoutés par un code ami.
   - D'autres joueurs connectés passent dans la rue pour que la barre reste vivante.
-  - Pas de texte libre entre joueurs : seulement des émotes et des tampons.
+  - Depuis le 8 octobre 2026, le texte libre est permis, mais seulement entre ceux qui sont dans la même taverne : messages courts, filtrés par le serveur, avec masquage et raccompagnement à la porte (voir l'étape 7). Les passants n'échangent toujours que des saluts.
 - **En direct dès le départ**, avec Supabase Realtime, tant que le forfait gratuit suffit. Sinon, le même jeu fonctionne en différé (voir « Le direct et le quota »).
 - **Ça marche à 3 joueurs comme à 300.** Les clients du jeu remplissent la taverne et les vrais joueurs s'y ajoutent.
 
@@ -42,7 +42,9 @@ De gauche à droite :
   | 150 % | 126 px | 4 | 31 |
   | 175 % | 147 px | 5 | 29 |
   | 200 % | 168 px | 6 | 28 |
-- **Les tabourets s'ajoutent** vers la droite à mesure qu'on les achète : la largeur de l'écran le permet.
+- **Les tabourets se répartissent sur tout le comptoir** (`TavernLayout`) : de 24 à 110 pixels d'art entre deux tabourets, le dernier cinquième de la salle restant au décor. Sur un écran étroit, l'écart descend jusqu'à 12 pixels pour que tous les tabourets restent visibles.
+- **L'aide au comptoir se voit** (`CounterHelper`, `HelperPainter`) : un apprenti, un commis à casquette ou une serveuse à chignon, en tablier. Elle va au poste, verse, porte sur son plateau jusqu'à 2, 3 ou 4 boissons selon son niveau, les sert de gauche à droite, puis essuie le comptoir entre deux services.
+- **Des clients s'attardent** (`Lounge`) : après leur verre, 4 clients sur 10 restent debout au comptoir 25 à 60 secondes, par deux, à bavarder avec de petites bulles (« … », « ! », une note, un cœur), leur chope à la main. Ils libèrent leur tabouret, ne se placent jamais devant un tabouret, et on n'en voit pas plus de 4 à la fois.
 - **Les fenêtres** du mur du fond montrent le ciel (jour, crépuscule, étoiles). Les passants y défileront.
 - **Le décor** est tiré au hasard, mais toujours le même pour une largeur donnée, sur toute la largeur de l'écran, sans motif qui se répète (`DecorPlan`) :
   - au mur, espacés de 22 à 56 pixels avec une fenêtre au moins tous les 3 décors : fenêtres, étagères, tableau, portrait, trophée, bouclier, panneau d'affichage, bannières, horloge à balancier, cible, et parfois un poteau de charpente ;
@@ -83,7 +85,9 @@ Les écus achètent :
 - du **décor** : plantes, ail et herbes, panneau d'affichage, tableaux, cible, bannières, le chat de la taverne, horloge, trophées, cheminée ;
 - des améliorations de l'**aide au comptoir**.
 
-La **renommée** de la taverne monte avec les clients servis. Elle débloque les postes et fait venir les habitués. La taverne s'agrandit au fil des paliers : bicoque, estaminet, taverne, auberge.
+La **renommée** de la taverne monte avec les clients servis. Elle débloque les postes et fait venir les habitués. La taverne s'agrandit au fil des paliers : bicoque, estaminet, taverne, auberge, grande auberge.
+
+**Rythme visé** (mesuré le 8 octobre 2026 en simulant la salle) : l'aide seule sert de 180 à 270 clients par heure et gagne de 1 000 à 1 500 écus. Avec les seuils et les prix doublés par le script `15`, une barre ouverte 8 heures par jour achète presque tout en une semaine et atteint la Grande auberge vers la troisième semaine.
 
 **Objectifs du jour.** Trois petites demandes par jour (« servir 20 clients », « réussir 5 services parfaits », « servir 10 thés »…), avec une récompense versée dès qu'elles sont remplies.
 
@@ -147,8 +151,9 @@ Premiers habitués envisagés :
 
 **Organisation.**
 - Une connexion par joueur en ligne.
-- Un canal par taverne (`taverne:<id>`), privé, protégé par le RLS de `realtime.messages` : seuls le propriétaire et ses amis peuvent le rejoindre.
-- La présence ne sert que dans ces petits canaux (l'hôte et ses visiteurs). Il n'y a **pas de canal de présence global**, dont le coût croîtrait comme le carré du nombre de joueurs.
+- Un canal par taverne (`taverne:<id>`), privé, protégé par le RLS de `realtime.messages`.
+- En pratique, la règle « Recevoir sa sonnette » ne laisse entrer que le propriétaire dans son canal : quand quelque chose concerne toute une salle, le serveur sonne chez chacun de ses membres (`private.ring_room`), soit au plus 7 messages.
+- Il n'y a **pas de canal de présence global**, dont le coût croîtrait comme le carré du nombre de joueurs : la présence dans une taverne est écrite en base (`visits.present_until`).
 - Les passants viennent de la base (`last_seen` mis à jour par la lecture de l'état), pas du temps réel.
 - Les fonctions SQL sonnent à la porte avec `realtime.send` quand quelque chose arrive à un autre joueur : visite, tournée, invitation, demande d'ami.
 
@@ -192,6 +197,8 @@ Premiers habitués envisagés :
 | 6. Saisons | Météo, saisons, fêtes et leurs objets | Fait, à tester en jeu (sur le PC, sans script) |
 | Easter eggs | Le Sceau du dragon, tampon exclusif du livre d'or | Fait, à tester en jeu (script `12`) |
 | Mises à jour | Version minimale imposée par le serveur, procédure de publication | Fait (script `13`) |
+| 7. Ensemble | Vue de la taverne d'un ami pendant la visite, présence, chat filtré, masquage, raccompagnement, fiche d'ami, tampon-signature, journal, FAQ, aide visible, clients répartis et qui s'attardent | Fait, à tester en jeu (script `14`) |
+| Équilibre et revue | Seuils et prix ×2, relevé plafonné au temps réel, sonneries limitées, plafond d'amis, noms de taverne nettoyés | Fait (script `15`) |
 
 ## Étape 1 : le comptoir tel qu'il est
 
@@ -244,14 +251,14 @@ Chaque script peut être rejoué.
 
 **Relevé des services.**
 - Le jeu envoie toutes les 15 s, et à la fermeture, ce qui a été servi : `{"drinks": {"beer": 3}, "perfect": 2, "parting": 1, "coins": 37}`.
-- Le serveur ne garde que les boissons de la carte, dans la limite de tabourets × (1 + secondes écoulées / 10), sur 10 minutes au plus.
+- Le serveur ne garde que les boissons de la carte, dans la limite de tabourets × (secondes écoulées / 10, arrondi), sur 10 minutes au plus. Depuis le script `15`, `reported_at` n'avance que du temps réellement accordé : des relevés envoyés en rafale ne rapportent rien de plus.
 - Les écus sont plafonnés à 25 par service, plus 1 par client parti sans être servi. Les parfaits ne dépassent pas les services.
 - Ce qu'il accepte compte pour la renommée (1 par service, 1 de plus par parfait) et pour les objectifs du jour.
 - Si l'envoi échoue, le relevé est gardé et renvoyé plus tard.
 
-**Paliers de renommée.** Bicoque (0), Estaminet (300), Taverne (1 500), Auberge (6 000), Grande auberge (20 000).
+**Paliers de renommée.** Bicoque (0), Estaminet (600), Taverne (3 000), Auberge (12 000), Grande auberge (40 000). Ce sont les valeurs du script `15`, qui a doublé celles du script `01`.
 
-**Améliorations.** Les prix sont en écus ; le palier indique celui qu'il faut avoir atteint.
+**Améliorations.** Les prix sont en écus ; le palier indique celui qu'il faut avoir atteint. Le script `15` a doublé tous les prix ci-dessous (par exemple 240 écus pour le 5ᵉ tabouret, 16 000 pour la serveuse).
 - Tabourets : du 5ᵉ au 10ᵉ, à 120, 300, 700, 1 500, 3 000 et 6 000 écus, chacun après le précédent et à partir d'un palier croissant.
 - Postes :
   - marmite, 400 écus, Estaminet ;
@@ -325,7 +332,7 @@ Chaque script peut être rejoué.
 - Les souvenirs s'alignent sur une étagère, juste après le dernier tabouret.
 - L'onglet Habitués de la fenêtre de la taverne sert de carnet : portraits, conditions, amitié, répliques débloquées. Un habitué jamais rencontré y apparaît en ombre.
 
-**Météo.** Le temps change par tranches de 3 heures : il pleut une fois sur quatre, le même jour et à la même heure pour tout le monde (`Weather`). Les fenêtres montrent alors un ciel gris et la pluie.
+**Météo.** Le temps change par tranches de 3 heures : il pleut une fois sur quatre, le même jour et à la même heure pour tous les joueurs d'un même fuseau horaire (`Weather` lit l'heure locale). Les fenêtres montrent alors un ciel gris et la pluie.
 
 **À vérifier en jeu.**
 - La fréquence des habitués : une chance sur quatre et 10 minutes de repos entre deux visites.
@@ -353,8 +360,8 @@ Chaque script peut être rejoué.
 - La spécialité a un nom pris dans deux listes de mots (« Hydromel » + « de la Lune »), un plat de la carte et une couleur parmi huit. Il n'y a pas de texte libre entre joueurs.
 
 **Visites.**
-- « Rendre visite » ouvre une visite, avec le tampon choisi pour le livre d'or de l'hôte.
-- Un joueur ne fait qu'une visite à la fois, et une taverne reçoit 3 invités au plus.
+- « Rendre visite » ouvre une visite. Depuis le script `14`, le livre d'or reçoit le tampon-signature du visiteur (voir l'étape 7).
+- Un joueur ne fait qu'une visite à la fois. Une taverne reçoit 3 invités au plus, puis 6 depuis le script `14`.
 - Chez l'hôte, l'ami entre en priorité dès qu'un tabouret se libère. Il porte son avatar, son pseudo s'affiche en or au-dessus de sa tête, et sa bulle de commande passe à côté de sa tête. Il commande la spécialité de l'hôte.
 - Le pseudo est raccourci (« La Taverne du.. ») pour ne pas toucher celui d'un autre ami assis à côté.
 - Il ne perd jamais patience, et l'aide au comptoir ne le sert pas.
@@ -392,7 +399,7 @@ Chaque script peut être rejoué.
 
 **Passants.**
 - Jusqu'à 4 joueurs en ligne qui ne sont pas tes amis, tirés au hasard. Le tirage change toutes les 5 minutes.
-- Toutes les 8 à 25 secondes, l'un d'eux passe devant une fenêtre, vu des épaules jusqu'à la tête, en 5 secondes.
+- Toutes les 8 à 25 secondes, l'un d'eux passe devant une fenêtre, vu des épaules jusqu'à la tête, en 14 secondes : il entre dans le cadre en 4 secondes, s'arrête environ 6 secondes face à la salle, puis repart.
 - Un clic sur la fenêtre pendant son passage ouvre un petit menu :
   - **Saluer** : il reçoit « X te salue depuis la rue ! », au plus une fois toutes les 30 secondes ;
   - **Inviter à boire un verre** : il trouve l'invitation dans son onglet Amis. S'il accepte, vous devenez amis et il part aussitôt en visite chez toi, avec le tampon « Chope ».
@@ -415,7 +422,7 @@ Tout se calcule sur le PC, à partir de la date et de l'heure locales : il n'y a
 
 **Saisons.** Hiver de décembre à février, printemps de mars à mai, été de juin à août, automne de septembre à novembre.
 
-**Météo.** Elle change par tranches de 3 heures et reste la même pour tout le monde au même moment (`Weather`).
+**Météo.** Elle change par tranches de 3 heures et reste la même pour tous les joueurs d'un même fuseau horaire (`Weather` lit l'heure locale).
 
 | Saison | Temps couvert | Ce qu'on voit par les fenêtres |
 |---|---|---|
@@ -443,6 +450,86 @@ La capitaine Ysolde vient sous la pluie comme sous la neige.
 
 **À vérifier en jeu.** Les chauves-souris, la neige et le rythme des feuilles sur un vrai écran.
 
+## Étape 7 : ensemble, tel que c'est
+
+**Sur Supabase.**
+- `14_together.sql` : présence dans les tavernes, salle courante, chat et son filtre, masquage, raccompagnement, fiche d'ami, tampon-signature.
+- `15_balance.sql` : seuils et prix doublés, relevé plafonné au temps réel, sonneries limitées, plafond d'amis vérifié des deux côtés, noms de taverne nettoyés, index.
+- Les deux laissent jouer la 0.2.0 : ils ajoutent des clés à l'état et remplacent des fonctions sans en changer la signature.
+
+**Présence.**
+- Une visite reste ouverte tant que le visiteur ne part pas (`leave_visit`, ou une autre visite) et que son jeu se manifeste.
+- La 0.3 relit l'état avec `sync_state(p_present)`, qui prolonge `visits.present_until` de 90 secondes pendant une visite.
+- Un jeu fermé s'efface au plus tard 90 secondes après la dernière relecture. La 0.2.0, qui ne prolonge rien, part comme avant 60 secondes après avoir été servie.
+- Retirer un ami ferme les visites dans les deux sens. Une nouvelle visite est refusée moins de 10 secondes après la précédente.
+
+**La salle** (`private.room_state`, clé `room` de l'état).
+- Chez soi : les invités présents, servis ou non. Ils restent assis, leur verre à la main, tant qu'ils sont là.
+- En visite : la taverne de l'hôte, avec ses tabourets, sa carte, son aide, son décor, ses souvenirs, sa spécialité et tous les invités présents.
+- La barre affiche alors cette taverne (`RoomDesk`, une seconde `Tavern` non interactive).
+  - Les clients d'ambiance sont tirés sur le PC et servis par l'hôte en 3 à 10 secondes.
+  - L'hôte se tient derrière le comptoir, à côté de la porte, s'il est connecté et chez lui.
+  - Les postes ne réagissent pas aux clics, et les gains de cette salle ne comptent pas.
+  - La taverne du joueur continue de tourner : son aide sert ses clients.
+
+**Le chat.**
+- `say(texte)`, 120 caractères au plus, dans la salle où l'on est : chez son hôte, ou chez soi si des invités sont là.
+- Limites : un message toutes les 2 secondes, 12 par minute.
+- Filtre côté serveur (`private.clean_chat`) :
+  - chaque mot est comparé, après passage en minuscules et suppression des accents, du « leet » et des lettres répétées, à `private.chat_words` (mots entiers, débuts de mots ou morceaux) ;
+  - un mot interdit est remplacé par des étoiles ;
+  - la liste se complète par SQL.
+- Les messages sont gardés 24 heures. Un visiteur ne voit que ceux écrits depuis son arrivée.
+- Chaque membre de la salle reçoit une sonnette `chat`, sauf ceux qui ont masqué l'auteur.
+- Dans la barre, le message s'affiche en bulle au-dessus de son auteur (`LaneOverlay.PaintSpeech`). Celui de l'hôte s'affiche au-dessus de sa place derrière le comptoir, et tous sont inscrits dans le journal.
+- Bouton « Parler » (`ChatBox`).
+
+**Se protéger.**
+- Clic droit sur un joueur au comptoir (`PlayerMenu`) :
+  - voir sa fiche ;
+  - masquer ou afficher ses messages (`mute_player`, table `chat_mutes`) ;
+  - chez soi, le raccompagner à la porte (`show_door`) ;
+  - sur son propre avatar, rentrer chez soi.
+- La liste des joueurs masqués est dans l'onglet Amis.
+
+**Fiche d'ami** (`get_friend_profile`, `FriendProfileWindow`).
+- Lecture seule : avatar, palier, clients servis, souvenirs, date d'amitié, tampon, spécialité.
+- Son livre d'or : une ligne par visiteur, avec le nom de sa taverne, son tampon et ses visites.
+- Sa carte des spécialités.
+- Elle s'ouvre par « Fiche » dans l'onglet Amis, ou d'un clic droit au comptoir.
+
+**Tampon-signature.**
+- Chaque taverne a un tampon (`taverns.stamp`), choisi dans l'onglet Avatar (`set_stamp`, `StampPicker`).
+- Le livre d'or montre le tampon actuel de chaque visiteur, une ligne par visiteur avec son nombre de visites : changer de tampon le change partout.
+- La 0.2.0, qui envoie encore un tampon à chaque visite, change ainsi la signature.
+
+**Journal et FAQ.**
+- L'onglet Journal garde les 200 dernières annonces et messages dans `user://journal.txt`.
+- La FAQ est un onglet de la taverne et une fenêtre ouverte depuis les réglages (`FaqPanel`, `FaqWindow`). À tenir à jour à chaque nouveauté.
+
+**Revue du code** (8 octobre 2026, par un agent sans contexte). Corrigés :
+- visites quittées encore vues par les anciennes fonctions ;
+- sonneries sans limite (invitations, demandes d'ami, visites) ;
+- relevé plafonné par appel et non par seconde ;
+- services hors ligne perdus après une coupure ;
+- sonnette jamais rejointe après un refus ;
+- ami retiré resté dans la salle ;
+- tabourets hors de l'écran ;
+- tests SQL cassés ;
+- tournée réannoncée à chaque lancement ;
+- plafond d'amis dépassable ;
+- relevé rendu au compte suivant ;
+- sonnette perdue pendant une relecture ;
+- bouton d'achat trompé par les écus non envoyés ;
+- jeton rafraîchi deux fois ;
+- décodage UTF-8 des messages Realtime ;
+- liste de tampons figée ;
+- couleurs refaites à chaque image ;
+- index manquants ;
+- noms de taverne non nettoyés.
+
+Non traités : les sommes « +250 » et « +30 écus » écrites en dur dans quelques textes.
+
 ## Mises à jour
 
 **Pour les joueurs.**
@@ -458,6 +545,8 @@ La capitaine Ysolde vient sous la pluie comme sous la neige.
 1. Exécuter les nouveaux scripts SQL. Ils doivent laisser jouer la version précédente : on ajoute, on ne retire ni ne renomme rien de ce qu'elle appelle.
 2. Pousser le tag `vX.Y.Z` : GitHub construit et publie.
 3. Seulement si l'ancienne version ne peut vraiment plus jouer : `update private.settings set min_client_version = 'X.Y.Z';`.
+
+La 0.3.0 a besoin des scripts `14` et `15` : les exécuter avant de pousser le tag `v0.3.0`. La 0.2.0 continue de jouer avec eux ; relever la version minimale à `0.3.0` n'est utile que pour que tout le monde voie les visites et le chat.
 
 Les joueurs en 0.1.3 (le jeu de commerce) n'ont pas ce garde-fou. Ils verront la case « Mise à jour » dès que la 0.2.0 sera publiée, mais leur jeu ne fonctionnera plus d'ici là.
 
@@ -478,7 +567,9 @@ Les joueurs en 0.1.3 (le jeu de commerce) n'ont pas ce garde-fou. Ils verront la
 - `supabase/` : les scripts SQL numérotés, à exécuter dans l'ordre, et `tests/` (lancés par `run.sh` dans Docker).
 - `src/Inn/` : les règles de la salle, sans Godot.
   - `Tavern` : la salle (arrivées, commandes, paiements) et sa configuration (tabourets, carte, aide).
-  - `ServiceDesk` : les boissons qui glissent et l'aide au comptoir.
+  - `ServiceDesk` : les boissons qui glissent, les invités déjà servis et les clients servis par l'hôte d'une autre taverne.
+  - `CounterHelper` (et `HelperSpots`) : l'aide au comptoir qui marche, verse, porte et essuie.
+  - `Lounge` : les clients qui s'attardent debout ; `Orders` : ce que commande un client.
   - `Patron` : un client et son parcours (entrée, réflexion, attente, boisson, départ).
   - `Station` et ses postes : `TapStation`, `TeapotStation`, `PieStation`, et `RhythmStation` pour `SoupStation` et `CiderStation`.
   - `TavernLayout` : la place des postes, de la porte et des tabourets.
@@ -487,7 +578,7 @@ Les joueurs en 0.1.3 (le jeu de commerce) n'ont pas ce garde-fou. Ils verront la
   - `OnlineSession` : la connexion, la synchronisation, le relevé des services (`ServiceLedger`).
   - `TavernApi` : les appels aux fonctions SQL ; les records `*Data` et `*Info` reprennent leurs réponses.
   - `Account` (connexion) et `GameActions` (les actions du joueur).
-  - `Doorbell` et `RealtimeClient` (avec `RealtimeMessages`) : la sonnette en direct.
+  - `Doorbell` et `RealtimeClient` (avec `RealtimeMessages`) : la sonnette en direct ; `SyncClock` : quand relire l'état et envoyer le relevé.
 - `src/Pixel/` : le dessin.
   - `TavernRows` : les rangées de la scène.
   - `RoomPainter` et `WindowPainter` : le mur, les fenêtres, la porte.
@@ -507,6 +598,9 @@ Les joueurs en 0.1.3 (le jeu de commerce) n'ont pas ce garde-fou. Ils verront la
   - `VisitDesk` : les amis en visite (apparence, service, émotes) ; `VisitSlot` : la case « Chez … » du visiteur ; `FriendBanners` : leurs annonces.
   - Onglets `FriendsPanel` (amis, livre d'or, carte des spécialités) et `ProfilePanel` (avatar, spécialité).
   - `StreetDesk` : les passants (`Street`, `StreetWalk`, menu `StreetMenu`), les saluts et la fête des tournées (`RoundMemory`) ; `PasserbyPainter` les dessine dans les fenêtres.
+  - `RoomDesk` : la salle où l'on est, la taverne de l'ami pendant une visite (`TavernSetup`) et le fil du chat ; `SocialControls` branche `ChatBox` et `PlayerMenu` ; `LaneHost` place l'hôte et les bulles.
+  - `Journal` et `JournalPanel` : le journal ; `FaqPanel` et `FaqWindow` : la FAQ ; `FriendProfileWindow` : la fiche d'ami ; `StampPicker` : le tampon-signature.
+  - `TavernLane` est partagée en deux fichiers : le dessin (`TavernLane.cs`) et la souris (`TavernLaneInput.cs`).
 - `src/Desktop/` : l'ancrage de la barre dans Windows (`AppBar`) et au-dessus du Dock sur macOS (`FloatingDock`). Ne pas casser.
 - `src/Cloud/` : les comptes et les appels à Supabase.
 

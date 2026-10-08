@@ -37,6 +37,8 @@ public sealed class PixelCanvas
             new Rect2(region.Position, region.Size),
             modulate);
 
+    public int TextHeight(Font font, int fontSize) => (int)MathF.Ceiling(font.GetHeight(fontSize) / _scale);
+
     public int TextWidth(Font font, int fontSize, string text) =>
         (int)MathF.Ceiling(font.GetStringSize(text, HorizontalAlignment.Left, -1, fontSize).X / _scale);
 

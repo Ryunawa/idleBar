@@ -16,10 +16,7 @@ public sealed class GameBridge : IDisposable
     private const int HttpTimeoutSeconds = 10;
     private const double LongestStep = 0.25;
     private const float RefusalSeconds = 5;
-    private const float FestivalSeconds = 9;
     private const string SessionPath = "user://session.dat";
-
-    private static readonly Color RegularColor = new("f4a3b5");
 
     private readonly HttpClient? _http;
     private readonly Doorbell? _doorbell;
@@ -29,11 +26,15 @@ public sealed class GameBridge : IDisposable
     private readonly GameDialogs? _dialogs;
     private readonly RegularBook _book = new();
     private bool _festivalAnnounced;
+    private SessionKeeper? _keeper;
+    private DecorSet _decor = DecorSet.Bare;
+    private IReadOnlyList<string> _souvenirs = [];
 
     public GameBridge(Node host)
     {
         Tavern.Open = false;
         Tavern.Book = _book;
+        Announced += (message, _) => Journal.Add(message);
         SupabaseSettings? settings = SupabaseSettings.FromProjectSettings();
         if (settings is null)
         {
@@ -47,10 +48,19 @@ public sealed class GameBridge : IDisposable
         _session = new OnlineSession(keeper, api, _doorbell);
         _actions = new GameActions(_session, api);
         _account = new Account(keeper, _session);
+        _keeper = keeper;
         Visits = new VisitDesk(Tavern, _actions, _doorbell);
         Visits.Announced += (message, seconds) => Announced?.Invoke(message, seconds);
         Streets = new StreetDesk(Tavern, _actions, _doorbell);
         Streets.Announced += (message, seconds) => Announced?.Invoke(message, seconds);
+        Rooms = new RoomDesk(_actions, _doorbell);
+        Rooms.Announced += (message, seconds) => Announced?.Invoke(message, seconds);
+        Rooms.ViewChanged += () => ViewChanged?.Invoke();
+        Rooms.Spoken += line =>
+        {
+            Journal.Add($"{line.Name} : {line.Text}");
+            Spoken?.Invoke(line);
+        };
         _session.Changed += Synchronize;
         _session.Applied += (previous, current) =>
         {
@@ -59,25 +69,45 @@ public sealed class GameBridge : IDisposable
                 Announced?.Invoke(announcement.Text, announcement.Seconds);
             }
 
-            AnnounceFestival();
+            if (!_festivalAnnounced && SessionBanners.Feast(DateTime.Now) is Announcement festival)
+            {
+                _festivalAnnounced = true;
+                Announced?.Invoke(festival.Text, festival.Seconds);
+            }
         };
         Tavern.Paid += _session.Record;
-        _dialogs = new GameDialogs(_session, _account, _actions, host);
+        _dialogs = new GameDialogs(_session, _account, _actions, Journal, host);
     }
 
     public event Action<string, float>? Announced;
 
+    public event Action? ViewChanged;
+
+    public event Action<ChatLine>? Spoken;
+
     public Tavern Tavern { get; } = new(new Random());
+
+    public Journal Journal { get; } = new();
 
     public VisitDesk? Visits { get; }
 
     public StreetDesk? Streets { get; }
 
-    public DecorSet Decor { get; private set; } = DecorSet.Bare;
+    public RoomDesk? Rooms { get; }
 
-    public IReadOnlyList<string> Souvenirs { get; private set; } = [];
+    public Tavern Shown => Rooms?.Away ?? Tavern;
 
-    public BarStatus Status => StatusBuilder.Describe(_session, Tavern);
+    public bool Away => Rooms?.Away is not null;
+
+    public TavernData? Data => _session?.Tavern;
+
+    public DecorSet Decor => Away ? Rooms!.Decor : _decor;
+
+    public IReadOnlyList<string> Souvenirs => Away ? Rooms!.Souvenirs : _souvenirs;
+
+    public Guid? Me => Guid.TryParse(_keeper?.UserId, out Guid me) ? me : null;
+
+    public BarStatus Status => StatusBuilder.Describe(_session, Tavern, Rooms);
 
     public bool SignedIn => _session?.Status is not (null or SessionStatus.SignedOut);
 
@@ -86,10 +116,13 @@ public sealed class GameBridge : IDisposable
     public void Tick(double delta)
     {
         Tavern.Update((float)Math.Min(delta, LongestStep));
+        Rooms?.Tick((float)Math.Min(delta, LongestStep));
         _session?.Tick(delta);
     }
 
     public Task FlushAsync() => _session?.FlushAsync() ?? Task.CompletedTask;
+
+    public void Announce(string text, float seconds) => Announced?.Invoke(text, seconds);
 
     public void OpenMenu(float scale)
     {
@@ -125,46 +158,18 @@ public sealed class GameBridge : IDisposable
     public PatronLook? LookOf(Patron patron) =>
         (Visits?.LookOf(patron) ?? RegularLooks.For(patron.Regular)) ?? Costumes.For(patron.Look, Calendar.FestivalOf(DateTime.Now));
 
-    public NameTag? TagOf(Patron patron)
-    {
-        if (patron.Guest is string guest)
-        {
-            return new NameTag(guest, BarPalette.Gold, false);
-        }
+    public NameTag? TagOf(Patron patron) => patron.Guest is string guest ? new NameTag(guest, BarPalette.Gold, false) : _book.Tag(patron.Regular);
 
-        return _book.Find(patron.Regular) is RegularInfo regular ? new NameTag(regular.Name, RegularColor, true) : null;
-    }
+    public string? Describe(Patron patron) => Visits?.Describe(patron, !Away) ?? _book.Describe(patron.Regular);
 
-    public string? Describe(Patron patron)
-    {
-        if (Visits?.Describe(patron) is string guest)
-        {
-            return guest;
-        }
+    public Guid? PlayerOf(Patron patron) => Visits?.PlayerOf(patron);
 
-        if (_book.Find(patron.Regular) is not RegularInfo regular)
-        {
-            return null;
-        }
-
-        int friendship = _session?.Tavern?.Regulars.FirstOrDefault(progress => progress.Id == regular.Id)?.Friendship ?? 0;
-        return $"{regular.Name} · {regular.Title} · amitié {friendship}";
-    }
+    public void OpenProfile(Guid friend) => _dialogs?.OpenProfile(friend);
 
     public void Dispose()
     {
         _doorbell?.Dispose();
         _http?.Dispose();
-    }
-
-    private void AnnounceFestival()
-    {
-        Festival festival = Calendar.FestivalOf(DateTime.Now);
-        if (!_festivalAnnounced && festival != Festival.None)
-        {
-            _festivalAnnounced = true;
-            Announced?.Invoke(Calendar.Describe(festival), FestivalSeconds);
-        }
     }
 
     private void Synchronize()
@@ -173,20 +178,17 @@ public sealed class GameBridge : IDisposable
         _book.Update(_session.World, _session.Tavern);
         Visits?.Sync(_session.Tavern);
         Streets?.Sync(_session.Tavern);
+        Rooms?.Sync(_session.Tavern, _session.World);
         if (_session.Tavern is not TavernData data)
         {
             Tavern.Configure(4, DrinkMenu.Starters, 0);
-            Decor = DecorSet.Bare;
-            Souvenirs = [];
+            _decor = DecorSet.Bare;
+            _souvenirs = [];
             return;
         }
 
-        Souvenirs = data.Regulars.Where(progress => progress.Chapter >= 5).Select(progress => progress.Id).ToList();
-        List<Drink> menu = data.Menu.Select(DrinkMenu.FromId).OfType<Drink>().ToList();
-        Tavern.Configure(data.Stools, menu.Count > 0 ? menu : DrinkMenu.Starters, data.Helper);
-        IEnumerable<string> unlocks = _session.World?.Upgrades
-            .Where(upgrade => upgrade.Kind == "decor" && data.Upgrades.Contains(upgrade.Id))
-            .Select(upgrade => upgrade.Value) ?? [];
-        Decor = DecorSet.From(unlocks);
+        _souvenirs = data.Regulars.Where(progress => progress.Chapter >= 5).Select(progress => progress.Id).ToList();
+        TavernSetup.Configure(Tavern, data.Stools, data.Menu, data.Helper);
+        _decor = TavernSetup.Decor(_session.World, data.Upgrades);
     }
 }

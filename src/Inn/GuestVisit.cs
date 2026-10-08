@@ -1,3 +1,3 @@
 namespace IdleBar.Inn;
 
-public sealed record GuestVisit(long Visit, string Name, Drink Order);
+public sealed record GuestVisit(long Visit, string Name, Drink Order, bool Served = false);

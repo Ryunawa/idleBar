@@ -5,6 +5,8 @@ insert into auth.users (id) values
   ('aaaaaaaa-0000-0000-0000-000000000002'),
   ('aaaaaaaa-0000-0000-0000-000000000003');
 
+update private.settings set visit_hop_seconds = 0;
+
 create function pg_temp.check(p_condition boolean, p_message text) returns void
 language plpgsql
 as $$
@@ -89,7 +91,9 @@ select pg_temp.expect_error('select public.start_visit(''aaaaaaaa-0000-0000-0000
 select pg_temp.expect_error('select public.start_visit(''aaaaaaaa-0000-0000-0000-000000000002'', ''fusee'')', 'tampon');
 select public.start_visit('aaaaaaaa-0000-0000-0000-000000000002', 'heart');
 select pg_temp.check(public.get_state() #>> '{tavern,outing,host}' = 'Chez Bruno', 'Aline est en visite chez Bruno');
-select pg_temp.expect_error('select public.start_visit(''aaaaaaaa-0000-0000-0000-000000000002'', ''star'')', 'déjà en visite');
+select pg_temp.check(
+  public.start_visit('aaaaaaaa-0000-0000-0000-000000000002', 'star') #>> '{tavern,outing,visit}' = public.get_state() #>> '{tavern,outing,visit}',
+  'revenir chez le même ami ne crée pas de seconde visite');
 select public.send_emote((public.get_state() #>> '{tavern,outing,visit}')::bigint, 'cheers');
 select public.send_emote((public.get_state() #>> '{tavern,outing,visit}')::bigint, 'laugh');
 
@@ -127,3 +131,5 @@ reset role;
 select pg_temp.check(
   (select helped and not rewarded from public.visits where visitor_id = 'aaaaaaaa-0000-0000-0000-000000000001' order by id desc limit 1),
   'deuxième visite servie par l''aide, sans récompense');
+
+update private.settings set visit_hop_seconds = 10;

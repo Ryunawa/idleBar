@@ -8,6 +8,7 @@ public static class DrinkMenu
     public const int PerfectTip = 3;
     public const int QuickTip = 1;
     public const int Parting = 1;
+    private const float QuickService = 20f;
 
     public static IReadOnlyList<Drink> Starters { get; } = [Drink.Beer, Drink.Tea];
 
@@ -20,6 +21,9 @@ public static class DrinkMenu
         Drink.Pie => 14,
         _ => 0,
     };
+
+    public static int Bill(PreparedDrink drink, float waited) =>
+        Price(drink.Drink) + (drink.Perfect ? PerfectTip : 0) + (!drink.Helped && waited < QuickService ? QuickTip : 0);
 
     public static int Appetite(Drink drink) => drink switch
     {

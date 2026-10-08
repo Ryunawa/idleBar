@@ -28,6 +28,9 @@ public static class LaneHits
             new Rect2I((int)MathF.Round(patron.X) - PatronSprites.Width / 2, top + TavernRows.PatronTop, PatronSprites.Width, TavernRows.CounterTop - TavernRows.PatronTop)
                 .HasPoint(pixel));
 
+    public static bool Helper(Tavern tavern, Vector2I pixel, int top) =>
+        tavern.Helper.Hired && !float.IsNaN(tavern.Helper.X) && HelperPainter.Bounds(tavern.Helper, top).HasPoint(pixel);
+
     public static StreetWalk? Walk(Street? street, Vector2I pixel, int top) =>
         street?.Current is StreetWalk walk && PasserbyPainter.Pane(walk.WindowX, top).Grow(1).HasPoint(pixel) ? walk : null;
 

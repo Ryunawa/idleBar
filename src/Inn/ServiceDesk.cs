@@ -6,17 +6,12 @@ namespace IdleBar.Inn;
 
 public sealed class ServiceDesk
 {
+    private const float HostDelay = 3f;
+    private const int HostSpread = 7;
+
     private readonly List<SlidingDrink> _slides = [];
 
     public IReadOnlyList<SlidingDrink> Slides => _slides;
-
-    public static float HelperDelay(int helper) => helper switch
-    {
-        >= 3 => 20f,
-        2 => 30f,
-        1 => 45f,
-        _ => float.MaxValue,
-    };
 
     public void Dispatch(IReadOnlyList<Station> stations, IReadOnlyList<Patron> patrons)
     {
@@ -35,16 +30,6 @@ public sealed class ServiceDesk
         }
     }
 
-    public void Help(int helper, IReadOnlyList<Station> stations, IReadOnlyList<Patron> patrons)
-    {
-        float delay = HelperDelay(helper);
-        foreach (Patron patron in patrons.Where(each => each.Visit is null && each.Wants(each.Order) && each.Waited >= delay).ToList())
-        {
-            int x = stations.FirstOrDefault(station => station.Drink == patron.Order)?.X ?? stations[0].X;
-            Send(new PreparedDrink(patron.Order, false, true), patron, x);
-        }
-    }
-
     public void Update(float delta, Action<SlidingDrink> deliver)
     {
         foreach (SlidingDrink slide in _slides)
@@ -60,6 +45,20 @@ public sealed class ServiceDesk
     }
 
     public void Forget(Patron patron) => _slides.RemoveAll(slide => slide.Patron == patron);
+
+    public void ServeUnattended(IReadOnlyList<Patron> patrons, IReadOnlyList<Station> stations, IReadOnlySet<long> served, bool hosted)
+    {
+        foreach (Patron patron in patrons.Where(patron => patron.Phase == PatronPhase.Waiting && !patron.Incoming).ToList())
+        {
+            bool alreadyServed = patron.Visit is long visit && served.Contains(visit);
+            bool byHost = hosted && patron.Visit is null && patron.Waited >= HostDelay + patron.Look % HostSpread;
+            if (alreadyServed || byHost)
+            {
+                int x = stations.FirstOrDefault(station => station.Drink == patron.Order)?.X ?? stations[0].X;
+                Send(new PreparedDrink(patron.Order, false, alreadyServed), patron, x);
+            }
+        }
+    }
 
     private void Send(PreparedDrink drink, Patron patron, int x)
     {

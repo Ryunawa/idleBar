@@ -13,6 +13,7 @@ public sealed class RegularBook : IRegularBook
     private const float Dusk = 0.5f;
 
     private static readonly TimeSpan Cooldown = TimeSpan.FromMinutes(10);
+    private static readonly Godot.Color RegularColor = new("f4a3b5");
 
     private readonly Dictionary<string, DateTime> _lastArrival = [];
     private WorldData? _world;
@@ -29,6 +30,19 @@ public sealed class RegularBook : IRegularBook
     }
 
     public RegularInfo? Find(string? regular) => regular is null ? null : _world?.Regulars.FirstOrDefault(each => each.Id == regular);
+
+    public NameTag? Tag(string? regular) => Find(regular) is RegularInfo info ? new NameTag(info.Name, RegularColor, true) : null;
+
+    public string? Describe(string? regular)
+    {
+        if (Find(regular) is not RegularInfo info)
+        {
+            return null;
+        }
+
+        int friendship = _tavern?.Regulars.FirstOrDefault(progress => progress.Id == info.Id)?.Friendship ?? 0;
+        return $"{info.Name} · {info.Title} · amitié {friendship}";
+    }
 
     public string? Pick(IReadOnlyCollection<string> present, Random random)
     {

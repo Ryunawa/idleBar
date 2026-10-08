@@ -3,8 +3,8 @@
 Une petite taverne en pixel art qui vit dans une barre en bas de ton écran. Pendant que tu fais autre chose :
 - tu sers d'un geste les clients qui passent la porte ;
 - tu fais connaissance avec douze habitués, chacun avec son histoire ;
-- tu agrandis ta salle ;
-- tu vas boire un verre chez tes amis, en direct quand ils sont là.
+- tu agrandis ta salle, et ton aide au comptoir sert quand tu as le dos tourné ;
+- tu vas boire un verre chez tes amis : ta barre montre alors leur taverne, et vous discutez au comptoir.
 
 ## Télécharger
 
@@ -37,8 +37,10 @@ xattr -dr com.apple.quarantine /Applications/IdleBar.app
 3. Sers-les d'un geste ; la boisson glisse ensuite jusqu'au client qui l'a commandée :
    - **le fût :** maintiens le clic et lâche quand la jauge est dans la zone dorée ;
    - **la théière :** clique, puis reclique quand la vapeur devient dorée.
-4. Un clic sur tes écus ouvre ta taverne : améliorations, objectifs du jour, carnet des habitués, amis et avatar.
+4. Un clic sur tes écus ouvre ta taverne : améliorations, objectifs du jour, carnet des habitués, amis, journal, avatar et FAQ.
 5. Pour jouer à plusieurs, échangez vos codes amis dans l'onglet Amis, puis rendez-vous visite.
+
+Toutes les questions fréquentes sont dans le jeu : onglet FAQ de la taverne, ou bouton « Questions fréquentes » des réglages (l'engrenage).
 
 ### Mettre à jour
 
@@ -58,17 +60,17 @@ Dans cet ordre :
 2. **Le jeu ensuite.** Pousse un tag de version : GitHub construit les versions Windows et macOS, inscrit le numéro dans le jeu, puis crée la page de téléchargement.
 
 ```bash
-git tag v0.2.0
+git tag v0.3.0
 ```
 
 ```bash
-git push origin v0.2.0
+git push origin v0.3.0
 ```
 
 3. **Seulement si les anciennes versions ne peuvent plus jouer** : une fois la nouvelle version publiée, impose-la dans l'éditeur SQL. Les jeux plus anciens affichent alors « Mise à jour requise » au lieu de planter.
 
 ```sql
-update private.settings set min_client_version = '0.2.0';
+update private.settings set min_client_version = '0.3.0';
 ```
 
 Pendant le développement, `config/version` dans `project.godot` doit valoir au moins cette version minimale, sinon le jeu lancé depuis Godot se bloque lui-même.

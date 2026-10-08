@@ -20,6 +20,7 @@ public partial class Main : Control
     private CollapsedBar _collapsedBar = null!;
     private TrayMenu _tray = null!;
     private SettingsWindow _settings = null!;
+    private FaqWindow _faq = null!;
     private UpdateNotice _updates = null!;
     private double _sinceTrayRefresh = TrayRefreshIntervalSeconds;
 
@@ -34,9 +35,18 @@ public partial class Main : Control
         _expanded.Lane.Describe = _game.Describe;
         _expanded.Lane.LookOf = _game.LookOf;
         _expanded.Lane.TagOf = _game.TagOf;
+        _expanded.Lane.PlayerOf = _game.PlayerOf;
+        _game.ViewChanged += () => _expanded.Attach(_game.Shown, !_game.Away);
+        SocialControls.Attach(this, _game, _expanded, () => _placement.DialogScale);
         if (_game.Visits is VisitDesk visits)
         {
-            _expanded.Lane.PatronClicked += visits.Cheer;
+            _expanded.Lane.PatronClicked += patron =>
+            {
+                if (!_game.Away)
+                {
+                    visits.Cheer(patron);
+                }
+            };
             _expanded.EmoteRequested += visits.Emote;
             visits.Popped += (text, x, color) => _expanded.Lane.Pop(text, x, color);
         }
@@ -127,13 +137,17 @@ public partial class Main : Control
         _updates.Found += release =>
         {
             _expanded.ShowUpdate(release.Name);
-            _expanded.Lane.Announce($"Nouvelle version {release.Name} disponible : clique sur « Mise à jour »", UpdateBannerSeconds);
+            _game.Announce($"Nouvelle version {release.Name} disponible : clique sur « Mise à jour »", UpdateBannerSeconds);
         };
 
         _settings = new SettingsWindow();
         AddChild(_settings);
         _settings.SizeChosen += size => _placement.Resize(size);
         _settings.ScreenChosen += device => _placement.MoveTo(device);
+
+        _faq = new FaqWindow();
+        AddChild(_faq);
+        _settings.FaqRequested += () => _faq.Open(_placement.DialogScale);
     }
 
     private void RefreshInterface()
@@ -141,6 +155,9 @@ public partial class Main : Control
         BarStatus status = _game.Status;
         _expanded.Lane.Decor = _game.Decor;
         _expanded.Lane.Souvenirs = _game.Souvenirs;
+        _expanded.Lane.HostLook = _game.Rooms?.HostLook;
+        _expanded.Lane.HostName = _game.Rooms?.Room?.Host;
+        _expanded.Lane.HostId = _game.Away ? _game.Rooms?.Room?.HostId : _game.Me;
         _expanded.Refresh(status);
         _collapsedBar.Refresh(status);
     }

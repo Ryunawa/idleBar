@@ -14,13 +14,22 @@ public sealed class LaneOverlay
     private const float PopRise = 1.5f;
     private const float BannerFade = 0.4f;
     private const int NameFontSize = 12;
-    private const int NameRoom = 40;
+    private const int NameRoom = 64;
     private const int NameGap = 3;
     private const int HeartWidth = 4;
 
+    private const int SpeechPadding = 2;
+    private const int SpeechRoom = 170;
+    private const float SpeechShortest = 4f;
+    private const float SpeechLongest = 10f;
+    private const float SpeechPerLetter = 0.07f;
+
     private static readonly Color PlainPop = new("efe6d2");
+    private static readonly Color SpeechFill = new("efe6d2");
+    private static readonly Color SpeechEdge = new("1a1411");
 
     private readonly List<LanePop> _pops = [];
+    private readonly List<LaneSpeech> _speeches = [];
     private readonly Queue<(string Text, float Seconds)> _banners = new();
     private float _bannerAge;
 
@@ -46,6 +55,12 @@ public sealed class LaneOverlay
         }
 
         _pops.RemoveAll(pop => pop.Age > PopSeconds);
+        foreach (LaneSpeech speech in _speeches)
+        {
+            speech.Age += delta;
+        }
+
+        _speeches.RemoveAll(speech => speech.Age > SpeechSeconds(speech));
         if (_banners.Count == 0)
         {
             return;
@@ -84,23 +99,72 @@ public sealed class LaneOverlay
 
     public static void PaintNames(PixelCanvas canvas, Font font, int top, IReadOnlyList<Patron> patrons, Func<Patron, NameTag?> tagOf)
     {
-        List<Patron> tagged = patrons.Where(patron => patron.Phase != PatronPhase.Gone && tagOf(patron) is not null).ToList();
-        foreach (Patron patron in tagged)
+        List<(Patron Patron, NameTag Tag)> tagged = patrons
+            .Where(patron => patron.Phase != PatronPhase.Gone)
+            .Select(patron => (patron, tagOf(patron)))
+            .Where(pair => pair.Item2 is not null)
+            .Select(pair => (pair.patron, pair.Item2!))
+            .ToList();
+        foreach ((Patron patron, NameTag tag) in tagged)
         {
-            NameTag tag = tagOf(patron)!;
-            float nearest = tagged.Where(other => other != patron).Select(other => Math.Abs(other.X - patron.X)).DefaultIfEmpty(NameRoom).Min();
-            int heart = tag.Heart ? HeartWidth : 0;
-            string shown = Fit(canvas, font, tag.Text, (int)Math.Min(NameRoom, nearest - NameGap) - heart);
-            int width = canvas.TextWidth(font, NameFontSize, shown) + heart;
-            int x = Math.Clamp((int)MathF.Round(patron.X) - width / 2, 1, Math.Max(1, canvas.Width - width - 1));
-            if (tag.Heart)
-            {
-                PatronPainter.PaintHeart(canvas, x, top + 2);
-            }
-
-            canvas.Text(font, NameFontSize, shown, x + heart, top + 1, tag.Color, BarPalette.Shadow);
+            float nearest = tagged.Where(other => other.Patron != patron).Select(other => Math.Abs(other.Patron.X - patron.X)).DefaultIfEmpty(NameRoom).Min();
+            PaintTag(canvas, font, top, (int)MathF.Round(patron.X), tag, (int)Math.Min(NameRoom, nearest - NameGap));
         }
     }
+
+    public static void PaintTag(PixelCanvas canvas, Font font, int top, int center, NameTag tag, int room = NameRoom)
+    {
+        int heart = tag.Heart ? HeartWidth : 0;
+        string shown = Fit(canvas, font, tag.Text, room - heart);
+        int width = canvas.TextWidth(font, NameFontSize, shown) + heart;
+        int x = Math.Clamp(center - width / 2, 1, Math.Max(1, canvas.Width - width - 1));
+        if (tag.Heart)
+        {
+            PatronPainter.PaintHeart(canvas, x, top + 2);
+        }
+
+        canvas.Text(font, NameFontSize, shown, x + heart, top + 1, tag.Color, BarPalette.Shadow);
+    }
+
+    public void Speak(Guid author, string name, string text)
+    {
+        _speeches.RemoveAll(speech => speech.Author == author);
+        _speeches.Add(new LaneSpeech(author, name, text));
+    }
+
+    public void PaintSpeech(PixelCanvas canvas, Font font, int top, Func<Guid, int> anchorOf)
+    {
+        int fontSize = PixelFont.Size(FontSize);
+        int height = canvas.TextHeight(font, fontSize) + SpeechPadding;
+        foreach (LaneSpeech speech in _speeches)
+        {
+            float alpha = Math.Clamp(Math.Min(speech.Age * 6, (SpeechSeconds(speech) - speech.Age) * 3), 0, 1);
+            string shown = FitSpeech(canvas, font, fontSize, speech.Text);
+            int width = canvas.TextWidth(font, fontSize, shown) + SpeechPadding * 2;
+            int center = anchorOf(speech.Author);
+            int left = Math.Clamp(center - width / 2, 1, Math.Max(1, canvas.Width - width - 1));
+            Color fill = SpeechFill with { A = alpha };
+            Color edge = SpeechEdge with { A = alpha };
+            canvas.Fill(left + 1, top, width - 2, height, edge);
+            canvas.Fill(left, top + 1, width, height - 2, edge);
+            canvas.Fill(left + 1, top + 1, width - 2, height - 2, fill);
+            canvas.Fill(Math.Clamp(center, left + 2, left + width - 3), top + height, 1, 1, edge);
+            canvas.Text(font, fontSize, shown, left + SpeechPadding, top + 1, edge, fill);
+        }
+    }
+
+    private static string FitSpeech(PixelCanvas canvas, Font font, int fontSize, string text)
+    {
+        string shown = text;
+        while (shown.Length > 1 && canvas.TextWidth(font, fontSize, shown) > SpeechRoom)
+        {
+            shown = text[..(shown.TrimEnd('…').Length - 1)].TrimEnd() + "…";
+        }
+
+        return shown;
+    }
+
+    private static float SpeechSeconds(LaneSpeech speech) => Math.Min(SpeechLongest, SpeechShortest + speech.Text.Length * SpeechPerLetter);
 
     private static string Fit(PixelCanvas canvas, Font font, string name, int room)
     {

@@ -13,6 +13,7 @@ public partial class TipJarButton : HBoxContainer
     private Label _amount = null!;
     private bool _full;
     private bool _ready;
+    private Color _amountColor;
     private bool _hovered;
 
     public event Action? Pressed;

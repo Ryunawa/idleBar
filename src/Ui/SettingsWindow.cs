@@ -21,6 +21,8 @@ public partial class SettingsWindow : Window
 
     public event Action<string>? ScreenChosen;
 
+    public event Action? FaqRequested;
+
     public override void _Ready()
     {
         VBoxContainer content = WindowFrame.Build(this, $"IdleBar {GameVersion.Name} · Réglages", 8);
@@ -53,9 +55,15 @@ public partial class SettingsWindow : Window
         hint.AddThemeFontSizeOverride("font_size", PixelFont.Size(12));
         content.AddChild(hint);
 
-        Button close = new() { Text = "Fermer" };
+        HBoxContainer buttons = new();
+        buttons.AddThemeConstantOverride("separation", 8);
+        Button faq = new() { Text = "Questions fréquentes", SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        faq.Pressed += () => FaqRequested?.Invoke();
+        Button close = new() { Text = "Fermer", SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         close.Pressed += Hide;
-        content.AddChild(close);
+        buttons.AddChild(faq);
+        buttons.AddChild(close);
+        content.AddChild(buttons);
     }
 
     public void Open(float scale, float size, string? screenDevice, IReadOnlyList<DisplayScreen> screens)

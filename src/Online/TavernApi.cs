@@ -20,6 +20,25 @@ public sealed class TavernApi
 
     public Task<StateData> GetStateAsync(string token) => _rpc.CallAsync<NoArguments, StateData>(token, "get_state", new NoArguments());
 
+    public Task<StateData> SyncStateAsync(string token, bool present) =>
+        _rpc.CallAsync<PresenceArguments, StateData>(token, "sync_state", new PresenceArguments(present));
+
+    public Task<StateData> SetStampAsync(string token, string stamp) =>
+        _rpc.CallAsync<StampArguments, StateData>(token, "set_stamp", new StampArguments(stamp));
+
+    public Task<StateData> LeaveVisitAsync(string token) => _rpc.CallAsync<NoArguments, StateData>(token, "leave_visit", new NoArguments());
+
+    public Task<StateData> ShowDoorAsync(string token, long visit) =>
+        _rpc.CallAsync<DoorArguments, StateData>(token, "show_door", new DoorArguments(visit));
+
+    public Task<StateData> SayAsync(string token, string text) => _rpc.CallAsync<TextArguments, StateData>(token, "say", new TextArguments(text));
+
+    public Task<StateData> MuteAsync(string token, Guid player, bool muted) =>
+        _rpc.CallAsync<MuteArguments, StateData>(token, "mute_player", new MuteArguments(player, muted));
+
+    public Task<FriendProfile> GetFriendProfileAsync(string token, Guid friend) =>
+        _rpc.CallAsync<FriendArguments, FriendProfile>(token, "get_friend_profile", new FriendArguments(friend));
+
     public Task<StateData> FoundAsync(string token, string name) =>
         _rpc.CallAsync<NameArguments, StateData>(token, "found_tavern", new NameArguments(name));
 

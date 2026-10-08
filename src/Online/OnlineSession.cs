@@ -8,11 +8,6 @@ namespace IdleBar.Online;
 
 public sealed class OnlineSession
 {
-    private const double PollSeconds = 30;
-    private const double VisitPollSeconds = 5;
-    private const double ReportSeconds = 15;
-    private const double RetrySeconds = 20;
-
     private readonly SessionKeeper _keeper;
     private readonly TavernApi _api;
     private readonly Doorbell _doorbell;
@@ -21,8 +16,7 @@ public sealed class OnlineSession
     private long _lastRequest;
     private long _appliedRequest;
     private bool _syncing;
-    private double _sincePoll;
-    private double _sinceReport;
+    private readonly SyncClock _clock = new();
 
     public OnlineSession(SessionKeeper keeper, TavernApi api, Doorbell doorbell)
     {
@@ -30,7 +24,7 @@ public sealed class OnlineSession
         _api = api;
         _doorbell = doorbell;
         _access = new SessionAccess(keeper, api, doorbell);
-        _doorbell.Rang += () => _sincePoll = PollSeconds;
+        _doorbell.Rang += _clock.Ring;
     }
 
     public event Action? Changed;
@@ -54,7 +48,7 @@ public sealed class OnlineSession
         _keeper.Restore();
         if (_keeper.SignedIn)
         {
-            _ = SyncAsync(_api.GetStateAsync);
+            _ = SyncAsync(Poll);
         }
     }
 
@@ -66,7 +60,7 @@ public sealed class OnlineSession
         }
     }
 
-    public Task<bool> RefreshAsync() => SyncAsync(_api.GetStateAsync);
+    public Task<bool> RefreshAsync() => SyncAsync(Poll);
 
     public void Reset()
     {
@@ -86,17 +80,16 @@ public sealed class OnlineSession
             return;
         }
 
-        _sincePoll += delta;
-        _sinceReport += delta;
-        bool visiting = Tavern is { Outing: not null } or { Guests.Count: > 0 };
-        double poll = Status == SessionStatus.Offline ? RetrySeconds : visiting && !Live ? VisitPollSeconds : PollSeconds;
-        if (Status == SessionStatus.Ready && !_ledger.Empty && _sinceReport >= ReportSeconds)
+        _clock.Advance(delta);
+        bool together = Tavern is { Outing: not null } or { Guests.Count: > 0 } || Tavern?.Room is { Mine: false } or { Guests.Count: > 0 };
+        if (!_ledger.Empty && _clock.ReportDue(Status))
         {
             _ = ReportAsync();
         }
-        else if (_sincePoll >= poll)
+        else if (_clock.PollDue(Status, together, Live))
         {
-            _ = SyncAsync(_api.GetStateAsync);
+            _clock.StartPoll();
+            _ = SyncAsync(Poll);
         }
     }
 
@@ -136,11 +129,15 @@ public sealed class OnlineSession
 
     public async Task SendAsync(Func<string, Task<EmptyResult>> request) => await request(await _access.TokenAsync());
 
+    public async Task<TResult> FetchAsync<TResult>(Func<string, Task<TResult>> request) => await request(await _access.TokenAsync());
+
+    private Task<StateData> Poll(string token) => _api.SyncStateAsync(token, Tavern?.Room is { Mine: false });
+
     private async Task ReportAsync()
     {
         ServiceReport report = _ledger.Take();
-        _sinceReport = 0;
-        if (!await SyncAsync(token => _api.ReportAsync(token, report)))
+        _clock.Reported();
+        if (!await SyncAsync(token => _api.ReportAsync(token, report)) && _keeper.SignedIn)
         {
             _ledger.Restore(report);
         }
@@ -172,7 +169,7 @@ public sealed class OnlineSession
         finally
         {
             _syncing = false;
-            _sincePoll = 0;
+            _clock.Synced();
         }
     }
 

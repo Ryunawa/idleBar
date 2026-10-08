@@ -43,4 +43,16 @@ public sealed class GameActions
     public Task OfferRoundAsync() => _session.PerformAsync(_api.OfferRoundAsync);
 
     public Task SendEmoteAsync(long visit, string emote) => _session.SendAsync(token => _api.SendEmoteAsync(token, visit, emote));
+
+    public Task SetStampAsync(string stamp) => _session.PerformAsync(token => _api.SetStampAsync(token, stamp));
+
+    public Task LeaveVisitAsync() => _session.PerformAsync(_api.LeaveVisitAsync);
+
+    public Task ShowDoorAsync(long visit) => _session.PerformAsync(token => _api.ShowDoorAsync(token, visit));
+
+    public Task SayAsync(string text) => _session.PerformAsync(token => _api.SayAsync(token, text));
+
+    public Task MuteAsync(Guid player, bool muted) => _session.PerformAsync(token => _api.MuteAsync(token, player, muted));
+
+    public Task<FriendProfile> GetFriendProfileAsync(Guid friend) => _session.FetchAsync(token => _api.GetFriendProfileAsync(token, friend));
 }

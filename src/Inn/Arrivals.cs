@@ -31,7 +31,7 @@ public sealed class Arrivals
     public Patron? Admit(float delta, Tavern tavern)
     {
         _untilArrival -= delta;
-        List<int> free = Enumerable.Range(0, tavern.Layout.SeatXs.Count).Where(seat => tavern.Patrons.All(patron => patron.Seat != seat)).ToList();
+        List<int> free = Enumerable.Range(0, tavern.Layout.SeatXs.Count).Where(seat => tavern.Patrons.All(patron => !patron.HoldsSeat || patron.Seat != seat)).ToList();
         if (free.Count == 0 || !tavern.Open)
         {
             return null;

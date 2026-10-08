@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
@@ -23,6 +24,7 @@ public sealed class RealtimeClient : IDisposable
     private readonly CancellationTokenSource _stop = new();
     private string _token;
     private bool _joined;
+    private bool _wasJoined;
     private int _reference;
 
     public RealtimeClient(string supabaseUrl, string apiKey, string userId, string token)
@@ -67,14 +69,23 @@ public sealed class RealtimeClient : IDisposable
         int retry = FirstRetrySeconds;
         while (!stop.IsCancellationRequested)
         {
+            _wasJoined = false;
             try
             {
                 await ConnectAsync(stop);
-                retry = FirstRetrySeconds;
             }
-            catch (Exception exception) when (exception is WebSocketException or OperationCanceledException or InvalidOperationException or JsonException)
+            catch (OperationCanceledException) when (stop.IsCancellationRequested)
+            {
+                return;
+            }
+            catch (Exception exception)
             {
                 _events.Enqueue(new RealtimeEvent(RealtimeEvent.Lost, exception.Message));
+            }
+
+            if (_wasJoined)
+            {
+                retry = FirstRetrySeconds;
             }
 
             SetJoined(false);
@@ -122,7 +133,7 @@ public sealed class RealtimeClient : IDisposable
     private async Task ReceiveAsync(ClientWebSocket socket, CancellationToken stop)
     {
         byte[] buffer = new byte[BufferSize];
-        StringBuilder message = new();
+        using MemoryStream message = new();
         while (socket.State == WebSocketState.Open)
         {
             WebSocketReceiveResult result = await socket.ReceiveAsync(buffer, stop);
@@ -131,35 +142,35 @@ public sealed class RealtimeClient : IDisposable
                 return;
             }
 
-            message.Append(Encoding.UTF8.GetString(buffer, 0, result.Count));
-            if (result.EndOfMessage)
+            message.Write(buffer, 0, result.Count);
+            if (!result.EndOfMessage)
             {
-                Handle(message.ToString());
-                message.Clear();
+                continue;
+            }
+
+            bool keep = Handle(Encoding.UTF8.GetString(message.GetBuffer(), 0, (int)message.Length));
+            message.SetLength(0);
+            if (!keep)
+            {
+                return;
             }
         }
     }
 
-    private void Handle(string text)
+    private bool Handle(string text)
     {
-        JsonNode? node = JsonNode.Parse(text);
-        if (node?["topic"]?.GetValue<string>() != _topic)
+        (RealtimeSignal signal, RealtimeEvent? received) = RealtimeMessages.Read(text, _topic);
+        if (signal == RealtimeSignal.Joined)
         {
-            return;
+            SetJoined(true);
+            _wasJoined = true;
+        }
+        else if (received is not null)
+        {
+            _events.Enqueue(received);
         }
 
-        switch (node["event"]?.GetValue<string>())
-        {
-            case "phx_reply":
-                SetJoined(node["payload"]?["status"]?.GetValue<string>() == "ok" || Connected);
-                break;
-            case "phx_error" or "phx_close":
-                SetJoined(false);
-                break;
-            case "broadcast" when node["payload"] is JsonObject payload:
-                _events.Enqueue(new RealtimeEvent(payload["event"]?.GetValue<string>() ?? string.Empty, payload["payload"]?.ToJsonString() ?? "{}"));
-                break;
-        }
+        return signal != RealtimeSignal.Dropped;
     }
 
     private static Task SendAsync(ClientWebSocket socket, string message, CancellationToken stop) =>

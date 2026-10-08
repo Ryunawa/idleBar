@@ -5,7 +5,7 @@ namespace IdleBar.Inn;
 public sealed class Patron
 {
     public const float Patience = 90f;
-    private const float WalkSpeed = 22f;
+    private const float WalkSpeed = 28f;
     private const float ThinkSeconds = 1.6f;
 
     public Patron(int look, int seat, float x, Drink order, string? regular = null)
@@ -48,7 +48,19 @@ public sealed class Patron
 
     public float DrinkSeconds { get; private set; }
 
+    public int StandX { get; private set; }
+
+    public float MingleSeconds { get; private set; }
+
+    public Patron? Partner { get; set; }
+
+    public int Facing => Phase == PatronPhase.Mingling && Heading == 0 && Partner is { Phase: PatronPhase.Mingling } partner ? Math.Sign(partner.X - X) : 0;
+
     public bool Seated => Phase is PatronPhase.Thinking or PatronPhase.Waiting or PatronPhase.Drinking;
+
+    public bool HoldsSeat => Seated || Phase == PatronPhase.Entering;
+
+    public bool DoneMingling => Phase == PatronPhase.Mingling && PhaseTime >= MingleSeconds;
 
     public bool Wants(Drink drink) => Phase == PatronPhase.Waiting && !Incoming && Order == drink;
 
@@ -79,6 +91,10 @@ public sealed class Patron
                 X = seatX;
                 Waited += delta;
                 break;
+            case PatronPhase.Mingling:
+                Walk(StandX, delta);
+                Heading = Math.Abs(X - StandX) < 0.01f ? 0 : Heading;
+                break;
             case PatronPhase.Leaving:
                 Walk(doorX, delta);
                 if (Math.Abs(X - doorX) < 0.01f)
@@ -105,6 +121,8 @@ public sealed class Patron
         Enter(PatronPhase.Drinking);
     }
 
+    public void KeepDrinking() => PhaseTime = 0;
+
     public void OrderAgain(Drink order)
     {
         Order = order;
@@ -114,10 +132,19 @@ public sealed class Patron
         Enter(PatronPhase.Thinking);
     }
 
+    public void Mingle(int standX, float seconds, Patron? partner)
+    {
+        StandX = standX;
+        MingleSeconds = seconds;
+        Partner = partner;
+        Enter(PatronPhase.Mingling);
+    }
+
     public void Leave()
     {
         Glass = null;
         Incoming = false;
+        Partner = null;
         Enter(PatronPhase.Leaving);
     }
 

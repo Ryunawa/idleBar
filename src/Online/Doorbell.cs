@@ -10,6 +10,7 @@ public sealed class Doorbell : IDisposable
     private const string Refresh = "refresh";
     private const string Emote = "emote";
     private const string Wave = "wave";
+    private const string Chat = "chat";
 
     private readonly SupabaseSettings _settings;
     private RealtimeClient? _client;
@@ -25,6 +26,8 @@ public sealed class Doorbell : IDisposable
     public event Action<EmoteData>? Emoted;
 
     public event Action<WaveData>? Waved;
+
+    public event Action<ChatLine>? Chatted;
 
     public bool Connected => _client?.Connected == true;
 
@@ -63,6 +66,9 @@ public sealed class Doorbell : IDisposable
                     break;
                 case Wave when Parse<WaveData>(next.Payload) is WaveData wave:
                     Waved?.Invoke(wave);
+                    break;
+                case Chat when Parse<ChatLine>(next.Payload) is ChatLine line:
+                    Chatted?.Invoke(line);
                     break;
                 case RealtimeEvent.Lost:
                     GD.PushWarning($"Sonnette coupée, nouvel essai bientôt : {next.Payload}");

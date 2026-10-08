@@ -6,6 +6,7 @@ public enum PatronPhase
     Thinking,
     Waiting,
     Drinking,
+    Mingling,
     Leaving,
     Gone,
 }

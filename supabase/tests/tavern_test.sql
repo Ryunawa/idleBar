@@ -43,7 +43,7 @@ select pg_temp.check(jsonb_array_length(public.get_state() #> '{tavern,goals}') 
 select pg_temp.check(public.get_state() #>> '{tavern,friend_code}' ~ '^[A-Z2-9]{6}$', 'code ami');
 reset role;
 
-update public.taverns set reported_at = now() where player_id = '11111111-1111-1111-1111-111111111111';
+update public.taverns set reported_at = now() - interval '10 seconds' where player_id = '11111111-1111-1111-1111-111111111111';
 delete from public.tavern_goals where player_id = '11111111-1111-1111-1111-111111111111';
 insert into public.tavern_goals (player_id, day, goal_id) values
   ('11111111-1111-1111-1111-111111111111', current_date, 'servir-20'),
@@ -73,19 +73,19 @@ select pg_temp.expect_error('select public.buy_upgrade(''marmite'')', 'Estaminet
 select pg_temp.expect_error('select public.buy_upgrade(''inconnue'')', 'n''existe pas');
 select public.buy_upgrade('tabouret-5');
 select pg_temp.check((public.get_state() #>> '{tavern,stools}')::integer = 5, 'cinquième tabouret');
-select pg_temp.check((public.get_state() #>> '{tavern,coins}')::integer = 292 - 120, 'tabouret payé');
+select pg_temp.check((public.get_state() #>> '{tavern,coins}')::integer = 292 - 240, 'tabouret payé');
 select pg_temp.expect_error('select public.buy_upgrade(''tabouret-5'')', 'déjà');
-select pg_temp.expect_error('select public.buy_upgrade(''apprenti'')', 'Il te manque 28 écus');
+select pg_temp.expect_error('select public.buy_upgrade(''apprenti'')', 'Il te manque 348 écus');
 select pg_temp.expect_error('select public.collect_tip_jar()', 'vide');
 reset role;
 
-update public.taverns set coins = 1000, renown = 300 where player_id = '11111111-1111-1111-1111-111111111111';
+update public.taverns set coins = 1500, renown = 600 where player_id = '11111111-1111-1111-1111-111111111111';
 set role authenticated;
 select public.buy_upgrade('apprenti');
 select public.buy_upgrade('marmite');
 select pg_temp.check((public.get_state() #>> '{tavern,helper}')::integer = 1, 'apprenti embauché');
 select pg_temp.check(public.get_state() #> '{tavern,menu}' = '["beer", "tea", "soup"]'::jsonb, 'soupe à la carte');
-select pg_temp.check((public.get_state() #>> '{tavern,tier}')::integer = 1, 'Estaminet à 300 de renommée');
+select pg_temp.check((public.get_state() #>> '{tavern,tier}')::integer = 1, 'Estaminet à 600 de renommée');
 select pg_temp.check((public.get_state() #>> '{tavern,tip_jar,hourly}')::integer = 50, 'apprenti : 40 par heure pour 4 tabourets, 50 pour 5');
 reset role;
 
@@ -94,7 +94,7 @@ set role authenticated;
 select pg_temp.check((public.get_state() #>> '{tavern,tip_jar,amount}')::integer = 150, 'trois heures d''absence : 150 écus dans le pot');
 select pg_temp.check((public.get_state() #>> '{tavern,tip_jar,amount}')::integer = 150, 'le pot ne se remplit pas en ligne');
 select public.collect_tip_jar();
-select pg_temp.check((public.get_state() #>> '{tavern,coins}')::integer = 1000 - 200 - 400 + 150, 'pot vidé dans la bourse');
+select pg_temp.check((public.get_state() #>> '{tavern,coins}')::integer = 1500 - 400 - 800 + 150, 'pot vidé dans la bourse');
 select pg_temp.check((public.get_state() #>> '{tavern,tip_jar,amount}')::integer = 0, 'pot vide');
 reset role;
 

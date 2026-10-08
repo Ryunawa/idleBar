@@ -5,6 +5,8 @@ insert into auth.users (id) values
   ('bbbbbbbb-0000-0000-0000-000000000002'),
   ('bbbbbbbb-0000-0000-0000-000000000003');
 
+update private.settings set visit_hop_seconds = 0;
+
 create function pg_temp.check(p_condition boolean, p_message text) returns void
 language plpgsql
 as $$
@@ -94,3 +96,5 @@ select pg_temp.check(public.get_state() #>> '{tavern,rounds,0,from}' = 'Le Xéno
 select pg_temp.act('3');
 select pg_temp.check((public.get_state() #>> '{tavern,coins}')::integer = 30, 'le Zéphyr reçoit la tournée');
 reset role;
+
+update private.settings set visit_hop_seconds = 10;

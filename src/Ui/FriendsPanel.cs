@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using Godot;
 using IdleBar.Online;
 using IdleBar.Pixel;
@@ -12,9 +11,7 @@ public partial class FriendsPanel : VBoxContainer
 
     private Label _code = null!;
     private LineEdit _friendCode = null!;
-    private OptionButton _stamps = null!;
     private VBoxContainer _rows = null!;
-    private WorldData? _world;
 
     public event Action<string>? FriendRequested;
 
@@ -23,6 +20,10 @@ public partial class FriendsPanel : VBoxContainer
     public event Action<Guid>? Removed;
 
     public event Action<Guid, string>? VisitRequested;
+
+    public event Action<Guid>? ProfileRequested;
+
+    public event Action<Guid>? Unmuted;
 
     public event Action<Guid, bool>? InvitationAnswered;
 
@@ -43,11 +44,6 @@ public partial class FriendsPanel : VBoxContainer
         request.Pressed += RequestFriend;
         add.AddChild(request);
         content.AddChild(add);
-        HBoxContainer stamp = new();
-        stamp.AddChild(new Label { Text = "Ton tampon pour leur livre d'or :" });
-        _stamps = new OptionButton { FocusMode = FocusModeEnum.None };
-        stamp.AddChild(_stamps);
-        content.AddChild(stamp);
         _rows = new VBoxContainer();
         _rows.AddThemeConstantOverride("separation", 6);
         content.AddChild(_rows);
@@ -56,15 +52,6 @@ public partial class FriendsPanel : VBoxContainer
 
     public void Refresh(WorldData world, TavernData tavern)
     {
-        if (_world is null)
-        {
-            _world = world;
-            foreach (StampInfo stamp in world.Stamps)
-            {
-                _stamps.AddIconItem(StampSprites.For(stamp.Id)?.Texture, stamp.Name);
-            }
-        }
-
         _code.Text = $"Ton code ami : {tavern.FriendCode}";
         WindowRows.Clear(_rows);
         foreach (InvitationData invitation in tavern.Invitations)
@@ -86,9 +73,10 @@ public partial class FriendsPanel : VBoxContainer
         }
 
         _rows.AddChild(WindowRows.Heading(tavern.Friends.Count == 0 ? "Pas encore d'amis : échange vos codes." : $"Tes amis · {tavern.Friends.Count}"));
+        Guid? here = tavern.Room is { Mine: false } room ? room.HostId : null;
         foreach (FriendData friend in tavern.Friends)
         {
-            _rows.AddChild(FriendRow(friend, tavern.Outing is null));
+            _rows.AddChild(FriendRow(friend, tavern.Stamp ?? "heart", friend.Id == here));
         }
 
         _rows.AddChild(RoundButton(tavern));
@@ -98,7 +86,8 @@ public partial class FriendsPanel : VBoxContainer
         {
             HBoxContainer row = new();
             row.AddChild(Icon(StampSprites.For(entry.Stamp)?.Texture, new Vector2(14, 12)));
-            row.AddChild(new Label { Text = $"{entry.Name} · {entry.At.ToLocalTime():dd/MM HH:mm}" });
+            string visits = entry.Visits > 1 ? $" · {entry.Visits} visites" : string.Empty;
+            row.AddChild(new Label { Text = $"{entry.Name}{visits} · dernière le {entry.At.ToLocalTime():dd/MM à HH:mm}" });
             _rows.AddChild(row);
         }
 
@@ -110,9 +99,22 @@ public partial class FriendsPanel : VBoxContainer
             row.AddChild(new Label { Text = $"{tasted.Name}, chez {tasted.Host}" });
             _rows.AddChild(row);
         }
+
+        if (tavern.Muted is { Count: > 0 } muted)
+        {
+            _rows.AddChild(WindowRows.Heading($"Joueurs masqués · {muted.Count}"));
+            _rows.AddChild(WindowRows.Muted("Tu ne vois plus leurs messages, et ils ne savent pas que tu les as masqués."));
+            foreach (MutedData player in muted)
+            {
+                HBoxContainer row = new();
+                row.AddChild(new Label { Text = player.Name, SizeFlagsHorizontal = SizeFlags.ExpandFill });
+                row.AddChild(Action("Ne plus masquer", () => Unmuted?.Invoke(player.Id)));
+                _rows.AddChild(row);
+            }
+        }
     }
 
-    private PanelContainer FriendRow(FriendData friend, bool canVisit)
+    private PanelContainer FriendRow(FriendData friend, string stamp, bool here)
     {
         HBoxContainer row = new();
         row.AddThemeConstantOverride("separation", 8);
@@ -123,8 +125,9 @@ public partial class FriendsPanel : VBoxContainer
         text.AddChild(name);
         text.AddChild(WindowRows.Muted($"Spécialité : {friend.Specialty}"));
         row.AddChild(text);
-        Button visit = Action("Rendre visite", () => VisitRequested?.Invoke(friend.Id, SelectedStamp()));
-        visit.Disabled = !canVisit;
+        row.AddChild(Action("Fiche", () => ProfileRequested?.Invoke(friend.Id)));
+        Button visit = Action(here ? "Tu y es" : "Rendre visite", () => VisitRequested?.Invoke(friend.Id, stamp));
+        visit.Disabled = here;
         row.AddChild(visit);
         Button remove = Action("×", () => Removed?.Invoke(friend.Id));
         remove.TooltipText = "Retirer de tes amis";
@@ -144,8 +147,6 @@ public partial class FriendsPanel : VBoxContainer
         round.TooltipText = "Chaque ami reçoit 30 écus, et ses pourboires doublent pendant 5 minutes s'il est là.";
         return round;
     }
-
-    private string SelectedStamp() => _world?.Stamps.ElementAtOrDefault(Math.Max(_stamps.Selected, 0))?.Id ?? "heart";
 
     private void RequestFriend()
     {

@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using IdleBar.Online;
+using IdleBar.Pixel;
 
 namespace IdleBar.Ui;
 
@@ -8,6 +10,9 @@ public static class SessionBanners
 {
     private const float Short = 5;
     private const float Long = 9;
+
+    public static Announcement? Feast(DateTime now) =>
+        Calendar.FestivalOf(now) is var festival && festival != Festival.None ? new Announcement(Calendar.Describe(festival), Long) : null;
 
     public static IEnumerable<Announcement> Describe(WorldData? world, TavernData? previous, TavernData current)
     {
