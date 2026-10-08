@@ -6,8 +6,6 @@ namespace IdleBar.Pixel;
 
 public sealed class DecorPlan
 {
-    private const int WallStart = 62;
-    private const int FirstLantern = 58;
     private const int FireplaceSpacing = 260;
     private const int WindowEvery = 3;
     private const int PostGap = 30;
@@ -25,20 +23,23 @@ public sealed class DecorPlan
 
     private static readonly DecorKind[] CounterKinds = [DecorKind.Candle, DecorKind.Candle, DecorKind.Bowl, DecorKind.Mug];
 
-    private DecorPlan(int width, int floorStart)
+    private DecorPlan(int width, int wallStart, int floorStart)
     {
         Width = width;
+        WallStart = wallStart;
         FloorStart = floorStart;
         Floor = PlanFloor(width, floorStart);
         List<int> posts = [];
-        List<PlacedDecor> hanging = [new PlacedDecor(DecorKind.Lantern, FirstLantern)];
-        Wall = PlanWall(width, floorStart, Floor.Where(piece => piece.Kind == DecorKind.Fireplace).Select(piece => piece.X).ToList(), posts, hanging);
+        List<PlacedDecor> hanging = [new PlacedDecor(DecorKind.Lantern, wallStart - 4)];
+        Wall = PlanWall(width, wallStart, floorStart, Floor.Where(piece => piece.Kind == DecorKind.Fireplace).Select(piece => piece.X).ToList(), posts, hanging);
         Posts = posts;
         Hanging = hanging;
         Counter = Scatter(width, floorStart + 20, CounterKinds, 70, 170, 4);
     }
 
     public int Width { get; }
+
+    public int WallStart { get; }
 
     public int FloorStart { get; }
 
@@ -52,7 +53,7 @@ public sealed class DecorPlan
 
     public IReadOnlyList<int> Posts { get; }
 
-    public static DecorPlan For(int width, int floorStart) => new(width, floorStart);
+    public static DecorPlan For(int width, int wallStart, int floorStart) => new(width, wallStart, floorStart);
 
     private static List<PlacedDecor> PlanFloor(int width, int start)
     {
@@ -75,12 +76,12 @@ public sealed class DecorPlan
         return pieces;
     }
 
-    private static List<PlacedDecor> PlanWall(int width, int floorStart, IReadOnlyList<int> fireplaces, List<int> posts, List<PlacedDecor> hanging)
+    private static List<PlacedDecor> PlanWall(int width, int wallStart, int floorStart, IReadOnlyList<int> fireplaces, List<int> posts, List<PlacedDecor> hanging)
     {
         Random random = new(2);
         List<PlacedDecor> pieces = [];
         int sinceWindow = 0;
-        for (int x = WallStart; x < width - 6;)
+        for (int x = wallStart; x < width - 6;)
         {
             int blocked = fireplaces.FirstOrDefault(fireplace => x + 14 > fireplace - 4 && x < fireplace + DecorSizes.Fireplace + 4, -1);
             if (blocked >= 0)

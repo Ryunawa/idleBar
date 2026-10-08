@@ -40,10 +40,15 @@ public static class DecorPainter
         }
     }
 
-    public static void PaintWall(PixelCanvas canvas, int top, DecorPlan plan, SkyLight sky, float time)
+    public static void PaintWall(PixelCanvas canvas, int top, DecorPlan plan, DecorSet decor, SkyLight sky, float time)
     {
         foreach (PlacedDecor piece in plan.Wall)
         {
+            if (!decor.Has(piece.Kind))
+            {
+                continue;
+            }
+
             switch (piece.Kind)
             {
                 case DecorKind.Window:
@@ -63,10 +68,15 @@ public static class DecorPainter
         }
     }
 
-    public static void PaintHanging(PixelCanvas canvas, int top, DecorPlan plan, SkyLight sky, float time)
+    public static void PaintHanging(PixelCanvas canvas, int top, DecorPlan plan, DecorSet decor, SkyLight sky, float time)
     {
         foreach (PlacedDecor piece in plan.Hanging)
         {
+            if (!decor.Has(piece.Kind))
+            {
+                continue;
+            }
+
             canvas.Draw(PropSprites.For(piece.Kind), piece.X, top + HangRow);
             if (piece.Kind == DecorKind.Lantern)
             {

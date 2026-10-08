@@ -61,18 +61,18 @@ Les clients entrent par la porte, prennent un tabouret libre et une bulle montre
 |---|---|---|---|
 | Fût | Bière | Maintenir le clic : la chope se remplit | Relâcher quand la mousse touche le trait |
 | Théière | Thé | Un clic pour infuser, la vapeur change de couleur | Recliquer quand elle est dorée |
-| Marmite | Soupe | Trois clics pour touiller | Touiller en rythme |
-| Pressoir | Cidre | Cliquer en cadence | Garder la cadence |
-| Four | Tourte | Enfourner, puis sortir | Sortir avant la fumée |
+| Marmite | Soupe | Un clic pour prendre la louche, puis trois coups de louche ; le curseur de la jauge fait l'aller-retour | Les trois coups dans la zone dorée |
+| Pressoir | Cidre | Un clic pour lancer, puis quatre pressions ; le curseur repart de zéro à chaque tour | Trois pressions sur quatre dans la zone dorée |
+| Four | Tourte | Enfourner, puis sortir (9 s de cuisson) | Sortir quand la croûte est dorée, entre 60 % et 80 % |
 
 - Ce qu'on prépare glisse tout seul sur le comptoir jusqu'au client qui l'a commandé et attend depuis le plus longtemps. Si personne n'en veut encore, la boisson attend sur le comptoir, devant son poste.
 - Un geste raté sert quand même : seul le pourboire de « service parfait » est perdu.
 - Un client qui attend trop ne part jamais fâché : l'aide au comptoir le sert, plus lentement et sans pourboire. Sans aide, il laisse une pièce et s'en va.
-- Quand tu es là, un client arrive toutes les 20 à 40 secondes ; parfois une tablée entière (« les aventuriers rentrent de mission »).
+- Un client arrive toutes les 10 à 26 secondes s'il reste un tabouret libre. Il commande au hasard parmi la carte : bière 35, thé 25, soupe 20, cidre 12, tourte 8 (poids relatifs).
 
 ### Pendant l'absence
 
-- L'aide au comptoir (le chat de la taverne, puis un commis) sert à ta place, moins bien que toi.
+- L'aide au comptoir (un apprenti, puis un commis, puis une serveuse) sert à ta place, moins bien que toi.
 - Ce qu'elle gagne tombe dans le **pot à pourboires**, plafonné à 8 h. Au retour, on le vide d'un clic dans la barre.
 
 ### Grandir
@@ -80,12 +80,12 @@ Les clients entrent par la porte, prennent un tabouret libre et une bulle montre
 Les écus achètent :
 - des **tabourets** ;
 - des **postes**, et chaque poste ajoute une boisson à la carte et attire d'autres clients ;
-- du **décor** : lanternes, cheminée, plantes, enseigne, scène pour le barde ;
+- du **décor** : plantes, ail et herbes, panneau d'affichage, tableaux, cible, bannières, le chat de la taverne, horloge, trophées, cheminée ;
 - des améliorations de l'**aide au comptoir**.
 
 La **renommée** de la taverne monte avec les clients servis. Elle débloque les postes et fait venir les habitués. La taverne s'agrandit au fil des paliers : bicoque, estaminet, taverne, auberge.
 
-**Objectifs du jour.** Trois petites demandes par jour (« trois tirages parfaits », « recevoir un ami », « servir un habitué »), avec une récompense.
+**Objectifs du jour.** Trois petites demandes par jour (« servir 20 clients », « réussir 5 services parfaits », « servir 10 thés »…), avec une récompense versée dès qu'elles sont remplies.
 
 ### Les habitués
 
@@ -185,7 +185,7 @@ Premiers habitués envisagés :
 |---|---|---|
 | 0. Table rase | Retirer le jeu de commerce, garder le socle ci-dessus, vider l'ancien schéma Supabase (`reset_trade_game.sql`) | Fait ; le script reste à exécuter sur Supabase |
 | 1. Le comptoir | Prototype **sans serveur** : la scène de la taverne, des clients qui entrent, commandent et repartent, le fût et la théière avec leur geste, le service, les pourboires, le jour et la nuit. On vérifie que c'est agréable avant de construire le reste | Fait, à tester en jeu |
-| 2. La taverne grandit | Sauvegarde sur Supabase, écus, tabourets, marmite, pressoir, four, décor, aide au comptoir, pot à pourboires, renommée et paliers, objectifs du jour | À faire |
+| 2. La taverne grandit | Sauvegarde sur Supabase, écus, tabourets, marmite, pressoir, four, décor, aide au comptoir, pot à pourboires, renommée et paliers, objectifs du jour | Fait, à tester en jeu (scripts `01` à `04`) |
 | 3. Les habitués | Les 12 habitués, leurs conditions de venue, l'amitié, les histoires en chapitres, le carnet | À faire |
 | 4. Entre amis | Avatar, code ami, client Realtime, visites en direct et en différé, émotes, livre d'or, spécialités et leur carte | À faire |
 | 5. Passants et tournées | Joueurs connectés dans la rue, salut, invitation, demande d'ami, tournée générale | À faire |
@@ -222,29 +222,95 @@ Premiers habitués envisagés :
 - La lisibilité à 100 %, la taille par défaut.
 - La nuit : fenêtres étoilées et lanternes.
 
+## Étape 2 : la taverne grandit, telle qu'elle est
+
+**Sur Supabase.** Après `reset_trade_game.sql`, exécuter `01_world.sql` à `04_actions.sql`, dans l'ordre :
+- `01` : les catalogues (paliers de renommée, boissons, améliorations, objectifs du jour) et les réglages (`private.settings`) ;
+- `02` : les tavernes, les améliorations achetées et les objectifs du jour de chaque joueur ;
+- `03` : les règles (`private`) ;
+- `04` : les fonctions appelées par le jeu.
+
+Chaque script peut être rejoué.
+
+**Fonctions appelées par le jeu.**
+- `get_world` renvoie les catalogues.
+- `get_state` renvoie la taverne, ou `null` avant l'ouverture. Elle note la dernière visite et remplit le pot à pourboires après une absence.
+- `found_tavern(nom)` ouvre la taverne et tire un code ami de 6 caractères.
+- `report_service(relevé)` reçoit les services joués sur le PC.
+- `buy_upgrade(id)` achète une amélioration.
+- `collect_tip_jar` vide le pot dans la bourse.
+
+**Relevé des services.**
+- Le jeu envoie toutes les 15 s, et à la fermeture, ce qui a été servi : `{"drinks": {"beer": 3}, "perfect": 2, "parting": 1, "coins": 37}`.
+- Le serveur ne garde que les boissons de la carte, dans la limite de tabourets × (1 + secondes écoulées / 10), sur 10 minutes au plus.
+- Les écus sont plafonnés à 25 par service, plus 1 par client parti sans être servi. Les parfaits ne dépassent pas les services.
+- Ce qu'il accepte compte pour la renommée (1 par service, 1 de plus par parfait) et pour les objectifs du jour.
+- Si l'envoi échoue, le relevé est gardé et renvoyé plus tard.
+
+**Paliers de renommée.** Bicoque (0), Estaminet (300), Taverne (1 500), Auberge (6 000), Grande auberge (20 000).
+
+**Améliorations.** Les prix sont en écus ; le palier indique celui qu'il faut avoir atteint.
+- Tabourets : du 5ᵉ au 10ᵉ, à 120, 300, 700, 1 500, 3 000 et 6 000 écus, chacun après le précédent et à partir d'un palier croissant.
+- Postes :
+  - marmite, 400 écus, Estaminet ;
+  - pressoir, 1 500 écus, Taverne ;
+  - four, 4 000 écus, Auberge.
+- Aide au comptoir, chacune après la précédente :
+  - apprenti, 200 écus : sert au bout de 45 s ;
+  - commis, 2 000 écus, Taverne : au bout de 30 s ;
+  - serveuse, 8 000 écus, Auberge : au bout de 20 s.
+- Décor :
+  - plantes (80 écus), ail et herbes (150), panneau d'affichage (150) ;
+  - à l'Estaminet : tableaux (250), cible (300), bannières (400), le chat de la taverne (500) ;
+  - à la Taverne : horloge (500), trophées (600), cheminée (900).
+- La boisson apportée par l'aide rapporte son prix, sans pourboire.
+
+**Pot à pourboires.** Si le jeu ne s'est pas manifesté depuis 5 minutes, l'aide remplit le pot pour toute l'absence.
+- Elle verse 40, 120 ou 300 écus par heure selon l'aide, multipliés par tabourets ÷ 4.
+- Le pot est plafonné à 8 heures de versements.
+- Un clic sur le pot, à côté des écus, le vide dans la bourse.
+
+**Décor débloqué.** Les emplacements du décor sont fixes. Une taverne neuve n'a que les fenêtres, les étagères, les lanternes, les tonneaux et les objets du comptoir, et chaque achat remplit les emplacements de son type. Une cheminée ou un chat pas encore achetés laissent des tonneaux à leur place.
+
+**Objectifs du jour.** Trois objectifs tirés chaque jour (en UTC) parmi neuf, seulement pour les plats de la carte. Ils sont payés dès qu'ils sont remplis.
+
+**Dans la barre.**
+- Un clic sur les écus ouvre, selon le moment, la connexion, l'ouverture de la taverne ou la fenêtre de la taverne (onglets Améliorations, Objectifs, Taverne).
+- Les annonces passent en or dans la salle : objectif rempli, nouveau palier, amélioration installée, pot rempli pendant l'absence.
+- Sans connexion, la taverne reste fermée : aucun client n'entre.
+
+**À vérifier en jeu.**
+- La connexion, l'ouverture de la taverne, l'envoi des services et l'achat d'une amélioration.
+- Le rythme de la marmite et du pressoir.
+- Les prix et la vitesse de la renommée.
+
 ## Repères dans le code
 
-- `src/Inn/` : les règles de la taverne, sans Godot.
-  - `Tavern` : la salle (arrivées, service, paiements).
+- `supabase/` : les scripts SQL numérotés, à exécuter dans l'ordre, et `tests/` (lancés par `run.sh` dans Docker).
+- `src/Inn/` : les règles de la salle, sans Godot.
+  - `Tavern` : la salle (arrivées, commandes, paiements) et sa configuration (tabourets, carte, aide).
+  - `ServiceDesk` : les boissons qui glissent et l'aide au comptoir.
   - `Patron` : un client et son parcours (entrée, réflexion, attente, boisson, départ).
-  - `TapStation` et `TeapotStation` : les postes et leur geste.
-  - `SlidingDrink` : une boisson qui glisse sur le comptoir.
+  - `Station` et ses postes : `TapStation`, `TeapotStation`, `PieStation`, et `RhythmStation` pour `SoupStation` et `CiderStation`.
   - `TavernLayout` : la place des postes, de la porte et des tabourets.
-  - `DrinkMenu` : les prix et les pourboires.
+  - `DrinkMenu` : les prix, les pourboires, l'appétit des clients et les identifiants partagés avec le serveur.
+- `src/Online/` : la partie en ligne.
+  - `OnlineSession` : la connexion, la synchronisation, le relevé des services (`ServiceLedger`).
+  - `TavernApi` : les appels aux fonctions SQL ; les records `*Data` et `*Info` reprennent leurs réponses.
 - `src/Pixel/` : le dessin.
   - `TavernRows` : les rangées de la scène.
-  - `RoomPainter` et `WindowPainter` : le mur, les étagères, les fenêtres, la porte et les lanternes.
-  - `CounterPainter` et `StationPainter` : le comptoir et les postes.
+  - `RoomPainter` et `WindowPainter` : le mur, les fenêtres, la porte.
+  - `DecorPlan` (la place du décor), `DecorSet` (le décor débloqué), `DecorPainter`, `PropPainter`, `DecorSprites` et `PropSprites`.
+  - `CounterPainter`, `StationPainter`, `KitchenPainter` et `GaugePainter` : le comptoir, les postes et leur jauge.
   - `PatronPainter`, `PatronSprites` et `PatronLook` : les clients, à partir de gabarits recolorés (chiffres `1` à `8` dans les grilles).
-  - `DrinkPainter` : la chope et la tasse.
-  - `TavernSprites` : les postes et les bouteilles.
-  - `DecorPlan` : la place du décor ; `DecorPainter`, `PropPainter`, `DecorSprites` et `PropSprites` : son dessin et ses animations.
+  - `DrinkPainter`, `TavernSprites` et `KitchenSprites` : les boissons, les plats et les postes.
 - `src/Ui/` :
-  - `TavernLane` : la scène dans la barre, les clics et les gains affichés ;
-  - `TavernSession` : la partie locale et sa sauvegarde ;
-  - `ExpandedBar` et `CollapsedBar` : la barre dépliée et repliée.
+  - `GameBridge` relie la salle, la session et les fenêtres ; `StatusBuilder` décrit la barre ; `SessionBanners` les annonces.
+  - `TavernLane` : la scène dans la barre et les clics ; `LaneOverlay` : les gains et les annonces.
+  - `ExpandedBar`, `TipJarButton` et `CollapsedBar` : la barre dépliée et repliée.
+  - `GameDialogs` ouvre `LoginWindow`, `FoundingWindow` et `TavernWindow` (onglets `UpgradesPanel`, `GoalsPanel`, `TavernPanel`).
 - `src/Desktop/` : l'ancrage de la barre dans Windows (`AppBar`) et au-dessus du Dock sur macOS (`FloatingDock`). Ne pas casser.
-- `src/Cloud/` : les comptes et les appels à Supabase, gardés pour l'étape 2. `LoginWindow` aussi.
+- `src/Cloud/` : les comptes et les appels à Supabase.
 
 ## Les dessins
 
@@ -262,7 +328,7 @@ Premiers habitués envisagés :
    ```bash
    git config user.email "robin.douet@gmail.com"
    ```
-3. **Mettre Supabase à jour** : dans l'éditeur SQL, exécuter les scripts de `supabase/` dans l'ordre, jusqu'au dernier numéro.
+3. **Mettre Supabase à jour** : dans l'éditeur SQL, exécuter les scripts numérotés de `supabase/` dans l'ordre, jusqu'au dernier numéro. Sur un projet qui contient encore le jeu de commerce, exécuter d'abord `reset_trade_game.sql`.
 4. **Lancer les tests SQL** (Docker requis) :
    ```bash
    bash supabase/tests/run.sh

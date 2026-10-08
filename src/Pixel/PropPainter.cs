@@ -21,11 +21,16 @@ public static class PropPainter
     private static readonly Color Fur = PixelPalette.Resolve('a');
     private static readonly Color Snore = PixelPalette.Resolve('h');
 
-    public static void PaintFloor(PixelCanvas canvas, int top, DecorPlan plan, float time)
+    public static void PaintFloor(PixelCanvas canvas, int top, DecorPlan plan, DecorSet decor, float time)
     {
         foreach (PlacedDecor piece in plan.Floor)
         {
-            switch (piece.Kind)
+            if (piece.Kind == DecorKind.Plant && !decor.Has(DecorKind.Plant))
+            {
+                continue;
+            }
+
+            switch (decor.Has(piece.Kind) ? piece.Kind : DecorKind.Barrels)
             {
                 case DecorKind.Fireplace:
                     PaintFireplace(canvas, top, piece.X, time);
@@ -34,7 +39,7 @@ public static class PropPainter
                     canvas.Draw(PropSprites.Plant, piece.X, top + Floor - PropSprites.Plant.Height);
                     break;
                 default:
-                    PaintBarrels(canvas, top, piece, time);
+                    PaintBarrels(canvas, top, piece with { Kind = decor.Has(piece.Kind) ? piece.Kind : DecorKind.Barrels }, time);
                     break;
             }
         }

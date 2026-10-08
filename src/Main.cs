@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Godot;
 using IdleBar.Desktop;
 using IdleBar.Ui;
@@ -9,10 +10,12 @@ public partial class Main : Control
     private const double TrayRefreshIntervalSeconds = 2;
     private const string PreferencesPath = "user://preferences.cfg";
     private const string InstancePath = "user://instance.pid";
+    private const float UpdateBannerSeconds = 10;
+    private const int FlushTimeoutMilliseconds = 2000;
 
     private SingleInstance _instance = null!;
     private BarPlacement _placement = null!;
-    private TavernSession _session = null!;
+    private GameBridge _game = null!;
     private ExpandedBar _expanded = null!;
     private CollapsedBar _collapsedBar = null!;
     private TrayMenu _tray = null!;
@@ -25,28 +28,31 @@ public partial class Main : Control
         _instance = SingleInstance.ReplaceRunningInstance(ProjectSettings.GlobalizePath(InstancePath));
         GetTree().AutoAcceptQuit = false;
         Theme = BarTheme.Create();
-        _session = new TavernSession();
+        _game = new GameBridge(this);
         BuildInterface();
-        _expanded.Attach(_session.Tavern);
+        _expanded.Attach(_game.Tavern);
+        _game.Announced += (message, seconds) => _expanded.Lane.Announce(message, seconds);
 
         BarPreferences preferences = BarPreferences.Load(PreferencesPath);
         _placement = new BarPlacement(GetWindow(), preferences);
         _placement.CollapsedChanged += OnCollapsedChanged;
         _placement.ApplyCollapsed(preferences.Collapsed);
+
+        _game.Start();
         RefreshInterface();
     }
 
     public override void _Process(double delta)
     {
         _placement.Update();
-        _session.Tick(delta);
+        _game.Tick(delta);
         RefreshInterface();
 
         _sinceTrayRefresh += delta;
         if (_sinceTrayRefresh >= TrayRefreshIntervalSeconds)
         {
             _sinceTrayRefresh = 0;
-            _tray.Refresh($"IdleBar · {_session.Status.Compact}");
+            _tray.Refresh($"IdleBar · {_game.Status.Compact}", _game.SignedIn);
         }
     }
 
@@ -60,8 +66,8 @@ public partial class Main : Control
 
     public override void _ExitTree()
     {
-        _session.Save();
         _placement.Dispose();
+        _game.Dispose();
         _instance.Dispose();
     }
 
@@ -79,6 +85,8 @@ public partial class Main : Control
         _expanded.QuitRequested += Quit;
         _expanded.SettingsRequested += OpenSettings;
         _expanded.UpdateRequested += OpenDownloadPage;
+        _expanded.MenuRequested += () => _game.OpenMenu(_placement.DialogScale);
+        _expanded.TipJarRequested += () => _game.CollectTipJar();
 
         _collapsedBar = new CollapsedBar();
         AddChild(_collapsedBar);
@@ -90,12 +98,17 @@ public partial class Main : Control
         _tray = new TrayMenu();
         AddChild(_tray);
         _tray.ToggleRequested += () => _placement.ToggleCollapsed();
+        _tray.SignOutRequested += () => _game.SignOut();
         _tray.SettingsRequested += OpenSettings;
         _tray.QuitRequested += Quit;
 
         _updates = new UpdateNotice();
         AddChild(_updates);
-        _updates.Found += release => _expanded.ShowUpdate(release.Name);
+        _updates.Found += release =>
+        {
+            _expanded.ShowUpdate(release.Name);
+            _expanded.Lane.Announce($"Nouvelle version {release.Name} disponible : clique sur « Mise à jour »", UpdateBannerSeconds);
+        };
 
         _settings = new SettingsWindow();
         AddChild(_settings);
@@ -105,7 +118,8 @@ public partial class Main : Control
 
     private void RefreshInterface()
     {
-        BarStatus status = _session.Status;
+        BarStatus status = _game.Status;
+        _expanded.Lane.Decor = _game.Decor;
         _expanded.Refresh(status);
         _collapsedBar.Refresh(status);
     }
@@ -128,9 +142,11 @@ public partial class Main : Control
     private void OpenSettings() =>
         _settings.Open(_placement.DialogScale, _placement.Size, _placement.ScreenDevice, _placement.DetectScreens());
 
-    private void Quit()
+    private async void Quit()
     {
-        _session.Save();
+        _expanded.Visible = false;
+        _collapsedBar.Visible = false;
+        await Task.WhenAny(_game.FlushAsync(), Task.Delay(FlushTimeoutMilliseconds));
         _placement.Dispose();
         _tray.Dismiss();
         GetTree().Quit();

@@ -11,12 +11,12 @@ public static class IconSprites
         ".hhhhh.",
         "...h...");
 
-    public static PixelSprite Pouch { get; } = PixelSprite.Parse(
-        ".B...B.",
-        "..BBB..",
-        ".ooooo.",
-        "oooLooo",
-        "ooLgLoo",
-        "oooLooo",
-        ".ooooo.");
+    public static PixelSprite Jar { get; } = PixelSprite.Parse(
+        ".BBBBB.",
+        "..www..",
+        ".wgLgw.",
+        "wgggLgw",
+        "wLgggLw",
+        "wgLgggw",
+        ".wwwww.");
 }

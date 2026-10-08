@@ -38,6 +38,18 @@ public static class StationPainter
                 PaintTeapot(canvas, top, teapot, time);
                 GaugePainter.Paint(canvas, top, teapot.X + TeapotLeft, teapot, Stewed, time);
                 break;
+            case SoupStation soup:
+                KitchenPainter.PaintSoup(canvas, top, soup, time);
+                GaugePainter.Paint(canvas, top, soup.X + TeapotLeft, soup, Stewed, time);
+                break;
+            case CiderStation cider:
+                KitchenPainter.PaintCider(canvas, top, cider, time);
+                GaugePainter.Paint(canvas, top, cider.X + TeapotLeft, cider, Stewed, time);
+                break;
+            case PieStation pie:
+                KitchenPainter.PaintPie(canvas, top, pie, time);
+                GaugePainter.Paint(canvas, top, pie.X + TeapotLeft, pie, Stewed, time);
+                break;
         }
     }
 

@@ -69,8 +69,7 @@ public static class PatronPainter
             {
                 float worry = Math.Clamp((patron.Waited / Patron.Patience - 0.5f) * 2, 0, 1);
                 PaintBubble(canvas, top, center, Cream.Lerp(Impatient, worry * 0.55f));
-                PixelSprite icon = patron.Order == Drink.Beer ? TavernSprites.BeerIcon : TavernSprites.TeaIcon;
-                canvas.Draw(icon, center - 2, top + TavernRows.BubbleTop + 1);
+                canvas.Draw(DrinkPainter.Icon(patron.Order), center - 2, top + TavernRows.BubbleTop + 1);
             }
         }
     }

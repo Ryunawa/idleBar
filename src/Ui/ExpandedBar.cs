@@ -8,6 +8,7 @@ public partial class ExpandedBar : MarginContainer
 {
     private const double CoinCatchUp = 5;
     private const float GlowSeconds = 1.2f;
+    private const float JarBeat = 4f;
     private const int StatsWidth = 190;
 
     private static readonly Color Glow = new(1.6f, 1.5f, 1.2f);
@@ -17,8 +18,9 @@ public partial class ExpandedBar : MarginContainer
     private double _shownCoins = double.NaN;
     private double _targetCoins;
     private float _glow;
+    private float _time;
+    private TipJarButton _jar = null!;
     private BarSlot _update = null!;
-    private TavernLane _lane = null!;
 
     public event Action? ToggleRequested;
 
@@ -27,6 +29,12 @@ public partial class ExpandedBar : MarginContainer
     public event Action? SettingsRequested;
 
     public event Action? UpdateRequested;
+
+    public event Action? MenuRequested;
+
+    public event Action? TipJarRequested;
+
+    public TavernLane Lane { get; private set; } = null!;
 
     public override void _Ready()
     {
@@ -39,18 +47,32 @@ public partial class ExpandedBar : MarginContainer
         row.AddThemeConstantOverride("separation", 10);
         AddChild(row);
 
-        VBoxContainer stats = new() { CustomMinimumSize = new Vector2(StatsWidth, 0), Alignment = BoxContainer.AlignmentMode.Center };
+        VBoxContainer stats = new()
+        {
+            CustomMinimumSize = new Vector2(StatsWidth, 0),
+            Alignment = BoxContainer.AlignmentMode.Center,
+            MouseFilter = MouseFilterEnum.Stop,
+            MouseDefaultCursorShape = CursorShape.PointingHand,
+            TooltipText = "Ouvrir la taverne : améliorations, objectifs du jour",
+        };
         stats.AddThemeConstantOverride("separation", 0);
+        ClickBinding.OnLeftPress(stats, () => MenuRequested?.Invoke());
+        HBoxContainer coinsRow = new();
+        coinsRow.AddThemeConstantOverride("separation", 8);
         _coins = BarLabels.Create(19, BarPalette.Gold);
         _coins.TextOverrunBehavior = TextServer.OverrunBehavior.NoTrimming;
+        coinsRow.AddChild(_coins);
+        _jar = new TipJarButton();
+        _jar.Pressed += () => TipJarRequested?.Invoke();
+        coinsRow.AddChild(_jar);
         _situation = BarLabels.Create(11, BarPalette.Muted);
         _situation.CustomMinimumSize = new Vector2(StatsWidth, 0);
-        stats.AddChild(_coins);
+        stats.AddChild(coinsRow);
         stats.AddChild(_situation);
         row.AddChild(stats);
 
-        _lane = new TavernLane { SizeFlagsHorizontal = SizeFlags.ExpandFill };
-        row.AddChild(_lane);
+        Lane = new TavernLane { SizeFlagsHorizontal = SizeFlags.ExpandFill };
+        row.AddChild(Lane);
 
         _update = new BarSlot();
         _update.Button.Visible = false;
@@ -65,10 +87,12 @@ public partial class ExpandedBar : MarginContainer
         row.AddChild(windowButtons);
     }
 
-    public void Attach(Tavern tavern) => _lane.Attach(tavern);
+    public void Attach(Tavern tavern) => Lane.Attach(tavern);
 
     public override void _Process(double delta)
     {
+        _time += (float)delta;
+        _jar.Pulse(_time * JarBeat);
         if (double.IsNaN(_shownCoins))
         {
             return;
@@ -87,25 +111,34 @@ public partial class ExpandedBar : MarginContainer
             "Mise à jour",
             $"version {version}",
             BarPalette.Gold,
-            $"La version {version} d'IdleBar est disponible. Clique pour ouvrir la page de téléchargement, puis remplace ton jeu actuel."));
+            $"La version {version} d'IdleBar est disponible. Clique pour ouvrir la page de téléchargement, puis remplace ton jeu actuel : ta taverne est gardée sur le serveur."));
         _update.Button.Visible = true;
     }
 
     public void Refresh(BarStatus status)
     {
-        string? hint = _lane.Hint;
+        string? hint = Lane.Hint;
         _situation.Text = hint ?? status.Situation;
         _situation.AddThemeColorOverride("font_color", hint is null ? BarPalette.Muted : BarPalette.Text);
+        _jar.Display(status.TipJar);
+        if (status.Coins is not double coins)
+        {
+            _shownCoins = double.NaN;
+            _coins.Text = status.Headline;
+            _coins.Modulate = Colors.White;
+            return;
+        }
+
         if (double.IsNaN(_shownCoins))
         {
-            _shownCoins = status.Coins;
-            _coins.Text = NumberFormat.Coins(status.Coins);
+            _shownCoins = coins;
+            _coins.Text = NumberFormat.Coins(coins);
         }
-        else if (status.Coins > _targetCoins)
+        else if (coins > _targetCoins)
         {
             _glow = 1;
         }
 
-        _targetCoins = status.Coins;
+        _targetCoins = coins;
     }
 }

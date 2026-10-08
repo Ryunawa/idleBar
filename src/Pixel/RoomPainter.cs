@@ -9,6 +9,7 @@ public static class RoomPainter
     private const int PanelGap = 10;
     private const int JointGap = 16;
     private const int FloorMargin = 14;
+    private const int WallMargin = 5;
 
     private static readonly Color Wall = PixelPalette.Resolve('D');
     private static readonly Color Joint = PixelPalette.Resolve('d');
@@ -25,27 +26,28 @@ public static class RoomPainter
     public static DecorPlan PlanFor(TavernLayout layout, int width)
     {
         int floorStart = layout.SeatXs[^1] + FloorMargin;
-        if (_plan is null || _plan.Width != width || _plan.FloorStart != floorStart)
+        int wallStart = layout.DoorX + TavernLayout.DoorWidth + WallMargin;
+        if (_plan is null || _plan.Width != width || _plan.FloorStart != floorStart || _plan.WallStart != wallStart)
         {
-            _plan = DecorPlan.For(width, floorStart);
+            _plan = DecorPlan.For(width, wallStart, floorStart);
         }
 
         return _plan;
     }
 
-    public static void Paint(PixelCanvas canvas, int top, TavernLayout layout, SkyLight sky, float time, bool doorOpen)
+    public static void Paint(PixelCanvas canvas, int top, TavernLayout layout, DecorSet decor, SkyLight sky, float time, bool doorOpen)
     {
         DecorPlan plan = PlanFor(layout, canvas.Width);
         DecorPainter.PaintCeiling(canvas, top);
         PaintWall(canvas, top);
         DecorPainter.PaintPosts(canvas, top, plan);
         DecorPainter.PaintShelf(canvas, top, 1, StationShelfWidth);
-        DecorPainter.PaintWall(canvas, top, plan, sky, time);
-        PropPainter.PaintFloor(canvas, top, plan, time);
+        DecorPainter.PaintWall(canvas, top, plan, decor, sky, time);
+        PropPainter.PaintFloor(canvas, top, plan, decor, time);
         PaintDoor(canvas, top, layout.DoorX, sky, doorOpen);
         canvas.Fill(0, top, canvas.Width, 1, Beam);
         canvas.Fill(0, top + 1, canvas.Width, 1, Trim);
-        DecorPainter.PaintHanging(canvas, top, plan, sky, time);
+        DecorPainter.PaintHanging(canvas, top, plan, decor, sky, time);
     }
 
     private static void PaintWall(PixelCanvas canvas, int top)

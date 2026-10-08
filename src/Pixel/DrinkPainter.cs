@@ -20,14 +20,36 @@ public static class DrinkPainter
 
     public static void Paint(PixelCanvas canvas, PreparedDrink drink, int x, int bottom)
     {
-        if (drink.Drink == Drink.Beer)
+        switch (drink.Drink)
         {
-            Mug(canvas, x, bottom, 1f);
-            return;
+            case Drink.Beer:
+                Mug(canvas, x, bottom, 1f);
+                break;
+            case Drink.Tea:
+                Cup(canvas, x, bottom, drink.Perfect);
+                break;
+            default:
+                PixelSprite sprite = Served(drink.Drink);
+                canvas.Draw(sprite, x, bottom - sprite.Height + 1);
+                break;
         }
-
-        Cup(canvas, x, bottom, drink.Perfect);
     }
+
+    public static PixelSprite Icon(Drink drink) => drink switch
+    {
+        Drink.Beer => TavernSprites.BeerIcon,
+        Drink.Tea => TavernSprites.TeaIcon,
+        Drink.Soup => KitchenSprites.SoupIcon,
+        Drink.Cider => KitchenSprites.CiderIcon,
+        _ => KitchenSprites.PieIcon,
+    };
+
+    private static PixelSprite Served(Drink drink) => drink switch
+    {
+        Drink.Soup => KitchenSprites.SoupBowl,
+        Drink.Cider => KitchenSprites.CiderGlass,
+        _ => KitchenSprites.PieDish,
+    };
 
     public static void Mug(PixelCanvas canvas, int x, int bottom, float level)
     {
