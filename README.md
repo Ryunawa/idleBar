@@ -1,6 +1,10 @@
 # IdleBar
 
-Une petite taverne en pixel art qui vit dans une barre en bas de ton écran. Tire les bières et fais infuser le thé d'un clic pour les clients qui passent la porte, pendant que tu fais autre chose.
+Une petite taverne en pixel art qui vit dans une barre en bas de ton écran. Pendant que tu fais autre chose :
+- tu sers d'un geste les clients qui passent la porte ;
+- tu fais connaissance avec douze habitués, chacun avec son histoire ;
+- tu agrandis ta salle ;
+- tu vas boire un verre chez tes amis, en direct quand ils sont là.
 
 ## Télécharger
 
@@ -28,7 +32,13 @@ xattr -dr com.apple.quarantine /Applications/IdleBar.app
 
 ### Premiers pas
 
-Les clients arrivent tout seuls. Maintiens le clic sur le fût pour tirer une bière et lâche quand la mousse touche le bord ; clique sur la théière, puis reclique quand la vapeur est dorée. La boisson glisse jusqu'au client qui l'a commandée.
+1. Clique sur « Bienvenue ! » à gauche de la barre pour créer ton compte, puis donne un nom à ta taverne.
+2. Les clients arrivent tout seuls et commandent dans une bulle.
+3. Sers-les d'un geste ; la boisson glisse ensuite jusqu'au client qui l'a commandée :
+   - **le fût :** maintiens le clic et lâche quand la jauge est dans la zone dorée ;
+   - **la théière :** clique, puis reclique quand la vapeur devient dorée.
+4. Un clic sur tes écus ouvre ta taverne : améliorations, objectifs du jour, carnet des habitués, amis et avatar.
+5. Pour jouer à plusieurs, échangez vos codes amis dans l'onglet Amis, puis rendez-vous visite.
 
 ## Publier une nouvelle version
 
