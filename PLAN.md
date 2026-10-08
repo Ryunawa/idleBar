@@ -186,7 +186,7 @@ Premiers habitués envisagés :
 | 0. Table rase | Retirer le jeu de commerce, garder le socle ci-dessus, vider l'ancien schéma Supabase (`reset_trade_game.sql`) | Fait ; le script reste à exécuter sur Supabase |
 | 1. Le comptoir | Prototype **sans serveur** : la scène de la taverne, des clients qui entrent, commandent et repartent, le fût et la théière avec leur geste, le service, les pourboires, le jour et la nuit. On vérifie que c'est agréable avant de construire le reste | Fait, à tester en jeu |
 | 2. La taverne grandit | Sauvegarde sur Supabase, écus, tabourets, marmite, pressoir, four, décor, aide au comptoir, pot à pourboires, renommée et paliers, objectifs du jour | Fait, à tester en jeu (scripts `01` à `04`) |
-| 3. Les habitués | Les 12 habitués, leurs conditions de venue, l'amitié, les histoires en chapitres, le carnet | À faire |
+| 3. Les habitués | Les 12 habitués, leurs conditions de venue, l'amitié, les histoires en chapitres, le carnet | Fait, à tester en jeu (scripts `05` et `06`) |
 | 4. Entre amis | Avatar, code ami, client Realtime, visites en direct et en différé, émotes, livre d'or, spécialités et leur carte | À faire |
 | 5. Passants et tournées | Joueurs connectés dans la rue, salut, invitation, demande d'ami, tournée générale | À faire |
 | 6. Saisons | Météo, saisons, fêtes et leurs objets | À faire |
@@ -284,6 +284,51 @@ Chaque script peut être rejoué.
 - Le rythme de la marmite et du pressoir.
 - Les prix et la vitesse de la renommée.
 
+## Étape 3 : les habitués, tels qu'ils sont
+
+**Sur Supabase.** `05_regulars.sql` contient les douze habitués, leurs soixante répliques, leur amitié avec chaque taverne et deux nouveaux objectifs (« servir un habitué », « servir 4 habitués »). `06_regular_rules.sql` contient leurs règles : il remplace `report_service`, `get_world` et `private.state`, et donne une nouvelle signature à `private.advance_goals`.
+
+**Venue.**
+- À chaque arrivée, un client a une chance sur quatre d'être un habitué, si l'un d'eux est disponible :
+  - il n'est pas déjà dans la salle ;
+  - il n'est pas venu depuis 10 minutes ;
+  - sa condition est remplie (voir le tableau).
+- Ce choix se fait sur le PC (`RegularBook`). Le serveur ne vérifie pas les conditions : tricher ne profiterait qu'au tricheur.
+- Un habitué commande sa boisson préférée sept fois sur dix, si elle est à la carte.
+
+| Habitué | Boisson | Condition |
+|---|---|---|
+| Gaspard, chevalier à la retraite | bière | toujours |
+| Mélisande, herboriste | thé | le jour |
+| Brindille, apprentie sorcière | thé | la nuit |
+| Odette, factrice | bière | le jour |
+| Le Fantôme | thé | la nuit (il est à demi transparent) |
+| Bartholomé, barde | cidre | une cheminée achetée |
+| Ysolde, capitaine | bière | sous la pluie |
+| Pip, gobelin | soupe | soupe à la carte |
+| Frère Anselme | cidre | cidre à la carte |
+| Madame Lune, astrologue | thé | la nuit sans pluie |
+| Fennec, voleur repenti | bière | à partir de l'Estaminet |
+| Hugues, marchand de cartes | tourte | tourte à la carte |
+
+**Amitié.**
+- Chaque service rapporte 1 point d'amitié, et 1 de plus s'il est parfait. Le relevé des services indique les habitués servis (`"regulars": {"gaspard": {"served": 1, "perfect": 1}}`).
+- Le serveur plafonne chaque habitué à un tabouret, dans la limite des services acceptés.
+- Les chapitres s'ouvrent à 3, 8, 15, 25 et 40 points ; leur réplique passe en annonce dans la salle.
+- Au cinquième chapitre, l'habitué offre un souvenir (250 écus).
+
+**Dans la barre et dans la fenêtre.**
+- Chaque habitué a une apparence fixe (`RegularLooks`), et un cœur à côté de sa bulle.
+- Au survol, son nom, son titre et son amitié s'affichent à gauche de la barre.
+- Les souvenirs s'alignent sur une étagère, juste après le dernier tabouret.
+- L'onglet Habitués de la fenêtre de la taverne sert de carnet : portraits, conditions, amitié, répliques débloquées. Un habitué jamais rencontré y apparaît en ombre.
+
+**Météo.** Le temps change par tranches de 3 heures : il pleut une fois sur quatre, le même jour et à la même heure pour tout le monde (`Weather`). Les fenêtres montrent alors un ciel gris et la pluie.
+
+**À vérifier en jeu.**
+- La fréquence des habitués : une chance sur quatre et 10 minutes de repos entre deux visites.
+- La longueur des répliques en annonce sur un petit écran.
+
 ## Repères dans le code
 
 - `supabase/` : les scripts SQL numérotés, à exécuter dans l'ordre, et `tests/` (lancés par `run.sh` dans Docker).
@@ -304,11 +349,14 @@ Chaque script peut être rejoué.
   - `CounterPainter`, `StationPainter`, `KitchenPainter` et `GaugePainter` : le comptoir, les postes et leur jauge.
   - `PatronPainter`, `PatronSprites` et `PatronLook` : les clients, à partir de gabarits recolorés (chiffres `1` à `8` dans les grilles).
   - `DrinkPainter`, `TavernSprites` et `KitchenSprites` : les boissons, les plats et les postes.
+  - `RegularLooks` et `SouvenirSprites` : l'apparence des habitués et leurs souvenirs.
+  - `Outdoors` (le ciel et la météo, `Weather`) et `RoomView` : ce que le peintre de la salle reçoit à chaque image.
 - `src/Ui/` :
   - `GameBridge` relie la salle, la session et les fenêtres ; `StatusBuilder` décrit la barre ; `SessionBanners` les annonces.
   - `TavernLane` : la scène dans la barre et les clics ; `LaneOverlay` : les gains et les annonces.
   - `ExpandedBar`, `TipJarButton` et `CollapsedBar` : la barre dépliée et repliée.
-  - `GameDialogs` ouvre `LoginWindow`, `FoundingWindow` et `TavernWindow` (onglets `UpgradesPanel`, `GoalsPanel`, `TavernPanel`).
+  - `GameDialogs` ouvre `LoginWindow`, `FoundingWindow` et `TavernWindow` (onglets `UpgradesPanel`, `GoalsPanel`, `RegularsPanel`, `TavernPanel`).
+  - `RegularBook` : qui, parmi les habitués, peut entrer maintenant.
 - `src/Desktop/` : l'ancrage de la barre dans Windows (`AppBar`) et au-dessus du Dock sur macOS (`FloatingDock`). Ne pas casser.
 - `src/Cloud/` : les comptes et les appels à Supabase.
 

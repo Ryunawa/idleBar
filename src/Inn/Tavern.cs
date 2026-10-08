@@ -15,6 +15,7 @@ public sealed class Tavern
     private const float QuickService = 20f;
     private const double SecondRoundChance = 0.3;
     private const int MaxRounds = 2;
+    private const double FavoriteChance = 0.7;
 
     private readonly Random _random;
     private readonly List<Patron> _patrons = [];
@@ -45,6 +46,8 @@ public sealed class Tavern
     public int Helper { get; private set; }
 
     public bool Open { get; set; } = true;
+
+    public IRegularBook? Book { get; set; }
 
     public int Waiting => _patrons.Count(patron => patron.Phase is PatronPhase.Thinking or PatronPhase.Waiting);
 
@@ -113,7 +116,8 @@ public sealed class Tavern
             return;
         }
 
-        _patrons.Add(new Patron(_random.Next(), free[_random.Next(free.Count)], Layout.DoorCenter, ChooseOrder()));
+        string? regular = Book?.Pick(_patrons.Select(patron => patron.Regular).OfType<string>().ToList(), _random);
+        _patrons.Add(new Patron(_random.Next(), free[_random.Next(free.Count)], Layout.DoorCenter, OrderFor(regular), regular));
         _untilArrival = MinArrival + (float)_random.NextDouble() * (MaxArrival - MinArrival);
     }
 
@@ -139,7 +143,7 @@ public sealed class Tavern
     {
         if (patron.Rounds + 1 < MaxRounds && _random.NextDouble() < SecondRoundChance)
         {
-            patron.OrderAgain(ChooseOrder());
+            patron.OrderAgain(OrderFor(patron.Regular));
             return;
         }
 
@@ -157,7 +161,17 @@ public sealed class Tavern
     }
 
     private void Pay(int amount, Patron patron, bool perfect, Drink? drink) =>
-        Paid?.Invoke(new Payment(amount, (int)MathF.Round(patron.X), perfect, drink));
+        Paid?.Invoke(new Payment(amount, (int)MathF.Round(patron.X), perfect, drink, drink is null ? null : patron.Regular));
+
+    private Drink OrderFor(string? regular)
+    {
+        if (regular is not null && Book?.Favorite(regular) is Drink favorite && _stations.Any(station => station.Drink == favorite) && _random.NextDouble() < FavoriteChance)
+        {
+            return favorite;
+        }
+
+        return ChooseOrder();
+    }
 
     private Drink ChooseOrder()
     {

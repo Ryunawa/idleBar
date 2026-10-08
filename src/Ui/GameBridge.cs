@@ -15,16 +15,18 @@ public sealed class GameBridge : IDisposable
 {
     private const int HttpTimeoutSeconds = 10;
     private const double LongestStep = 0.25;
-    private const float BannerSeconds = 5;
+    private const float RefusalSeconds = 5;
     private const string SessionPath = "user://session.dat";
 
     private readonly HttpClient? _http;
     private readonly OnlineSession? _session;
     private readonly GameDialogs? _dialogs;
+    private readonly RegularBook _book = new();
 
     public GameBridge(Node host)
     {
         Tavern.Open = false;
+        Tavern.Book = _book;
         SupabaseSettings? settings = SupabaseSettings.FromProjectSettings();
         if (settings is null)
         {
@@ -37,9 +39,9 @@ public sealed class GameBridge : IDisposable
         _session.Changed += Synchronize;
         _session.Applied += (previous, current) =>
         {
-            foreach (string message in SessionBanners.Describe(_session.World, previous, current))
+            foreach (Announcement announcement in SessionBanners.Describe(_session.World, previous, current))
             {
-                Announced?.Invoke(message, BannerSeconds);
+                Announced?.Invoke(announcement.Text, announcement.Seconds);
             }
         };
         Tavern.Paid += _session.Record;
@@ -51,6 +53,8 @@ public sealed class GameBridge : IDisposable
     public Tavern Tavern { get; } = new(new Random());
 
     public DecorSet Decor { get; private set; } = DecorSet.Bare;
+
+    public IReadOnlyList<string> Souvenirs { get; private set; } = [];
 
     public BarStatus Status => StatusBuilder.Describe(_session, Tavern);
 
@@ -80,8 +84,19 @@ public sealed class GameBridge : IDisposable
         string? error = await ActionFeedback.CaptureAsync(_session.CollectTipJarAsync);
         if (error is not null)
         {
-            Announced?.Invoke(error, BannerSeconds);
+            Announced?.Invoke(error, RefusalSeconds);
         }
+    }
+
+    public string? Describe(Patron patron)
+    {
+        if (_book.Find(patron.Regular) is not RegularInfo regular)
+        {
+            return null;
+        }
+
+        int friendship = _session?.Tavern?.Regulars.FirstOrDefault(progress => progress.Id == regular.Id)?.Friendship ?? 0;
+        return $"{regular.Name} · {regular.Title} · amitié {friendship}";
     }
 
     public void Dispose() => _http?.Dispose();
@@ -89,12 +104,16 @@ public sealed class GameBridge : IDisposable
     private void Synchronize()
     {
         Tavern.Open = _session!.Playing;
+        _book.Update(_session.World, _session.Tavern);
         if (_session.Tavern is not TavernData data)
         {
             Tavern.Configure(4, DrinkMenu.Starters, 0);
             Decor = DecorSet.Bare;
+            Souvenirs = [];
             return;
         }
+
+        Souvenirs = data.Regulars.Where(progress => progress.Chapter >= 5).Select(progress => progress.Id).ToList();
 
         List<Drink> menu = data.Menu.Select(DrinkMenu.FromId).OfType<Drink>().ToList();
         Tavern.Configure(data.Stools, menu.Count > 0 ? menu : DrinkMenu.Starters, data.Helper);

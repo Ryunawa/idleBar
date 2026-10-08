@@ -13,14 +13,22 @@ public static class WindowPainter
     private static readonly Color Frame = PixelPalette.Resolve('B');
     private static readonly Color Sill = PixelPalette.Resolve('o');
     private static readonly Color Star = PixelPalette.Resolve('h');
+    private static readonly Color Cloud = new("5d6670");
+    private static readonly Color Drop = new("9fb4c8");
 
-    public static void Paint(PixelCanvas canvas, int top, int x, SkyLight sky, float time)
+    public static void Paint(PixelCanvas canvas, int top, int x, Outdoors outdoors, float time)
     {
         int y = top + Top;
+        SkyLight sky = outdoors.Sky;
+        float gloom = outdoors.Raining ? 0.55f : 0;
         canvas.Fill(x, y, Width, Height, Frame);
-        canvas.Fill(x + 1, y + 1, Width - 2, 4, sky.Sky(Night));
-        canvas.Fill(x + 1, y + 5, Width - 2, Height - 6, sky.Horizon(Night));
-        if (sky.Daylight < 0.3f)
+        canvas.Fill(x + 1, y + 1, Width - 2, 4, sky.Sky(Night).Lerp(Cloud, gloom));
+        canvas.Fill(x + 1, y + 5, Width - 2, Height - 6, sky.Horizon(Night).Lerp(Cloud, gloom));
+        if (outdoors.Raining)
+        {
+            PaintRain(canvas, x, y, time);
+        }
+        else if (sky.Daylight < 0.3f)
         {
             PaintStars(canvas, x, y, time);
         }
@@ -28,6 +36,15 @@ public static class WindowPainter
         canvas.Fill(x + Width / 2, y + 1, 1, Height - 2, Frame);
         canvas.Fill(x + 1, y + 4, Width - 2, 1, Frame);
         canvas.Fill(x - 1, y + Height, Width + 2, 1, Sill);
+    }
+
+    private static void PaintRain(PixelCanvas canvas, int x, int y, float time)
+    {
+        for (int column = 1; column < Width - 1; column += 2)
+        {
+            int fall = (int)(time * 14 + column * 3.7f) % (Height - 2);
+            canvas.Fill(x + column, y + 1 + fall, 1, 2, Drop with { A = 0.8f });
+        }
     }
 
     private static void PaintStars(PixelCanvas canvas, int x, int y, float time)

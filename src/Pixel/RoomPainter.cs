@@ -23,31 +23,33 @@ public static class RoomPainter
 
     private static DecorPlan? _plan;
 
-    public static DecorPlan PlanFor(TavernLayout layout, int width)
+    public static DecorPlan PlanFor(TavernLayout layout, int width, int souvenirs)
     {
         int floorStart = layout.SeatXs[^1] + FloorMargin;
         int wallStart = layout.DoorX + TavernLayout.DoorWidth + WallMargin;
-        if (_plan is null || _plan.Width != width || _plan.FloorStart != floorStart || _plan.WallStart != wallStart)
+        int shelf = souvenirs > 0 ? ShelfWidth(souvenirs) : 0;
+        if (_plan is null || _plan.Width != width || _plan.FloorStart != floorStart || _plan.WallStart != wallStart || _plan.ShelfWidth != shelf)
         {
-            _plan = DecorPlan.For(width, wallStart, floorStart);
+            _plan = DecorPlan.For(width, wallStart, floorStart, shelf);
         }
 
         return _plan;
     }
 
-    public static void Paint(PixelCanvas canvas, int top, TavernLayout layout, DecorSet decor, SkyLight sky, float time, bool doorOpen)
+    public static void Paint(PixelCanvas canvas, int top, RoomView view, float time)
     {
-        DecorPlan plan = PlanFor(layout, canvas.Width);
+        DecorPlan plan = PlanFor(view.Layout, canvas.Width, view.Souvenirs.Count);
         DecorPainter.PaintCeiling(canvas, top);
         PaintWall(canvas, top);
         DecorPainter.PaintPosts(canvas, top, plan);
         DecorPainter.PaintShelf(canvas, top, 1, StationShelfWidth);
-        DecorPainter.PaintWall(canvas, top, plan, decor, sky, time);
-        PropPainter.PaintFloor(canvas, top, plan, decor, time);
-        PaintDoor(canvas, top, layout.DoorX, sky, doorOpen);
+        DecorPainter.PaintWall(canvas, top, plan, view.Decor, view.Outdoors, time);
+        PaintSouvenirs(canvas, top, view);
+        PropPainter.PaintFloor(canvas, top, plan, view.Decor, time);
+        PaintDoor(canvas, top, view.Layout.DoorX, view.Outdoors.Sky, view.DoorOpen);
         canvas.Fill(0, top, canvas.Width, 1, Beam);
         canvas.Fill(0, top + 1, canvas.Width, 1, Trim);
-        DecorPainter.PaintHanging(canvas, top, plan, decor, sky, time);
+        DecorPainter.PaintHanging(canvas, top, plan, view.Decor, view.Outdoors, time);
     }
 
     private static void PaintWall(PixelCanvas canvas, int top)
@@ -68,6 +70,29 @@ public static class RoomPainter
         for (int x = PanelGap / 2; x < canvas.Width; x += PanelGap)
         {
             canvas.Fill(x, wainscot + 2, 1, 3, Joint);
+        }
+    }
+
+    private static int ShelfWidth(int souvenirs) => 4 + souvenirs * (SouvenirSprites.Size + 1);
+
+    private static void PaintSouvenirs(PixelCanvas canvas, int top, RoomView view)
+    {
+        if (view.Souvenirs.Count == 0)
+        {
+            return;
+        }
+
+        int x = view.Layout.SeatXs[^1] + FloorMargin;
+        int board = top + 9;
+        canvas.Fill(x, board, ShelfWidth(view.Souvenirs.Count), 1, Plank);
+        canvas.Fill(x + 1, board + 1, 1, 2, Beam);
+        canvas.Fill(x + ShelfWidth(view.Souvenirs.Count) - 2, board + 1, 1, 2, Beam);
+        for (int index = 0; index < view.Souvenirs.Count; index++)
+        {
+            if (SouvenirSprites.For(view.Souvenirs[index]) is PixelSprite sprite)
+            {
+                canvas.Draw(sprite, x + 2 + index * (SouvenirSprites.Size + 1), board - SouvenirSprites.Size);
+            }
         }
     }
 

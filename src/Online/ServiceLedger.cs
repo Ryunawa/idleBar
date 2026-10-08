@@ -6,6 +6,7 @@ namespace IdleBar.Online;
 public sealed class ServiceLedger
 {
     private readonly Dictionary<string, int> _drinks = [];
+    private readonly Dictionary<string, RegularReport> _regulars = [];
     private int _perfect;
     private int _parting;
 
@@ -25,15 +26,22 @@ public sealed class ServiceLedger
         string id = DrinkMenu.Id(drink);
         _drinks[id] = _drinks.GetValueOrDefault(id) + 1;
         _perfect += payment.Perfect ? 1 : 0;
+        if (payment.Regular is string regular)
+        {
+            RegularReport known = _regulars.GetValueOrDefault(regular) ?? new RegularReport(0, 0);
+            _regulars[regular] = new RegularReport(known.Served + 1, known.Perfect + (payment.Perfect ? 1 : 0));
+        }
     }
 
     public ServiceReport Take()
     {
-        ServiceReport report = new(new Dictionary<string, int>(_drinks), _perfect, _parting, Coins);
-        _drinks.Clear();
-        _perfect = 0;
-        _parting = 0;
-        Coins = 0;
+        ServiceReport report = new(
+            new Dictionary<string, int>(_drinks),
+            _perfect,
+            _parting,
+            Coins,
+            new Dictionary<string, RegularReport>(_regulars));
+        Clear();
         return report;
     }
 
@@ -44,10 +52,23 @@ public sealed class ServiceLedger
             _drinks[id] = _drinks.GetValueOrDefault(id) + count;
         }
 
+        foreach ((string id, RegularReport regular) in report.Regulars)
+        {
+            RegularReport known = _regulars.GetValueOrDefault(id) ?? new RegularReport(0, 0);
+            _regulars[id] = new RegularReport(known.Served + regular.Served, known.Perfect + regular.Perfect);
+        }
+
         _perfect += report.Perfect;
         _parting += report.Parting;
         Coins += report.Coins;
     }
 
-    public void Clear() => Take();
+    public void Clear()
+    {
+        _drinks.Clear();
+        _regulars.Clear();
+        _perfect = 0;
+        _parting = 0;
+        Coins = 0;
+    }
 }

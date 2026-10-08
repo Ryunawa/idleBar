@@ -40,7 +40,7 @@ public static class DecorPainter
         }
     }
 
-    public static void PaintWall(PixelCanvas canvas, int top, DecorPlan plan, DecorSet decor, SkyLight sky, float time)
+    public static void PaintWall(PixelCanvas canvas, int top, DecorPlan plan, DecorSet decor, Outdoors outdoors, float time)
     {
         foreach (PlacedDecor piece in plan.Wall)
         {
@@ -52,7 +52,7 @@ public static class DecorPainter
             switch (piece.Kind)
             {
                 case DecorKind.Window:
-                    WindowPainter.Paint(canvas, top, piece.X, sky, time);
+                    WindowPainter.Paint(canvas, top, piece.X, outdoors, time);
                     break;
                 case DecorKind.Shelf:
                     PaintShelf(canvas, top, piece.X, DecorSizes.Shelf);
@@ -68,7 +68,7 @@ public static class DecorPainter
         }
     }
 
-    public static void PaintHanging(PixelCanvas canvas, int top, DecorPlan plan, DecorSet decor, SkyLight sky, float time)
+    public static void PaintHanging(PixelCanvas canvas, int top, DecorPlan plan, DecorSet decor, Outdoors outdoors, float time)
     {
         foreach (PlacedDecor piece in plan.Hanging)
         {
@@ -80,7 +80,7 @@ public static class DecorPainter
             canvas.Draw(PropSprites.For(piece.Kind), piece.X, top + HangRow);
             if (piece.Kind == DecorKind.Lantern)
             {
-                PaintGlow(canvas, piece.X + 2, top + 4, (0.05f + 0.07f * (1 - sky.Daylight)) * Flicker(time, piece.X));
+                PaintGlow(canvas, piece.X + 2, top + 4, (0.05f + 0.07f * (1 - outdoors.Sky.Daylight)) * Flicker(time, piece.X));
             }
         }
     }

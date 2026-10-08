@@ -8,9 +8,10 @@ public sealed class Patron
     private const float WalkSpeed = 22f;
     private const float ThinkSeconds = 1.6f;
 
-    public Patron(int look, int seat, float x, Drink order)
+    public Patron(int look, int seat, float x, Drink order, string? regular = null)
     {
         Look = look;
+        Regular = regular;
         Seat = seat;
         X = x;
         Order = order;
@@ -18,6 +19,8 @@ public sealed class Patron
     }
 
     public int Look { get; }
+
+    public string? Regular { get; }
 
     public int Seat { get; }
 

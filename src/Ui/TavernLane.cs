@@ -18,11 +18,18 @@ public partial class TavernLane : Control
     private int _top;
     private float _time;
     private int _hovered = -1;
+    private Patron? _hoveredPatron;
     private int _pressed = -1;
 
-    public string? Hint => _tavern is not null && _hovered >= 0 && _hovered < _tavern.Stations.Count ? _tavern.Stations[_hovered].Hint : null;
+    public string? Hint => _tavern is not null && _hovered >= 0 && _hovered < _tavern.Stations.Count
+        ? _tavern.Stations[_hovered].Hint
+        : _hoveredPatron is not null ? Describe?.Invoke(_hoveredPatron) : null;
 
     public DecorSet Decor { get; set; } = DecorSet.Bare;
+
+    public IReadOnlyList<string> Souvenirs { get; set; } = [];
+
+    public Func<Patron, string?>? Describe { get; set; }
 
     public void Announce(string text, float seconds) => _overlay.Announce(text, seconds);
 
@@ -57,6 +64,7 @@ public partial class TavernLane : Control
         {
             case InputEventMouseMotion motion:
                 _hovered = StationAt(motion.Position);
+                _hoveredPatron = _hovered < 0 ? PatronAt(motion.Position) : null;
                 MouseDefaultCursorShape = _hovered >= 0 ? CursorShape.PointingHand : CursorShape.Arrow;
                 break;
             case InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true } press when StationAt(press.Position) >= 0:
@@ -77,6 +85,7 @@ public partial class TavernLane : Control
         if (what == NotificationMouseExit)
         {
             _hovered = -1;
+            _hoveredPatron = null;
         }
     }
 
@@ -107,11 +116,11 @@ public partial class TavernLane : Control
             _tavern.Arrange(canvas.Width);
         }
 
-        RoomPainter.Paint(canvas, _top, _tavern.Layout, Decor, SkyLight.At(DateTime.Now), _time, DoorOpen());
+        RoomPainter.Paint(canvas, _top, new RoomView(_tavern.Layout, Decor, Souvenirs, Outdoors.At(DateTime.Now), DoorOpen()), _time);
         PatronPainter.PaintBodies(canvas, _top, _tavern, _time);
         CounterPainter.Paint(canvas, _top);
-        PropPainter.PaintCounter(canvas, _top, RoomPainter.PlanFor(_tavern.Layout, canvas.Width), _time);
-        if (_hovered >= 0)
+        PropPainter.PaintCounter(canvas, _top, RoomPainter.PlanFor(_tavern.Layout, canvas.Width, Souvenirs.Count), _time);
+        if (_hovered >= 0 && _hovered < _tavern.Stations.Count)
         {
             CounterPainter.Highlight(canvas, _top, StationPainter.Bounds(_tavern.Stations[_hovered], _top));
         }
@@ -131,9 +140,11 @@ public partial class TavernLane : Control
         _tavern!.Patrons.Any(patron =>
             patron.Phase is PatronPhase.Entering or PatronPhase.Leaving && Math.Abs(patron.X - _tavern.Layout.DoorCenter) < DoorReach);
 
+    private Vector2I ArtPixel(Vector2 position) => new((int)(position.X / _artScale), (int)(position.Y / _artScale));
+
     private int StationAt(Vector2 position)
     {
-        Vector2I pixel = new((int)(position.X / _artScale), (int)(position.Y / _artScale));
+        Vector2I pixel = ArtPixel(position);
         for (int index = 0; index < _tavern!.Stations.Count; index++)
         {
             if (StationPainter.Bounds(_tavern.Stations[index], _top).HasPoint(pixel))
@@ -145,4 +156,10 @@ public partial class TavernLane : Control
         return -1;
     }
 
+    private Patron? PatronAt(Vector2 position)
+    {
+        Vector2I pixel = ArtPixel(position);
+        return _tavern!.Patrons.FirstOrDefault(patron =>
+            new Rect2I((int)MathF.Round(patron.X) - PatronSprites.Width / 2, _top + TavernRows.PatronTop, PatronSprites.Width, TavernRows.CounterTop - TavernRows.PatronTop).HasPoint(pixel));
+    }
 }

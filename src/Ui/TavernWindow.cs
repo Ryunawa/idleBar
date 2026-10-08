@@ -10,6 +10,7 @@ public partial class TavernWindow : Window
 
     private UpgradesPanel _upgrades = null!;
     private GoalsPanel _goals = null!;
+    private RegularsPanel _regulars = null!;
     private TavernPanel _tavern = null!;
     private Label _message = null!;
 
@@ -22,9 +23,11 @@ public partial class TavernWindow : Window
         _upgrades = new UpgradesPanel();
         _upgrades.BuyRequested += id => BuyRequested?.Invoke(id);
         _goals = new GoalsPanel();
+        _regulars = new RegularsPanel();
         _tavern = new TavernPanel();
         tabs.AddChild(_upgrades);
         tabs.AddChild(_goals);
+        tabs.AddChild(_regulars);
         tabs.AddChild(_tavern);
         content.AddChild(tabs);
         _message = WindowFrame.CreateMessage();
@@ -42,6 +45,7 @@ public partial class TavernWindow : Window
         Title = $"IdleBar · {tavern.Name}";
         _upgrades.Refresh(world, tavern, coins);
         _goals.Refresh(tavern);
+        _regulars.Refresh(world, tavern);
         _tavern.Refresh(world, tavern);
     }
 

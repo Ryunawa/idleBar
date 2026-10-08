@@ -31,6 +31,7 @@ public partial class Main : Control
         _game = new GameBridge(this);
         BuildInterface();
         _expanded.Attach(_game.Tavern);
+        _expanded.Lane.Describe = _game.Describe;
         _game.Announced += (message, seconds) => _expanded.Lane.Announce(message, seconds);
 
         BarPreferences preferences = BarPreferences.Load(PreferencesPath);
@@ -120,6 +121,7 @@ public partial class Main : Control
     {
         BarStatus status = _game.Status;
         _expanded.Lane.Decor = _game.Decor;
+        _expanded.Lane.Souvenirs = _game.Souvenirs;
         _expanded.Refresh(status);
         _collapsedBar.Refresh(status);
     }

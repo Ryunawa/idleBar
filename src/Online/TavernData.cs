@@ -15,4 +15,5 @@ public sealed record TavernData(
     int Helper,
     IReadOnlyList<string> Upgrades,
     TipJarData TipJar,
-    IReadOnlyList<GoalData> Goals);
+    IReadOnlyList<GoalData> Goals,
+    IReadOnlyList<RegularProgress> Regulars);
