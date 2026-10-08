@@ -117,9 +117,6 @@ alter table public.regular_chapters enable row level security;
 alter table public.tavern_regulars enable row level security;
 revoke all on public.regulars, public.regular_chapters, public.tavern_regulars from anon, authenticated;
 
-alter table public.goal_kinds drop constraint if exists goal_kinds_measure_check;
-alter table public.goal_kinds add constraint goal_kinds_measure_check check (measure in ('served', 'perfect', 'drink', 'regular'));
-
 insert into public.goal_kinds (id, label, measure, drink, target, reward) values
   ('habitue-1', 'Servir un habitué', 'regular', null, 1, 80),
   ('habitue-4', 'Servir 4 habitués', 'regular', null, 4, 160)

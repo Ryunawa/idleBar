@@ -31,6 +31,12 @@ public partial class TavernLane : Control
 
     public Func<Patron, string?>? Describe { get; set; }
 
+    public Func<Patron, PatronLook?> LookOf { get; set; } = patron => RegularLooks.For(patron.Regular);
+
+    public event Action<Patron>? PatronClicked;
+
+    public void Pop(string text, int x, Color color) => _overlay.Pop(text, x, color);
+
     public void Announce(string text, float seconds) => _overlay.Announce(text, seconds);
 
     public void Attach(Tavern tavern)
@@ -66,6 +72,10 @@ public partial class TavernLane : Control
                 _hovered = StationAt(motion.Position);
                 _hoveredPatron = _hovered < 0 ? PatronAt(motion.Position) : null;
                 MouseDefaultCursorShape = _hovered >= 0 ? CursorShape.PointingHand : CursorShape.Arrow;
+                break;
+            case InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true } press when StationAt(press.Position) < 0 && PatronAt(press.Position) is Patron clicked:
+                AcceptEvent();
+                PatronClicked?.Invoke(clicked);
                 break;
             case InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true } press when StationAt(press.Position) >= 0:
                 AcceptEvent();
@@ -117,7 +127,7 @@ public partial class TavernLane : Control
         }
 
         RoomPainter.Paint(canvas, _top, new RoomView(_tavern.Layout, Decor, Souvenirs, Outdoors.At(DateTime.Now), DoorOpen()), _time);
-        PatronPainter.PaintBodies(canvas, _top, _tavern, _time);
+        PatronPainter.PaintBodies(canvas, _top, _tavern, _time, LookOf);
         CounterPainter.Paint(canvas, _top);
         PropPainter.PaintCounter(canvas, _top, RoomPainter.PlanFor(_tavern.Layout, canvas.Width, Souvenirs.Count), _time);
         if (_hovered >= 0 && _hovered < _tavern.Stations.Count)

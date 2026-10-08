@@ -16,4 +16,12 @@ public sealed record TavernData(
     IReadOnlyList<string> Upgrades,
     TipJarData TipJar,
     IReadOnlyList<GoalData> Goals,
-    IReadOnlyList<RegularProgress> Regulars);
+    IReadOnlyList<RegularProgress> Regulars,
+    AvatarData Avatar,
+    SpecialtyData Specialty,
+    IReadOnlyList<FriendData> Friends,
+    IReadOnlyList<RequestData> Requests,
+    IReadOnlyList<TastedData> Tasted,
+    IReadOnlyList<GuestData> Guests,
+    OutingData? Outing,
+    IReadOnlyList<GuestbookEntry> Guestbook);

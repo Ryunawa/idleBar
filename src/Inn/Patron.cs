@@ -22,6 +22,10 @@ public sealed class Patron
 
     public string? Regular { get; }
 
+    public long? Visit { get; init; }
+
+    public string? Guest { get; init; }
+
     public int Seat { get; }
 
     public float X { get; private set; }
@@ -48,7 +52,9 @@ public sealed class Patron
 
     public bool Wants(Drink drink) => Phase == PatronPhase.Waiting && !Incoming && Order == drink;
 
-    public bool OutOfPatience => Phase == PatronPhase.Waiting && !Incoming && Waited >= Patience;
+    public bool OutOfPatience => Visit is null && Phase == PatronPhase.Waiting && !Incoming && Waited >= Patience;
+
+    public bool Awaited => Phase is PatronPhase.Entering or PatronPhase.Thinking or PatronPhase.Waiting && !Incoming;
 
     public bool Finished => Phase == PatronPhase.Drinking && PhaseTime >= DrinkSeconds;
 

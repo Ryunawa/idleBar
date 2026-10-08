@@ -22,7 +22,7 @@ public static class PatronPainter
     private static readonly Color Impatient = PixelPalette.Resolve('a');
     private static readonly Color Heart = PixelPalette.Resolve('r');
 
-    public static void PaintBodies(PixelCanvas canvas, int top, Tavern tavern, float time)
+    public static void PaintBodies(PixelCanvas canvas, int top, Tavern tavern, float time, Func<Patron, PatronLook?> lookOf)
     {
         foreach (Patron patron in tavern.Patrons)
         {
@@ -35,7 +35,7 @@ public static class PatronPainter
             int bob = patron.Heading != 0 && (int)(time * StepRate + patron.Look % 7) % 2 == 0 ? 1 : 0;
             float ghostly = patron.Regular == RegularLooks.Ghost ? GhostAlpha : 1;
             Color modulate = Colors.White with { A = Visibility(patron, tavern.Layout) * ghostly };
-            PatronLook look = RegularLooks.For(patron.Regular) ?? PatronLook.From(patron.Look);
+            PatronLook look = lookOf(patron) ?? PatronLook.From(patron.Look);
             canvas.Draw(PatronSprites.For(look, gaze), Left(patron), top + TavernRows.PatronTop - bob, modulate);
         }
     }
@@ -74,7 +74,11 @@ public static class PatronPainter
                 float worry = Math.Clamp((patron.Waited / Patron.Patience - 0.5f) * 2, 0, 1);
                 PaintBubble(canvas, top, center, Cream.Lerp(Impatient, worry * 0.55f));
                 canvas.Draw(DrinkPainter.Icon(patron.Order), center - 2, top + TavernRows.BubbleTop + 1);
-                if (patron.Regular is not null)
+                if (patron.Visit is not null)
+                {
+                    canvas.Draw(StampSprites.For("star")!, center + BubbleWidth / 2 + 1, top + TavernRows.BubbleTop);
+                }
+                else if (patron.Regular is not null)
                 {
                     PaintHeart(canvas, center + BubbleWidth / 2 + 1, top + TavernRows.BubbleTop + 1);
                 }

@@ -1,3 +1,5 @@
+using System;
+using System.Threading.Tasks;
 using Godot;
 using IdleBar.Online;
 
@@ -8,20 +10,30 @@ public sealed class GameDialogs
     private const string ConfirmEmailMessage = "Compte créé. Confirme ton adresse depuis l'email reçu, puis connecte-toi.";
 
     private readonly OnlineSession _session;
+    private readonly Account _account;
+    private readonly GameActions _actions;
     private readonly LoginWindow _login = new();
     private readonly FoundingWindow _founding = new();
     private readonly TavernWindow _tavern = new();
     private float _scale = 1f;
 
-    public GameDialogs(OnlineSession session, Node host)
+    public GameDialogs(OnlineSession session, Account account, GameActions actions, Node host)
     {
         _session = session;
+        _account = account;
+        _actions = actions;
         host.AddChild(_login);
         host.AddChild(_founding);
         host.AddChild(_tavern);
         _login.Submitted += OnLoginSubmitted;
         _founding.Submitted += OnFoundingSubmitted;
-        _tavern.BuyRequested += OnBuyRequested;
+        _tavern.BuyRequested += id => RunInTavern(() => _actions.BuyAsync(id));
+        _tavern.Friends.FriendRequested += code => RunInTavern(() => _actions.RequestFriendAsync(code));
+        _tavern.Friends.Answered += (from, accept) => RunInTavern(() => _actions.AnswerFriendAsync(from, accept));
+        _tavern.Friends.Removed += friend => RunInTavern(() => _actions.RemoveFriendAsync(friend));
+        _tavern.Friends.VisitRequested += (host, stamp) => RunInTavern(() => _actions.StartVisitAsync(host, stamp));
+        _tavern.Profile.AvatarSaved += avatar => RunInTavern(() => _actions.SetAvatarAsync(avatar));
+        _tavern.Profile.SpecialtySaved += specialty => RunInTavern(() => _actions.SetSpecialtyAsync(specialty));
         _session.Changed += RefreshTavern;
     }
 
@@ -31,7 +43,7 @@ public sealed class GameDialogs
         switch (_session.Status)
         {
             case SessionStatus.SignedOut:
-                _login.Open(scale, _session.LastEmail);
+                _login.Open(scale, _account.LastEmail);
                 break;
             case SessionStatus.NeedsFounding:
                 _founding.Open(scale);
@@ -70,9 +82,10 @@ public sealed class GameDialogs
         _tavern.Hide();
     }
 
-    private async void OnBuyRequested(string upgradeId)
+    private async void RunInTavern(Func<Task> action)
     {
-        string? error = await ActionFeedback.CaptureAsync(() => _session.BuyAsync(upgradeId));
+        _tavern.ClearError();
+        string? error = await ActionFeedback.CaptureAsync(action);
         if (error is not null)
         {
             _tavern.ShowError(error);
@@ -87,11 +100,11 @@ public sealed class GameDialogs
         {
             if (createAccount)
             {
-                awaitingConfirmation = !await _session.SignUpAsync(email, password);
+                awaitingConfirmation = !await _account.SignUpAsync(email, password);
                 return;
             }
 
-            await _session.SignInAsync(email, password);
+            await _account.SignInAsync(email, password);
         });
         _login.SetBusy(false);
         if (error is not null)
@@ -116,7 +129,7 @@ public sealed class GameDialogs
     private async void OnFoundingSubmitted(string name)
     {
         _founding.SetBusy(true);
-        string? error = await ActionFeedback.CaptureAsync(() => _session.FoundAsync(name));
+        string? error = await ActionFeedback.CaptureAsync(() => _actions.FoundAsync(name));
         _founding.SetBusy(false);
         if (error is not null)
         {

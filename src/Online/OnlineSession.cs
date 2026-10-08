@@ -9,11 +9,13 @@ namespace IdleBar.Online;
 public sealed class OnlineSession
 {
     private const double PollSeconds = 30;
+    private const double VisitPollSeconds = 5;
     private const double ReportSeconds = 15;
     private const double RetrySeconds = 20;
 
     private readonly SessionKeeper _keeper;
     private readonly TavernApi _api;
+    private readonly Doorbell _doorbell;
     private readonly ServiceLedger _ledger = new();
     private long _lastRequest;
     private long _appliedRequest;
@@ -21,10 +23,12 @@ public sealed class OnlineSession
     private double _sincePoll;
     private double _sinceReport;
 
-    public OnlineSession(SessionKeeper keeper, TavernApi api)
+    public OnlineSession(SessionKeeper keeper, TavernApi api, Doorbell doorbell)
     {
         _keeper = keeper;
         _api = api;
+        _doorbell = doorbell;
+        _doorbell.Rang += () => _sincePoll = PollSeconds;
     }
 
     public event Action? Changed;
@@ -37,7 +41,7 @@ public sealed class OnlineSession
 
     public TavernData? Tavern { get; private set; }
 
-    public string? LastEmail => _keeper.LastEmail;
+    public bool Live => _doorbell.Connected;
 
     public bool Playing => Tavern is not null && Status is not (SessionStatus.SignedOut or SessionStatus.NeedsFounding);
 
@@ -60,26 +64,11 @@ public sealed class OnlineSession
         }
     }
 
-    public async Task SignInAsync(string email, string password)
-    {
-        await _keeper.SignInAsync(email, password);
-        await SyncAsync(_api.GetStateAsync);
-    }
+    public Task<bool> RefreshAsync() => SyncAsync(_api.GetStateAsync);
 
-    public async Task<bool> SignUpAsync(string email, string password)
+    public void Reset()
     {
-        bool signedIn = await _keeper.SignUpAsync(email, password);
-        if (signedIn)
-        {
-            await SyncAsync(_api.GetStateAsync);
-        }
-
-        return signedIn;
-    }
-
-    public void SignOut()
-    {
-        _keeper.SignOut();
+        _doorbell.Stop();
         _ledger.Clear();
         World = null;
         Tavern = null;
@@ -89,6 +78,7 @@ public sealed class OnlineSession
 
     public void Tick(double delta)
     {
+        _doorbell.Drain();
         if (!_keeper.SignedIn || _syncing)
         {
             return;
@@ -96,11 +86,13 @@ public sealed class OnlineSession
 
         _sincePoll += delta;
         _sinceReport += delta;
+        bool visiting = Tavern is { Outing: not null } or { Guests.Count: > 0 };
+        double poll = Status == SessionStatus.Offline ? RetrySeconds : visiting && !Live ? VisitPollSeconds : PollSeconds;
         if (Status == SessionStatus.Ready && !_ledger.Empty && _sinceReport >= ReportSeconds)
         {
             _ = ReportAsync();
         }
-        else if (_sincePoll >= (Status == SessionStatus.Offline ? RetrySeconds : PollSeconds))
+        else if (_sincePoll >= poll)
         {
             _ = SyncAsync(_api.GetStateAsync);
         }
@@ -108,18 +100,49 @@ public sealed class OnlineSession
 
     public Task FlushAsync() => Status == SessionStatus.Ready && !_ledger.Empty && !_syncing ? ReportAsync() : Task.CompletedTask;
 
-    public Task FoundAsync(string name) => PerformAsync(token => _api.FoundAsync(token, name));
+    public async Task PerformAsync(Func<string, Task<StateData>> request)
+    {
+        try
+        {
+            string token = await TokenAsync();
+            World ??= await _api.GetWorldAsync(token);
+            long number = ++_lastRequest;
+            Apply(number, await request(token));
+        }
+        catch (CloudAuthException exception)
+        {
+            GD.PushWarning($"Session refusée : {exception.Message}");
+            _keeper.SignOut();
+            Reset();
+            throw;
+        }
+        catch (Exception exception) when (TransportFailure.Matches(exception))
+        {
+            GD.PushWarning($"Serveur injoignable : {exception.Message}");
+            Status = SessionStatus.Offline;
+            Changed?.Invoke();
+            throw;
+        }
+    }
 
-    public Task BuyAsync(string upgradeId) => PerformAsync(token => _api.BuyAsync(token, upgradeId));
+    public async Task SendAsync(Func<string, Task<EmptyResult>> request) => await request(await TokenAsync());
 
-    public Task CollectTipJarAsync() => PerformAsync(_api.CollectTipJarAsync);
+    private async Task<string> TokenAsync()
+    {
+        string token = await _keeper.GetAccessTokenAsync();
+        if (_keeper.UserId is string userId)
+        {
+            _doorbell.Listen(userId, token);
+        }
+
+        return token;
+    }
 
     private async Task ReportAsync()
     {
         ServiceReport report = _ledger.Take();
         _sinceReport = 0;
-        bool sent = await SyncAsync(token => _api.ReportAsync(token, report));
-        if (!sent)
+        if (!await SyncAsync(token => _api.ReportAsync(token, report)))
         {
             _ledger.Restore(report);
         }
@@ -152,30 +175,6 @@ public sealed class OnlineSession
         {
             _syncing = false;
             _sincePoll = 0;
-        }
-    }
-
-    private async Task PerformAsync(Func<string, Task<StateData>> request)
-    {
-        try
-        {
-            string token = await _keeper.GetAccessTokenAsync();
-            World ??= await _api.GetWorldAsync(token);
-            long number = ++_lastRequest;
-            Apply(number, await request(token));
-        }
-        catch (CloudAuthException exception)
-        {
-            GD.PushWarning($"Session refusée : {exception.Message}");
-            SignOut();
-            throw;
-        }
-        catch (Exception exception) when (TransportFailure.Matches(exception))
-        {
-            GD.PushWarning($"Serveur injoignable : {exception.Message}");
-            Status = SessionStatus.Offline;
-            Changed?.Invoke();
-            throw;
         }
     }
 

@@ -88,7 +88,7 @@ on conflict (id) do update set
 create table if not exists public.goal_kinds (
   id text primary key,
   label text not null,
-  measure text not null check (measure in ('served', 'perfect', 'drink')),
+  measure text not null check (measure in ('served', 'perfect', 'drink', 'regular', 'friend', 'round')),
   drink text references public.drinks (id),
   target integer not null check (target > 0),
   reward integer not null check (reward > 0),

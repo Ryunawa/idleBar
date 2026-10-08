@@ -21,6 +21,8 @@ public sealed class SessionKeeper
 
     public string? LastEmail { get; private set; }
 
+    public string? UserId => _session?.UserId;
+
     public void Restore()
     {
         _session = _store.Load();

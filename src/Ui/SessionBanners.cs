@@ -39,7 +39,7 @@ public static class SessionBanners
             }
         }
 
-        foreach (Announcement announcement in current.Regulars.SelectMany(progress => Regular(world, previous, progress)))
+        foreach (Announcement announcement in current.Regulars.SelectMany(progress => Regular(world, previous, progress)).Concat(FriendBanners.Describe(previous, current)))
         {
             yield return announcement;
         }

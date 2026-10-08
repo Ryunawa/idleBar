@@ -32,6 +32,13 @@ public partial class Main : Control
         BuildInterface();
         _expanded.Attach(_game.Tavern);
         _expanded.Lane.Describe = _game.Describe;
+        _expanded.Lane.LookOf = _game.LookOf;
+        if (_game.Visits is VisitDesk visits)
+        {
+            _expanded.Lane.PatronClicked += visits.Cheer;
+            _expanded.EmoteRequested += visits.Emote;
+            visits.Popped += (text, x, color) => _expanded.Lane.Pop(text, x, color);
+        }
         _game.Announced += (message, seconds) => _expanded.Lane.Announce(message, seconds);
 
         BarPreferences preferences = BarPreferences.Load(PreferencesPath);

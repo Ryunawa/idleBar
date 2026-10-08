@@ -187,7 +187,7 @@ Premiers habitués envisagés :
 | 1. Le comptoir | Prototype **sans serveur** : la scène de la taverne, des clients qui entrent, commandent et repartent, le fût et la théière avec leur geste, le service, les pourboires, le jour et la nuit. On vérifie que c'est agréable avant de construire le reste | Fait, à tester en jeu |
 | 2. La taverne grandit | Sauvegarde sur Supabase, écus, tabourets, marmite, pressoir, four, décor, aide au comptoir, pot à pourboires, renommée et paliers, objectifs du jour | Fait, à tester en jeu (scripts `01` à `04`) |
 | 3. Les habitués | Les 12 habitués, leurs conditions de venue, l'amitié, les histoires en chapitres, le carnet | Fait, à tester en jeu (scripts `05` et `06`) |
-| 4. Entre amis | Avatar, code ami, client Realtime, visites en direct et en différé, émotes, livre d'or, spécialités et leur carte | À faire |
+| 4. Entre amis | Avatar, code ami, client Realtime, visites en direct et en différé, émotes, livre d'or, spécialités et leur carte | Fait, à tester en jeu (scripts `07` à `09`) |
 | 5. Passants et tournées | Joueurs connectés dans la rue, salut, invitation, demande d'ami, tournée générale | À faire |
 | 6. Saisons | Météo, saisons, fêtes et leurs objets | À faire |
 
@@ -329,6 +329,54 @@ Chaque script peut être rejoué.
 - La fréquence des habitués : une chance sur quatre et 10 minutes de repos entre deux visites.
 - La longueur des répliques en annonce sur un petit écran.
 
+## Étape 4 : entre amis, tel que c'est
+
+**Sur Supabase.**
+- `07_friends.sql` ajoute :
+  - l'avatar et la spécialité de chaque taverne ;
+  - les demandes d'ami, les amitiés, les visites et les spécialités goûtées ;
+  - les listes de mots des spécialités et les huit tampons du livre d'or ;
+  - l'objectif « servir un ami de passage », proposé seulement à qui a des amis ;
+  - la règle Realtime « Recevoir sa sonnette » sur `realtime.messages`.
+- `08_friend_rules.sql` contient les règles (sonnette, service d'une visite, visites oubliées) et réécrit `private.state`.
+- `09_friend_actions.sql` contient les fonctions appelées par le jeu.
+
+**Amis.** On s'ajoute avec le code ami de 6 caractères, dans l'onglet Amis.
+- Deux demandes croisées font tout de suite des amis ; sinon l'autre accepte ou refuse.
+- 30 amis au plus.
+- Un ami est « en ligne » si son jeu s'est manifesté depuis 2 minutes.
+
+**Avatar et spécialité** (onglet Avatar).
+- L'avatar se compose de 6 coiffures, 5 peaux, 6 cheveux, 7 vêtements et 5 accessoires.
+- La spécialité a un nom pris dans deux listes de mots (« Hydromel » + « de la Lune »), un plat de la carte et une couleur parmi huit. Il n'y a pas de texte libre entre joueurs.
+
+**Visites.**
+- « Rendre visite » ouvre une visite, avec le tampon choisi pour le livre d'or de l'hôte.
+- Un joueur ne fait qu'une visite à la fois, et une taverne reçoit 3 invités au plus.
+- Chez l'hôte, l'ami entre en priorité dès qu'un tabouret se libère. Il porte son avatar, une étoile marque sa bulle, et il commande la spécialité de l'hôte.
+- Il ne perd jamais patience, et l'aide au comptoir ne le sert pas.
+- Le service se fait avec le geste habituel. Si l'hôte ne sert pas dans les 3 minutes, ou n'est pas là, son aide sert à sa place, côté serveur (`private.settle_visits`).
+- Récompenses, une fois par ami et par jour :
+  - l'hôte gagne 40 écus, 10 de plus si le service est parfait, la moitié si c'est l'aide qui sert, et 5 de renommée ;
+  - le visiteur gagne 20 écus ;
+  - le visiteur goûte la spécialité, qui rejoint sa carte des spécialités.
+- Pendant la visite, puis une minute après le service, chacun peut envoyer une émote : « Santé ! », « Merci ! », « Ha ha ! ».
+  - Le visiteur les envoie depuis la case « Chez … » de sa barre.
+  - L'hôte trinque en cliquant sur son invité.
+  - Le serveur n'en laisse passer qu'une toutes les 2 secondes.
+
+**Le direct.**
+- `RealtimeClient` parle le protocole Phoenix de Supabase Realtime sur WebSocket : jonction au canal privé `taverne:<id>` avec le jeton du joueur, battement toutes les 25 s, reconnexion de 2 s à 60 s, renouvellement du jeton.
+- Les fonctions SQL sonnent avec `realtime.send` (`private.ring`) :
+  - `refresh` fait relire l'état tout de suite ;
+  - `emote` affiche l'émote.
+- Sans direct, le jeu relit son état toutes les 5 s pendant une visite et toutes les 30 s sinon.
+- Le 8 octobre 2026, une jonction de test à un canal public du projet a fonctionné à travers le proxy du bureau.
+
+**À vérifier en jeu, à deux comptes.**
+- La demande d'ami, la visite en direct, le service, les émotes et le livre d'or.
+- La sonnette privée : si elle ne sonne jamais, vérifier dans Supabase (Realtime → Settings) que les canaux privés sont autorisés, et que la règle « Recevoir sa sonnette » existe.
+
 ## Repères dans le code
 
 - `supabase/` : les scripts SQL numérotés, à exécuter dans l'ordre, et `tests/` (lancés par `run.sh` dans Docker).
@@ -342,6 +390,8 @@ Chaque script peut être rejoué.
 - `src/Online/` : la partie en ligne.
   - `OnlineSession` : la connexion, la synchronisation, le relevé des services (`ServiceLedger`).
   - `TavernApi` : les appels aux fonctions SQL ; les records `*Data` et `*Info` reprennent leurs réponses.
+  - `Account` (connexion) et `GameActions` (les actions du joueur).
+  - `Doorbell` et `RealtimeClient` (avec `RealtimeMessages`) : la sonnette en direct.
 - `src/Pixel/` : le dessin.
   - `TavernRows` : les rangées de la scène.
   - `RoomPainter` et `WindowPainter` : le mur, les fenêtres, la porte.
@@ -357,6 +407,8 @@ Chaque script peut être rejoué.
   - `ExpandedBar`, `TipJarButton` et `CollapsedBar` : la barre dépliée et repliée.
   - `GameDialogs` ouvre `LoginWindow`, `FoundingWindow` et `TavernWindow` (onglets `UpgradesPanel`, `GoalsPanel`, `RegularsPanel`, `TavernPanel`).
   - `RegularBook` : qui, parmi les habitués, peut entrer maintenant.
+  - `VisitDesk` : les amis en visite (apparence, service, émotes) ; `VisitSlot` : la case « Chez … » du visiteur ; `FriendBanners` : leurs annonces.
+  - Onglets `FriendsPanel` (amis, livre d'or, carte des spécialités) et `ProfilePanel` (avatar, spécialité).
 - `src/Desktop/` : l'ancrage de la barre dans Windows (`AppBar`) et au-dessus du Dock sur macOS (`FloatingDock`). Ne pas casser.
 - `src/Cloud/` : les comptes et les appels à Supabase.
 

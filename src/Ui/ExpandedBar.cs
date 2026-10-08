@@ -20,6 +20,7 @@ public partial class ExpandedBar : MarginContainer
     private float _glow;
     private float _time;
     private TipJarButton _jar = null!;
+    private VisitSlot _visit = null!;
     private BarSlot _update = null!;
 
     public event Action? ToggleRequested;
@@ -33,6 +34,8 @@ public partial class ExpandedBar : MarginContainer
     public event Action? MenuRequested;
 
     public event Action? TipJarRequested;
+
+    public event Action<string>? EmoteRequested;
 
     public TavernLane Lane { get; private set; } = null!;
 
@@ -73,6 +76,10 @@ public partial class ExpandedBar : MarginContainer
 
         Lane = new TavernLane { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         row.AddChild(Lane);
+
+        _visit = new VisitSlot();
+        _visit.EmoteRequested += emote => EmoteRequested?.Invoke(emote);
+        row.AddChild(_visit);
 
         _update = new BarSlot();
         _update.Button.Visible = false;
@@ -121,6 +128,7 @@ public partial class ExpandedBar : MarginContainer
         _situation.Text = hint ?? status.Situation;
         _situation.AddThemeColorOverride("font_color", hint is null ? BarPalette.Muted : BarPalette.Text);
         _jar.Display(status.TipJar);
+        _visit.Display(status.Visit);
         if (status.Coins is not double coins)
         {
             _shownCoins = double.NaN;

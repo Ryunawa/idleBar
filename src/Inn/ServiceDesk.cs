@@ -38,7 +38,7 @@ public sealed class ServiceDesk
     public void Help(int helper, IReadOnlyList<Station> stations, IReadOnlyList<Patron> patrons)
     {
         float delay = HelperDelay(helper);
-        foreach (Patron patron in patrons.Where(each => each.Wants(each.Order) && each.Waited >= delay).ToList())
+        foreach (Patron patron in patrons.Where(each => each.Visit is null && each.Wants(each.Order) && each.Waited >= delay).ToList())
         {
             int x = stations.FirstOrDefault(station => station.Drink == patron.Order)?.X ?? stations[0].X;
             Send(new PreparedDrink(patron.Order, false, true), patron, x);

@@ -31,8 +31,17 @@ public static class StatusBuilder
             session.Coins,
             situation,
             $"{data.Name} · {NumberFormat.Coins(session.Coins)} · {situation}",
-            TipJar(data.TipJar));
+            TipJar(data.TipJar),
+            Outing(data.Outing));
     }
+
+    private static VisitView? Outing(OutingData? outing) => outing switch
+    {
+        null => null,
+        { ServedAt: null } => new VisitView($"Chez {outing.Host}", "On te sert…"),
+        { Perfect: true } => new VisitView($"Chez {outing.Host}", "Servi, parfait !"),
+        _ => new VisitView($"Chez {outing.Host}", "Servi"),
+    };
 
     private static BarStatus Waiting(string headline, string situation) =>
         new(headline, null, situation, $"{Title} · {headline} {situation}".Trim(), null);
