@@ -24,7 +24,7 @@ public partial class RegularsPanel : VBoxContainer
     {
         WindowRows.Clear(_rows);
         _rows.AddChild(WindowRows.Heading($"Carnet des habitués · {tavern.Regulars.Count} sur {world.Regulars.Count}"));
-        _rows.AddChild(WindowRows.Muted("Les habitués ont une bulle marquée d'un cœur. Bien les servir fait avancer leur histoire."));
+        _rows.AddChild(WindowRows.Muted("Au comptoir, un habitué porte son nom en rose au-dessus de la tête. Bien le servir fait avancer son histoire."));
         foreach (RegularInfo regular in world.Regulars)
         {
             _rows.AddChild(Card(regular, tavern.Regulars.FirstOrDefault(progress => progress.Id == regular.Id)));

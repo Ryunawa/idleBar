@@ -34,6 +34,8 @@ public partial class TavernLane : Control
 
     public Func<Patron, PatronLook?> LookOf { get; set; } = patron => RegularLooks.For(patron.Regular);
 
+    public Func<Patron, NameTag?> TagOf { get; set; } = patron => patron.Guest is string name ? new NameTag(name, BarPalette.Gold, false) : null;
+
     public event Action<Patron>? PatronClicked;
 
     public event Action<PasserbyData, Vector2I>? PasserbyClicked;
@@ -162,7 +164,7 @@ public partial class TavernLane : Control
         CounterPainter.PaintDrinks(canvas, _top, _tavern);
         PatronPainter.PaintGlasses(canvas, _top, _tavern, _time);
         PatronPainter.PaintBubbles(canvas, _top, _tavern, _time);
-        LaneOverlay.PaintNames(canvas, GetThemeDefaultFont(), _top, _tavern.Patrons);
+        LaneOverlay.PaintNames(canvas, GetThemeDefaultFont(), _top, _tavern.Patrons, TagOf);
         _overlay.Paint(canvas, GetThemeDefaultFont(), _top, (_tavern.Layout.SeatXs[^1] + BannerMargin + canvas.Width) / 2);
     }
 

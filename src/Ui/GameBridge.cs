@@ -19,6 +19,8 @@ public sealed class GameBridge : IDisposable
     private const float FestivalSeconds = 9;
     private const string SessionPath = "user://session.dat";
 
+    private static readonly Color RegularColor = new("f4a3b5");
+
     private readonly HttpClient? _http;
     private readonly Doorbell? _doorbell;
     private readonly OnlineSession? _session;
@@ -122,6 +124,16 @@ public sealed class GameBridge : IDisposable
 
     public PatronLook? LookOf(Patron patron) =>
         (Visits?.LookOf(patron) ?? RegularLooks.For(patron.Regular)) ?? Costumes.For(patron.Look, Calendar.FestivalOf(DateTime.Now));
+
+    public NameTag? TagOf(Patron patron)
+    {
+        if (patron.Guest is string guest)
+        {
+            return new NameTag(guest, BarPalette.Gold, false);
+        }
+
+        return _book.Find(patron.Regular) is RegularInfo regular ? new NameTag(regular.Name, RegularColor, true) : null;
+    }
 
     public string? Describe(Patron patron)
     {

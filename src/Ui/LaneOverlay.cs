@@ -16,6 +16,7 @@ public sealed class LaneOverlay
     private const int NameFontSize = 12;
     private const int NameRoom = 40;
     private const int NameGap = 3;
+    private const int HeartWidth = 4;
 
     private static readonly Color PlainPop = new("efe6d2");
 
@@ -81,16 +82,23 @@ public sealed class LaneOverlay
         canvas.Text(font, fontSize, text, left, top + 1, BarPalette.Gold with { A = fade }, BarPalette.Shadow with { A = fade * 0.9f });
     }
 
-    public static void PaintNames(PixelCanvas canvas, Font font, int top, IReadOnlyList<Patron> patrons)
+    public static void PaintNames(PixelCanvas canvas, Font font, int top, IReadOnlyList<Patron> patrons, Func<Patron, NameTag?> tagOf)
     {
-        List<Patron> guests = patrons.Where(patron => patron.Guest is not null && patron.Phase != PatronPhase.Gone).ToList();
-        foreach (Patron patron in guests)
+        List<Patron> tagged = patrons.Where(patron => patron.Phase != PatronPhase.Gone && tagOf(patron) is not null).ToList();
+        foreach (Patron patron in tagged)
         {
-            float nearest = guests.Where(other => other != patron).Select(other => Math.Abs(other.X - patron.X)).DefaultIfEmpty(NameRoom).Min();
-            string shown = Fit(canvas, font, patron.Guest!, (int)Math.Min(NameRoom, nearest - NameGap));
-            int width = canvas.TextWidth(font, NameFontSize, shown);
+            NameTag tag = tagOf(patron)!;
+            float nearest = tagged.Where(other => other != patron).Select(other => Math.Abs(other.X - patron.X)).DefaultIfEmpty(NameRoom).Min();
+            int heart = tag.Heart ? HeartWidth : 0;
+            string shown = Fit(canvas, font, tag.Text, (int)Math.Min(NameRoom, nearest - NameGap) - heart);
+            int width = canvas.TextWidth(font, NameFontSize, shown) + heart;
             int x = Math.Clamp((int)MathF.Round(patron.X) - width / 2, 1, Math.Max(1, canvas.Width - width - 1));
-            canvas.Text(font, NameFontSize, shown, x, top + 1, BarPalette.Gold, BarPalette.Shadow);
+            if (tag.Heart)
+            {
+                PatronPainter.PaintHeart(canvas, x, top + 2);
+            }
+
+            canvas.Text(font, NameFontSize, shown, x + heart, top + 1, tag.Color, BarPalette.Shadow);
         }
     }
 

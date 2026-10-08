@@ -21,7 +21,7 @@ public static class PatronPainter
     private static readonly Color Outline = new("1a1411");
     private static readonly Color Cream = PixelPalette.Resolve('f');
     private static readonly Color Impatient = PixelPalette.Resolve('a');
-    private static readonly Color Heart = PixelPalette.Resolve('r');
+    private static readonly Color Heart = new("e8576b");
 
     public static void PaintBodies(PixelCanvas canvas, int top, Tavern tavern, float time, Func<Patron, PatronLook?> lookOf)
     {
@@ -61,7 +61,7 @@ public static class PatronPainter
         foreach (Patron patron in tavern.Patrons)
         {
             int head = (int)MathF.Round(patron.X);
-            bool beside = patron.Visit is not null;
+            bool beside = patron.Visit is not null || patron.Regular is not null;
             int center = beside ? head + SideOffset : head;
             int y = top + (beside ? TavernRows.PatronTop : TavernRows.BubbleTop);
             if (patron.Phase == PatronPhase.Thinking)
@@ -78,10 +78,6 @@ public static class PatronPainter
                 float worry = Math.Clamp((patron.Waited / Patron.Patience - 0.5f) * 2, 0, 1);
                 PaintBubble(canvas, center, y, Cream.Lerp(Impatient, worry * 0.55f), beside);
                 canvas.Draw(DrinkPainter.Icon(patron.Order), center - 2, y + 1);
-                if (!beside && patron.Regular is not null)
-                {
-                    PaintHeart(canvas, center + BubbleWidth / 2 + 1, top + TavernRows.BubbleTop + 1);
-                }
             }
         }
     }
@@ -101,7 +97,7 @@ public static class PatronPainter
         canvas.Fill(center, y + BubbleHeight, 1, 1, Outline);
     }
 
-    private static void PaintHeart(PixelCanvas canvas, int x, int y)
+    public static void PaintHeart(PixelCanvas canvas, int x, int y)
     {
         canvas.Fill(x, y, 1, 1, Heart);
         canvas.Fill(x + 2, y, 1, 1, Heart);

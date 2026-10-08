@@ -33,6 +33,7 @@ public partial class Main : Control
         _expanded.Attach(_game.Tavern);
         _expanded.Lane.Describe = _game.Describe;
         _expanded.Lane.LookOf = _game.LookOf;
+        _expanded.Lane.TagOf = _game.TagOf;
         if (_game.Visits is VisitDesk visits)
         {
             _expanded.Lane.PatronClicked += visits.Cheer;

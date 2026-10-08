@@ -320,7 +320,7 @@ Chaque script peut être rejoué.
 - Au cinquième chapitre, l'habitué offre un souvenir (250 écus).
 
 **Dans la barre et dans la fenêtre.**
-- Chaque habitué a une apparence fixe (`RegularLooks`), et un cœur à côté de sa bulle.
+- Chaque habitué a une apparence fixe (`RegularLooks`). Son nom s'affiche en rose au-dessus de sa tête, précédé d'un cœur, et sa bulle de commande passe à côté de sa tête, comme pour les amis en visite, dont le nom est en or (`NameTag`, `LaneOverlay.PaintNames`).
 - Au survol, son nom, son titre et son amitié s'affichent à gauche de la barre.
 - Les souvenirs s'alignent sur une étagère, juste après le dernier tabouret.
 - L'onglet Habitués de la fenêtre de la taverne sert de carnet : portraits, conditions, amitié, répliques débloquées. Un habitué jamais rencontré y apparaît en ombre.
