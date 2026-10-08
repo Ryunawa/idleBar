@@ -188,7 +188,7 @@ Premiers habitués envisagés :
 | 2. La taverne grandit | Sauvegarde sur Supabase, écus, tabourets, marmite, pressoir, four, décor, aide au comptoir, pot à pourboires, renommée et paliers, objectifs du jour | Fait, à tester en jeu (scripts `01` à `04`) |
 | 3. Les habitués | Les 12 habitués, leurs conditions de venue, l'amitié, les histoires en chapitres, le carnet | Fait, à tester en jeu (scripts `05` et `06`) |
 | 4. Entre amis | Avatar, code ami, client Realtime, visites en direct et en différé, émotes, livre d'or, spécialités et leur carte | Fait, à tester en jeu (scripts `07` à `09`) |
-| 5. Passants et tournées | Joueurs connectés dans la rue, salut, invitation, demande d'ami, tournée générale | À faire |
+| 5. Passants et tournées | Joueurs connectés dans la rue, salut, invitation, demande d'ami, tournée générale | Fait, à tester en jeu (scripts `10` et `11`) |
 | 6. Saisons | Météo, saisons, fêtes et leurs objets | À faire |
 
 ## Étape 1 : le comptoir tel qu'il est
@@ -377,6 +377,35 @@ Chaque script peut être rejoué.
 - La demande d'ami, la visite en direct, le service, les émotes et le livre d'or.
 - La sonnette privée : si elle ne sonne jamais, vérifier dans Supabase (Realtime → Settings) que les canaux privés sont autorisés, et que la règle « Recevoir sa sonnette » existe.
 
+## Étape 5 : passants et tournées, tels qu'ils sont
+
+**Sur Supabase.**
+- `10_street.sql` ajoute :
+  - les invitations, les tournées et les salutations ;
+  - l'objectif « offrir une tournée générale », proposé seulement à qui a des amis ;
+  - les réglages de la tournée.
+  - Il relève aussi le plafond des écus à 40 par service, pour les pourboires doublés.
+- `11_street_rules.sql` contient la rue (`private.street_state`, branchée dans `private.state`), `greet_passerby`, `invite_passerby`, `answer_invitation` et `offer_round`.
+
+**Passants.**
+- Jusqu'à 4 joueurs en ligne qui ne sont pas tes amis, tirés au hasard. Le tirage change toutes les 5 minutes.
+- Toutes les 8 à 25 secondes, l'un d'eux passe devant une fenêtre, vu des épaules jusqu'à la tête, en 5 secondes.
+- Un clic sur la fenêtre pendant son passage ouvre un petit menu :
+  - **Saluer** : il reçoit « X te salue depuis la rue ! », au plus une fois toutes les 30 secondes ;
+  - **Inviter à boire un verre** : il trouve l'invitation dans son onglet Amis. S'il accepte, vous devenez amis et il part aussitôt en visite chez toi, avec le tampon « Chope ».
+
+**Tournée générale** (onglet Amis).
+- Elle coûte 200 écus et rapporte 10 de renommée ; on peut en offrir une toutes les 4 heures.
+- Chaque ami reçoit 30 écus.
+- Les amis connectés voient toute leur salle trinquer, et leurs pourboires doublent pendant ce qui reste des 5 minutes.
+- Les amis absents trouvent l'annonce à leur retour.
+- Le jeu retient la dernière tournée annoncée dans `user://rounds.cfg`, pour ne pas la répéter.
+
+**À vérifier en jeu.**
+- Les passants avec plusieurs comptes en ligne.
+- Le menu au-dessus de la barre sur un écran dont la barre n'est pas tout en bas.
+- Les noms de taverne visibles par des inconnus : il n'y a pas de modération.
+
 ## Repères dans le code
 
 - `supabase/` : les scripts SQL numérotés, à exécuter dans l'ordre, et `tests/` (lancés par `run.sh` dans Docker).
@@ -409,6 +438,7 @@ Chaque script peut être rejoué.
   - `RegularBook` : qui, parmi les habitués, peut entrer maintenant.
   - `VisitDesk` : les amis en visite (apparence, service, émotes) ; `VisitSlot` : la case « Chez … » du visiteur ; `FriendBanners` : leurs annonces.
   - Onglets `FriendsPanel` (amis, livre d'or, carte des spécialités) et `ProfilePanel` (avatar, spécialité).
+  - `StreetDesk` : les passants (`Street`, `StreetWalk`, menu `StreetMenu`), les saluts et la fête des tournées (`RoundMemory`) ; `PasserbyPainter` les dessine dans les fenêtres.
 - `src/Desktop/` : l'ancrage de la barre dans Windows (`AppBar`) et au-dessus du Dock sur macOS (`FloatingDock`). Ne pas casser.
 - `src/Cloud/` : les comptes et les appels à Supabase.
 

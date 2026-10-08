@@ -20,6 +20,7 @@ public sealed class Tavern
     private readonly ServiceDesk _desk = new();
     private readonly Arrivals _arrivals;
     private int _seats = StartingSeats;
+    private float _boost;
     private int _width = TavernLayout.MinWidth;
 
     public Tavern(Random random)
@@ -48,6 +49,8 @@ public sealed class Tavern
     public bool Open { get; set; } = true;
 
     public IRegularBook? Book { get; set; }
+
+    public bool Boosted => _boost > 0;
 
     public int Waiting => _patrons.Count(patron => patron.Phase is PatronPhase.Thinking or PatronPhase.Waiting);
 
@@ -84,12 +87,15 @@ public sealed class Tavern
         }
     }
 
+    public void Boost(float seconds) => _boost = Math.Max(_boost, seconds);
+
     public void Press(int station) => _stations[station].Press();
 
     public void Release(int station) => _stations[station].Release();
 
     public void Update(float delta)
     {
+        _boost = Math.Max(0, _boost - delta);
         foreach (Station station in _stations)
         {
             station.Update(delta);
@@ -178,7 +184,7 @@ public sealed class Tavern
 
         bool quick = !drink.Helped && patron.Waited < QuickService;
         int amount = DrinkMenu.Price(drink.Drink) + (drink.Perfect ? DrinkMenu.PerfectTip : 0) + (quick ? DrinkMenu.QuickTip : 0);
-        Pay(amount, patron, drink.Perfect, drink.Drink);
+        Pay(Boosted ? amount * 2 : amount, patron, drink.Perfect, drink.Drink);
     }
 
     private void Pay(int amount, Patron patron, bool perfect, Drink? drink) =>

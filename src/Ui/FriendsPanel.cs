@@ -24,6 +24,10 @@ public partial class FriendsPanel : VBoxContainer
 
     public event Action<Guid, string>? VisitRequested;
 
+    public event Action<Guid, bool>? InvitationAnswered;
+
+    public event Action? RoundOffered;
+
     public override void _Ready()
     {
         Name = "Amis";
@@ -63,6 +67,15 @@ public partial class FriendsPanel : VBoxContainer
 
         _code.Text = $"Ton code ami : {tavern.FriendCode}";
         WindowRows.Clear(_rows);
+        foreach (InvitationData invitation in tavern.Invitations)
+        {
+            HBoxContainer row = new();
+            row.AddChild(new Label { Text = $"{invitation.Name} t'invite à boire un verre", SizeFlagsHorizontal = SizeFlags.ExpandFill });
+            row.AddChild(Action("J'y vais", () => InvitationAnswered?.Invoke(invitation.Id, true)));
+            row.AddChild(Action("Non merci", () => InvitationAnswered?.Invoke(invitation.Id, false)));
+            _rows.AddChild(WindowRows.Card(row));
+        }
+
         foreach (RequestData request in tavern.Requests)
         {
             HBoxContainer row = new();
@@ -77,6 +90,8 @@ public partial class FriendsPanel : VBoxContainer
         {
             _rows.AddChild(FriendRow(friend, tavern.Outing is null));
         }
+
+        _rows.AddChild(RoundButton(tavern));
 
         _rows.AddChild(WindowRows.Heading($"Ton livre d'or · {tavern.Guestbook.Count}"));
         foreach (GuestbookEntry entry in tavern.Guestbook)
@@ -115,6 +130,19 @@ public partial class FriendsPanel : VBoxContainer
         remove.TooltipText = "Retirer de tes amis";
         row.AddChild(remove);
         return WindowRows.Card(row);
+    }
+
+    private Button RoundButton(TavernData tavern)
+    {
+        bool waiting = tavern.RoundReadyAt > DateTimeOffset.Now;
+        Button round = Action(
+            tavern.Friends.Count == 0 ? "Tournée générale : il te faut des amis"
+            : waiting ? $"Prochaine tournée générale à {tavern.RoundReadyAt!.Value.ToLocalTime():HH:mm}"
+            : $"Offrir une tournée générale à tes amis · {NumberFormat.Coins(tavern.RoundPrice)}",
+            () => RoundOffered?.Invoke());
+        round.Disabled = tavern.Friends.Count == 0 || waiting;
+        round.TooltipText = "Chaque ami reçoit 30 écus, et ses pourboires doublent pendant 5 minutes s'il est là.";
+        return round;
     }
 
     private string SelectedStamp() => _world?.Stamps.ElementAtOrDefault(Math.Max(_stamps.Selected, 0))?.Id ?? "heart";

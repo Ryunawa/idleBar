@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace IdleBar.Online;
@@ -24,4 +25,9 @@ public sealed record TavernData(
     IReadOnlyList<TastedData> Tasted,
     IReadOnlyList<GuestData> Guests,
     OutingData? Outing,
-    IReadOnlyList<GuestbookEntry> Guestbook);
+    IReadOnlyList<GuestbookEntry> Guestbook,
+    IReadOnlyList<PasserbyData> Passersby,
+    IReadOnlyList<InvitationData> Invitations,
+    IReadOnlyList<RoundData> Rounds,
+    int RoundPrice,
+    DateTimeOffset? RoundReadyAt);

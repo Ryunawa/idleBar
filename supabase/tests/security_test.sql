@@ -26,6 +26,8 @@ select pg_temp.expect_denied('select public.collect_tip_jar()');
 select pg_temp.expect_denied('select public.request_friend(''AAAAAA'')');
 select pg_temp.expect_denied('select public.start_visit(gen_random_uuid(), ''heart'')');
 select pg_temp.expect_denied('select public.send_emote(1, ''cheers'')');
+select pg_temp.expect_denied('select public.offer_round()');
+select pg_temp.expect_denied('select public.greet_passerby(gen_random_uuid())');
 reset role;
 
 select set_config('request.jwt.claim.sub', '33333333-3333-3333-3333-333333333333', false);
@@ -48,6 +50,9 @@ select pg_temp.expect_denied('select * from public.friend_requests');
 select pg_temp.expect_denied('select * from public.friendships');
 select pg_temp.expect_denied('select * from public.visits');
 select pg_temp.expect_denied('select * from public.tasted');
+select pg_temp.expect_denied('select * from public.invitations');
+select pg_temp.expect_denied('select * from public.rounds');
+select pg_temp.expect_denied('select * from public.greetings');
 select pg_temp.expect_denied('select private.ring(auth.uid(), ''refresh'', ''{}'')');
 select pg_temp.expect_denied('update public.taverns set coins = 1000000');
 select public.get_world();

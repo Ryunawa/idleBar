@@ -10,6 +10,11 @@ public static class FriendBanners
 
     public static IEnumerable<Announcement> Describe(TavernData previous, TavernData current)
     {
+        foreach (InvitationData invitation in current.Invitations.Where(invitation => previous.Invitations.All(before => before.Id != invitation.Id)))
+        {
+            yield return new Announcement($"{invitation.Name} t'invite à boire un verre : réponds dans l'onglet Amis de la taverne", Seconds);
+        }
+
         foreach (RequestData request in current.Requests.Where(request => previous.Requests.All(before => before.Id != request.Id)))
         {
             yield return new Announcement($"{request.Name} veut devenir ton ami : réponds dans l'onglet Amis de la taverne", Seconds);

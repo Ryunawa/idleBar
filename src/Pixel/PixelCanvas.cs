@@ -30,6 +30,13 @@ public sealed class PixelCanvas
     public void Draw(PixelSprite sprite, int x, int y, Color modulate) =>
         _target.DrawTextureRect(sprite.Texture, new Rect2(x * _scale, y * _scale, sprite.Width * _scale, sprite.Height * _scale), false, modulate);
 
+    public void DrawRegion(PixelSprite sprite, int x, int y, Rect2I region, Color modulate) =>
+        _target.DrawTextureRectRegion(
+            sprite.Texture,
+            new Rect2(x * _scale, y * _scale, region.Size.X * _scale, region.Size.Y * _scale),
+            new Rect2(region.Position, region.Size),
+            modulate);
+
     public int TextWidth(Font font, int fontSize, string text) =>
         (int)MathF.Ceiling(font.GetStringSize(text, HorizontalAlignment.Left, -1, fontSize).X / _scale);
 

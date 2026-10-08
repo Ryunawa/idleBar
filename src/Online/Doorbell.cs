@@ -9,6 +9,7 @@ public sealed class Doorbell : IDisposable
 {
     private const string Refresh = "refresh";
     private const string Emote = "emote";
+    private const string Wave = "wave";
 
     private readonly SupabaseSettings _settings;
     private RealtimeClient? _client;
@@ -22,6 +23,8 @@ public sealed class Doorbell : IDisposable
     public event Action? Rang;
 
     public event Action<EmoteData>? Emoted;
+
+    public event Action<WaveData>? Waved;
 
     public bool Connected => _client?.Connected == true;
 
@@ -55,8 +58,11 @@ public sealed class Doorbell : IDisposable
                 case Refresh:
                     Rang?.Invoke();
                     break;
-                case Emote when Parse(next.Payload) is EmoteData emote:
+                case Emote when Parse<EmoteData>(next.Payload) is EmoteData emote:
                     Emoted?.Invoke(emote);
+                    break;
+                case Wave when Parse<WaveData>(next.Payload) is WaveData wave:
+                    Waved?.Invoke(wave);
                     break;
                 case RealtimeEvent.Lost:
                     GD.PushWarning($"Sonnette coupée, nouvel essai bientôt : {next.Payload}");
@@ -67,11 +73,12 @@ public sealed class Doorbell : IDisposable
 
     public void Dispose() => Stop();
 
-    private static EmoteData? Parse(string payload)
+    private static TData? Parse<TData>(string payload)
+        where TData : class
     {
         try
         {
-            return JsonSerializer.Deserialize<EmoteData>(payload, SupabaseJson.Options);
+            return JsonSerializer.Deserialize<TData>(payload, SupabaseJson.Options);
         }
         catch (JsonException)
         {

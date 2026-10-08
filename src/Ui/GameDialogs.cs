@@ -32,6 +32,8 @@ public sealed class GameDialogs
         _tavern.Friends.Answered += (from, accept) => RunInTavern(() => _actions.AnswerFriendAsync(from, accept));
         _tavern.Friends.Removed += friend => RunInTavern(() => _actions.RemoveFriendAsync(friend));
         _tavern.Friends.VisitRequested += (host, stamp) => RunInTavern(() => _actions.StartVisitAsync(host, stamp));
+        _tavern.Friends.InvitationAnswered += (from, accept) => RunInTavern(() => _actions.AnswerInvitationAsync(from, accept));
+        _tavern.Friends.RoundOffered += () => RunInTavern(_actions.OfferRoundAsync);
         _tavern.Profile.AvatarSaved += avatar => RunInTavern(() => _actions.SetAvatarAsync(avatar));
         _tavern.Profile.SpecialtySaved += specialty => RunInTavern(() => _actions.SetSpecialtyAsync(specialty));
         _session.Changed += RefreshTavern;

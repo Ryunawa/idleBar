@@ -50,6 +50,18 @@ public sealed class TavernApi
     public Task<StateData> ServeVisitAsync(string token, long visit, bool perfect) =>
         _rpc.CallAsync<ServeVisitArguments, StateData>(token, "serve_visit", new ServeVisitArguments(visit, perfect));
 
+    public Task<EmptyResult> GreetAsync(string token, Guid player) =>
+        _rpc.CallAsync<PlayerArguments, EmptyResult>(token, "greet_passerby", new PlayerArguments(player));
+
+    public Task<StateData> InviteAsync(string token, Guid player) =>
+        _rpc.CallAsync<PlayerArguments, StateData>(token, "invite_passerby", new PlayerArguments(player));
+
+    public Task<StateData> AnswerInvitationAsync(string token, Guid from, bool accept) =>
+        _rpc.CallAsync<AnswerArguments, StateData>(token, "answer_invitation", new AnswerArguments(from, accept));
+
+    public Task<StateData> OfferRoundAsync(string token) =>
+        _rpc.CallAsync<NoArguments, StateData>(token, "offer_round", new NoArguments());
+
     public Task<EmptyResult> SendEmoteAsync(string token, long visit, string emote) =>
         _rpc.CallAsync<EmoteArguments, EmptyResult>(token, "send_emote", new EmoteArguments(visit, emote));
 }

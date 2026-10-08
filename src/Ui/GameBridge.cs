@@ -45,6 +45,8 @@ public sealed class GameBridge : IDisposable
         _account = new Account(keeper, _session);
         Visits = new VisitDesk(Tavern, _actions, _doorbell);
         Visits.Announced += (message, seconds) => Announced?.Invoke(message, seconds);
+        Streets = new StreetDesk(Tavern, _actions, _doorbell);
+        Streets.Announced += (message, seconds) => Announced?.Invoke(message, seconds);
         _session.Changed += Synchronize;
         _session.Applied += (previous, current) =>
         {
@@ -62,6 +64,8 @@ public sealed class GameBridge : IDisposable
     public Tavern Tavern { get; } = new(new Random());
 
     public VisitDesk? Visits { get; }
+
+    public StreetDesk? Streets { get; }
 
     public DecorSet Decor { get; private set; } = DecorSet.Bare;
 
@@ -128,6 +132,7 @@ public sealed class GameBridge : IDisposable
         Tavern.Open = _session!.Playing;
         _book.Update(_session.World, _session.Tavern);
         Visits?.Sync(_session.Tavern);
+        Streets?.Sync(_session.Tavern);
         if (_session.Tavern is not TavernData data)
         {
             Tavern.Configure(4, DrinkMenu.Starters, 0);

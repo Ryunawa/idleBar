@@ -39,6 +39,17 @@ public partial class Main : Control
             _expanded.EmoteRequested += visits.Emote;
             visits.Popped += (text, x, color) => _expanded.Lane.Pop(text, x, color);
         }
+
+        if (_game.Streets is StreetDesk streets)
+        {
+            StreetMenu menu = new();
+            AddChild(menu);
+            menu.GreetRequested += streets.Greet;
+            menu.InviteRequested += streets.Invite;
+            _expanded.Lane.Street = streets.Street;
+            _expanded.Lane.PasserbyClicked += menu.Open;
+            streets.Cheered += (text, x) => _expanded.Lane.Pop(text, x, BarPalette.Gold);
+        }
         _game.Announced += (message, seconds) => _expanded.Lane.Announce(message, seconds);
 
         BarPreferences preferences = BarPreferences.Load(PreferencesPath);

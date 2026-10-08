@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Godot;
 using IdleBar.Inn;
+using IdleBar.Online;
 using IdleBar.Pixel;
 
 namespace IdleBar.Ui;
@@ -19,6 +20,7 @@ public partial class TavernLane : Control
     private float _time;
     private int _hovered = -1;
     private Patron? _hoveredPatron;
+    private IReadOnlyList<int> _windows = [];
     private int _pressed = -1;
 
     public string? Hint => _tavern is not null && _hovered >= 0 && _hovered < _tavern.Stations.Count
@@ -34,6 +36,10 @@ public partial class TavernLane : Control
     public Func<Patron, PatronLook?> LookOf { get; set; } = patron => RegularLooks.For(patron.Regular);
 
     public event Action<Patron>? PatronClicked;
+
+    public event Action<PasserbyData, Vector2I>? PasserbyClicked;
+
+    public Street? Street { get; set; }
 
     public void Pop(string text, int x, Color color) => _overlay.Pop(text, x, color);
 
@@ -73,6 +79,10 @@ public partial class TavernLane : Control
                 _hoveredPatron = _hovered < 0 ? PatronAt(motion.Position) : null;
                 MouseDefaultCursorShape = _hovered >= 0 ? CursorShape.PointingHand : CursorShape.Arrow;
                 break;
+            case InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true } press when WalkAt(press.Position) is StreetWalk walk:
+                AcceptEvent();
+                PasserbyClicked?.Invoke(walk.Passerby, ScreenPoint(press.Position));
+                break;
             case InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true } press when StationAt(press.Position) < 0 && PatronAt(press.Position) is Patron clicked:
                 AcceptEvent();
                 PatronClicked?.Invoke(clicked);
@@ -103,6 +113,7 @@ public partial class TavernLane : Control
     {
         _time += (float)delta;
         _overlay.Advance((float)delta);
+        Street?.Update((float)delta, _windows);
         if (IsVisibleInTree())
         {
             QueueRedraw();
@@ -127,9 +138,16 @@ public partial class TavernLane : Control
         }
 
         RoomPainter.Paint(canvas, _top, new RoomView(_tavern.Layout, Decor, Souvenirs, Outdoors.At(DateTime.Now), DoorOpen()), _time);
+        DecorPlan plan = RoomPainter.PlanFor(_tavern.Layout, canvas.Width, Souvenirs.Count);
+        _windows = plan.Wall.Where(piece => piece.Kind == DecorKind.Window && piece.X + WindowPainter.Width < canvas.Width).Select(piece => piece.X).ToList();
+        if (Street?.Current is StreetWalk walk)
+        {
+            PasserbyPainter.Paint(canvas, _top, walk.WindowX, VisitDesk.Look(walk.Passerby.Avatar), walk.Progress, _time);
+        }
+
         PatronPainter.PaintBodies(canvas, _top, _tavern, _time, LookOf);
         CounterPainter.Paint(canvas, _top);
-        PropPainter.PaintCounter(canvas, _top, RoomPainter.PlanFor(_tavern.Layout, canvas.Width, Souvenirs.Count), _time);
+        PropPainter.PaintCounter(canvas, _top, plan, _time);
         if (_hovered >= 0 && _hovered < _tavern.Stations.Count)
         {
             CounterPainter.Highlight(canvas, _top, StationPainter.Bounds(_tavern.Stations[_hovered], _top));
@@ -149,6 +167,12 @@ public partial class TavernLane : Control
     private bool DoorOpen() =>
         _tavern!.Patrons.Any(patron =>
             patron.Phase is PatronPhase.Entering or PatronPhase.Leaving && Math.Abs(patron.X - _tavern.Layout.DoorCenter) < DoorReach);
+
+    private StreetWalk? WalkAt(Vector2 position) =>
+        Street?.Current is StreetWalk walk && PasserbyPainter.Pane(walk.WindowX, _top).Grow(1).HasPoint(ArtPixel(position)) ? walk : null;
+
+    private Vector2I ScreenPoint(Vector2 position) =>
+        GetWindow().Position + (Vector2I)((GetGlobalPosition() + position) * GetWindow().ContentScaleFactor);
 
     private Vector2I ArtPixel(Vector2 position) => new((int)(position.X / _artScale), (int)(position.Y / _artScale));
 
