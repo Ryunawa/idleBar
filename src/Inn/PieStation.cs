@@ -6,11 +6,10 @@ public sealed class PieStation : Station
 
     public override Drink Drink => Drink.Pie;
 
-    public override string Hint => (Ready, Baking, InZone) switch
+    public override string Hint => (Ready, Baking) switch
     {
-        (not null, _, _) => "Tourte prête, en attente",
-        (_, true, true) => "Sors-la maintenant !",
-        (_, true, _) => "Sors-la quand elle est dorée",
+        (not null, _) => "Tourte prête, en attente",
+        (_, true) => "Sors-la quand elle est dorée",
         _ => "Clique pour enfourner une tourte",
     };
 

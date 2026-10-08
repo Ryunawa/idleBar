@@ -10,11 +10,10 @@ public sealed class CiderStation : RhythmStation
 
     public override float ZoneEnd => 0.86f;
 
-    public override string Hint => (Ready, Active, InZone) switch
+    public override string Hint => (Ready, Active) switch
     {
-        (not null, _, _) => "Cidre prêt, en attente",
-        (_, true, true) => $"Presse maintenant ! ({Beats}/{BeatsNeeded})",
-        (_, true, _) => $"Presse quand c'est doré ({Beats}/{BeatsNeeded})",
+        (not null, _) => "Cidre prêt, en attente",
+        (_, true) => $"Presse quand c'est doré ({Beats}/{BeatsNeeded})",
         _ => "Clique pour lancer le pressoir",
     };
 

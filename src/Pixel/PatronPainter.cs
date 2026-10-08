@@ -16,6 +16,7 @@ public static class PatronPainter
     private const int BubbleWidth = 9;
     private const int BubbleHeight = 7;
     private const float GhostAlpha = 0.7f;
+    private const int SideOffset = 9;
 
     private static readonly Color Outline = new("1a1411");
     private static readonly Color Cream = PixelPalette.Resolve('f');
@@ -59,26 +60,25 @@ public static class PatronPainter
     {
         foreach (Patron patron in tavern.Patrons)
         {
-            int center = (int)MathF.Round(patron.X);
+            int head = (int)MathF.Round(patron.X);
+            bool beside = patron.Visit is not null;
+            int center = beside ? head + SideOffset : head;
+            int y = top + (beside ? TavernRows.PatronTop : TavernRows.BubbleTop);
             if (patron.Phase == PatronPhase.Thinking)
             {
-                PaintBubble(canvas, top, center, Cream);
+                PaintBubble(canvas, center, y, Cream, beside);
                 int dots = (int)(patron.PhaseTime * 3) % 4;
                 for (int dot = 0; dot < dots; dot++)
                 {
-                    canvas.Fill(center - 2 + dot * 2, top + TavernRows.BubbleTop + 3, 1, 1, Outline);
+                    canvas.Fill(center - 2 + dot * 2, y + 3, 1, 1, Outline);
                 }
             }
             else if (patron.Phase == PatronPhase.Waiting && !patron.Incoming)
             {
                 float worry = Math.Clamp((patron.Waited / Patron.Patience - 0.5f) * 2, 0, 1);
-                PaintBubble(canvas, top, center, Cream.Lerp(Impatient, worry * 0.55f));
-                canvas.Draw(DrinkPainter.Icon(patron.Order), center - 2, top + TavernRows.BubbleTop + 1);
-                if (patron.Visit is not null)
-                {
-                    canvas.Draw(StampSprites.For("star")!, center + BubbleWidth / 2 + 1, top + TavernRows.BubbleTop);
-                }
-                else if (patron.Regular is not null)
+                PaintBubble(canvas, center, y, Cream.Lerp(Impatient, worry * 0.55f), beside);
+                canvas.Draw(DrinkPainter.Icon(patron.Order), center - 2, y + 1);
+                if (!beside && patron.Regular is not null)
                 {
                     PaintHeart(canvas, center + BubbleWidth / 2 + 1, top + TavernRows.BubbleTop + 1);
                 }
@@ -86,13 +86,18 @@ public static class PatronPainter
         }
     }
 
-    private static void PaintBubble(PixelCanvas canvas, int top, int center, Color fill)
+    private static void PaintBubble(PixelCanvas canvas, int center, int y, Color fill, bool beside)
     {
         int left = center - BubbleWidth / 2;
-        int y = top + TavernRows.BubbleTop;
         canvas.Fill(left + 1, y, BubbleWidth - 2, BubbleHeight, Outline);
         canvas.Fill(left, y + 1, BubbleWidth, BubbleHeight - 2, Outline);
         canvas.Fill(left + 1, y + 1, BubbleWidth - 2, BubbleHeight - 2, fill);
+        if (beside)
+        {
+            canvas.Fill(left - 1, y + 3, 1, 1, Outline);
+            return;
+        }
+
         canvas.Fill(center, y + BubbleHeight, 1, 1, Outline);
     }
 

@@ -162,6 +162,7 @@ public partial class TavernLane : Control
         CounterPainter.PaintDrinks(canvas, _top, _tavern);
         PatronPainter.PaintGlasses(canvas, _top, _tavern, _time);
         PatronPainter.PaintBubbles(canvas, _top, _tavern, _time);
+        LaneOverlay.PaintNames(canvas, GetThemeDefaultFont(), _top, _tavern.Patrons);
         _overlay.Paint(canvas, GetThemeDefaultFont(), _top, (_tavern.Layout.SeatXs[^1] + BannerMargin + canvas.Width) / 2);
     }
 

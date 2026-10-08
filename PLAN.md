@@ -205,7 +205,7 @@ Premiers habitués envisagés :
 - **Théière.** Un clic lance l'infusion. La vapeur est blanche, dorée de 3 à 6 s, puis brune. Un second clic sert, et c'est parfait pendant la vapeur dorée. À 10 s, le thé part tout seul, sans bonus.
 - **Repérer le moment parfait.**
   - **Avant :** une jauge apparaît sur la façade du comptoir, sous le poste actif. On y voit la zone dorée à atteindre et la zone ratée (rouge pour la mousse qui déborde, brune pour le thé trop infusé), avec un curseur blanc.
-  - **Pendant :** le cadre de la jauge clignote en or. La chope devient dorée et scintille ; la théière s'entoure d'un halo doré qui pulse, sautille et scintille. Au survol, le texte à gauche de la barre dit « Lâche maintenant ! » ou « Clique maintenant ! ».
+  - **Pendant :** le cadre de la jauge clignote en or. La chope devient dorée et scintille ; la théière s'entoure d'un halo doré qui pulse, sautille et scintille. Aucun texte n'annonce le moment : seuls la jauge et l'éclat doré le montrent.
   - **Après :** « Parfait ! » s'affiche en or au-dessus du poste.
 - **Service.** La boisson glisse vers le client. Il boit pendant 10 à 18 s, puis repart, ou recommande une fois (30 %).
 - **Prix.**
@@ -353,7 +353,8 @@ Chaque script peut être rejoué.
 **Visites.**
 - « Rendre visite » ouvre une visite, avec le tampon choisi pour le livre d'or de l'hôte.
 - Un joueur ne fait qu'une visite à la fois, et une taverne reçoit 3 invités au plus.
-- Chez l'hôte, l'ami entre en priorité dès qu'un tabouret se libère. Il porte son avatar, une étoile marque sa bulle, et il commande la spécialité de l'hôte.
+- Chez l'hôte, l'ami entre en priorité dès qu'un tabouret se libère. Il porte son avatar, son pseudo s'affiche en or au-dessus de sa tête, et sa bulle de commande passe à côté de sa tête. Il commande la spécialité de l'hôte.
+- Le pseudo est raccourci (« La Taverne du.. ») pour ne pas toucher celui d'un autre ami assis à côté.
 - Il ne perd jamais patience, et l'aide au comptoir ne le sert pas.
 - Le service se fait avec le geste habituel. Si l'hôte ne sert pas dans les 3 minutes, ou n'est pas là, son aide sert à sa place, côté serveur (`private.settle_visits`).
 - Récompenses, une fois par ami et par jour :

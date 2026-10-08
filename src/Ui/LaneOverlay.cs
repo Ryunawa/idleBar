@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 using IdleBar.Inn;
 using IdleBar.Pixel;
@@ -12,6 +13,9 @@ public sealed class LaneOverlay
     private const float PopSeconds = 1.8f;
     private const float PopRise = 1.5f;
     private const float BannerFade = 0.4f;
+    private const int NameFontSize = 12;
+    private const int NameRoom = 40;
+    private const int NameGap = 3;
 
     private static readonly Color PlainPop = new("efe6d2");
 
@@ -75,6 +79,30 @@ public sealed class LaneOverlay
         int width = canvas.TextWidth(font, fontSize, text);
         int left = Math.Clamp(bannerCenter - width / 2, 1, Math.Max(1, canvas.Width - width - 1));
         canvas.Text(font, fontSize, text, left, top + 1, BarPalette.Gold with { A = fade }, BarPalette.Shadow with { A = fade * 0.9f });
+    }
+
+    public static void PaintNames(PixelCanvas canvas, Font font, int top, IReadOnlyList<Patron> patrons)
+    {
+        List<Patron> guests = patrons.Where(patron => patron.Guest is not null && patron.Phase != PatronPhase.Gone).ToList();
+        foreach (Patron patron in guests)
+        {
+            float nearest = guests.Where(other => other != patron).Select(other => Math.Abs(other.X - patron.X)).DefaultIfEmpty(NameRoom).Min();
+            string shown = Fit(canvas, font, patron.Guest!, (int)Math.Min(NameRoom, nearest - NameGap));
+            int width = canvas.TextWidth(font, NameFontSize, shown);
+            int x = Math.Clamp((int)MathF.Round(patron.X) - width / 2, 1, Math.Max(1, canvas.Width - width - 1));
+            canvas.Text(font, NameFontSize, shown, x, top + 1, BarPalette.Gold, BarPalette.Shadow);
+        }
+    }
+
+    private static string Fit(PixelCanvas canvas, Font font, string name, int room)
+    {
+        string shown = name;
+        while (shown.Length > 3 && canvas.TextWidth(font, NameFontSize, shown) > room)
+        {
+            shown = name[..(shown.TrimEnd('.').Length - 1)].TrimEnd() + "..";
+        }
+
+        return shown;
     }
 
     private static Color PopColor(Payment payment) =>

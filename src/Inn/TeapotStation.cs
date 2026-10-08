@@ -8,11 +8,10 @@ public sealed class TeapotStation : Station
 
     public override Drink Drink => Drink.Tea;
 
-    public override string Hint => (Ready, Steeping, InZone) switch
+    public override string Hint => (Ready, Steeping) switch
     {
-        (not null, _, _) => "Thé prêt, en attente",
-        (_, true, true) => "Clique maintenant !",
-        (_, true, _) => "Reclique quand c'est doré",
+        (not null, _) => "Thé prêt, en attente",
+        (_, true) => "Reclique quand c'est doré",
         _ => "Clique pour infuser le thé",
     };
 

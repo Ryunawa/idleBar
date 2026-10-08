@@ -8,12 +8,7 @@ public sealed class TapStation : Station
 
     public override Drink Drink => Drink.Beer;
 
-    public override string Hint => (Ready, InZone) switch
-    {
-        (not null, _) => "Bière prête, en attente",
-        (_, true) => "Lâche maintenant !",
-        _ => "Maintiens le clic pour tirer",
-    };
+    public override string Hint => Ready is not null ? "Bière prête, en attente" : "Maintiens le clic pour tirer";
 
     public override bool Active => Pouring || Level > 0;
 

@@ -10,11 +10,10 @@ public sealed class SoupStation : RhythmStation
 
     public override float ZoneEnd => 0.62f;
 
-    public override string Hint => (Ready, Active, InZone) switch
+    public override string Hint => (Ready, Active) switch
     {
-        (not null, _, _) => "Soupe prête, en attente",
-        (_, true, true) => $"Touille maintenant ! ({Beats}/{BeatsNeeded})",
-        (_, true, _) => $"Touille quand c'est doré ({Beats}/{BeatsNeeded})",
+        (not null, _) => "Soupe prête, en attente",
+        (_, true) => $"Touille quand c'est doré ({Beats}/{BeatsNeeded})",
         _ => "Clique pour remuer la soupe",
     };
 
