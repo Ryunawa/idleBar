@@ -18,4 +18,10 @@ public sealed class LaneSpeech
     public string Text { get; }
 
     public float Age { get; set; }
+
+    public string? Shown { get; set; }
+
+    public int ShownWidth { get; set; }
+
+    public float ShownScale { get; set; }
 }

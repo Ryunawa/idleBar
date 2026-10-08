@@ -22,6 +22,11 @@ public sealed class Arrivals
     public void Expect(IReadOnlyList<GuestVisit> guests, IReadOnlyList<Patron> patrons)
     {
         _guests.RemoveAll(waiting => guests.All(guest => guest.Visit != waiting.Visit));
+        for (int index = 0; index < _guests.Count; index++)
+        {
+            _guests[index] = guests.First(guest => guest.Visit == _guests[index].Visit);
+        }
+
         foreach (GuestVisit guest in guests.Where(guest => _guests.All(waiting => waiting.Visit != guest.Visit) && patrons.All(patron => patron.Visit != guest.Visit)))
         {
             _guests.Add(guest);

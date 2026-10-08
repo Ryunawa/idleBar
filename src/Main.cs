@@ -47,7 +47,6 @@ public partial class Main : Control
                     visits.Cheer(patron);
                 }
             };
-            _expanded.EmoteRequested += visits.Emote;
             visits.Popped += (text, x, color) => _expanded.Lane.Pop(text, x, color);
         }
 

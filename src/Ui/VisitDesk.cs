@@ -32,6 +32,8 @@ public sealed class VisitDesk
 
     public event Action<string, float>? Announced;
 
+    public bool Away { get; private set; }
+
     public static string Text(string emote) => emote switch
     {
         "cheers" => "Santé !",
@@ -63,6 +65,7 @@ public sealed class VisitDesk
             ? present.Select(Guest).ToList()
             : waiting.Select(guest => new GuestVisit(guest.Visit, guest.Name, DrinkMenu.FromId(guest.Drink) ?? Drink.Beer)).ToList());
         _outing = tavern?.Outing;
+        Away = tavern?.Room is { Mine: false };
     }
 
     public static GuestVisit Guest(RoomGuest guest) =>
@@ -123,7 +126,7 @@ public sealed class VisitDesk
 
     private void OnEmoted(EmoteData emote)
     {
-        if (_tavern.Patrons.FirstOrDefault(patron => patron.Visit == emote.Visit) is Patron guest)
+        if (!Away && _tavern.Patrons.FirstOrDefault(patron => patron.Visit == emote.Visit) is Patron guest)
         {
             Popped?.Invoke(Text(emote.Emote), (int)MathF.Round(guest.X), BarPalette.Text);
             return;

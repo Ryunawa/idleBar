@@ -3,7 +3,7 @@ config_version=5
 [application]
 
 config/name="IdleBar"
-config/version="0.2.0"
+config/version="0.3.2"
 run/main_scene="res://scenes/main.tscn"
 config/icon="res://assets/icon.png"
 config/use_custom_user_dir=true

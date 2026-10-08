@@ -200,6 +200,7 @@ Premiers habitués envisagés :
 | 7. Ensemble | Vue de la taverne d'un ami pendant la visite, présence, chat filtré, masquage, raccompagnement, fiche d'ami, tampon-signature, journal, FAQ, aide visible, clients répartis et qui s'attardent | Fait, à tester en jeu (script `14`) |
 | Équilibre et revue | Seuils et prix ×2, relevé plafonné au temps réel, sonneries limitées, plafond d'amis, noms de taverne nettoyés | Fait (script `15`) |
 | Rester et commander | Visites sans départ automatique (invités assoupis), commande au choix et nouvelles commandes, chat dans une vraie fenêtre, renommée en chiffres exacts | Fait, à tester en jeu (script `16`) |
+| Réparations | Seconde revue (serveur et jeu) : visites closes sous le 14 rouvertes par le 16, invitation qui échouait sur une taverne pleine, relevé rapproché perdu, filtre contourné, récompense quotidienne et carte des spécialités sur une nouvelle commande, verrous, porte, émotes masquées ; côté jeu, commande changée pendant l'entrée, chat dans le désordre, bulles, fiche, tampons, case de visite compacte | Fait (script `17`) |
 
 ## Étape 1 : le comptoir tel qu'il est
 
@@ -464,10 +465,15 @@ La capitaine Ysolde vient sous la pluie comme sous la neige.
 - Une nouvelle visite est refusée moins de 10 secondes après la précédente.
 
 **Commander** (script `16`).
-- Le visiteur choisit, par « Commander » dans la case « Chez … » (`OrderMenu`), la spécialité ou un plat de la carte de l'hôte (`order_drink`, colonnes `visits.choice`, `waiting`, `ordered_at`), au plus une fois toutes les 5 secondes.
+- Le visiteur choisit, d'un clic sur la case « Chez … » puis « Commander… » (`VisitMenu`, `OrderMenu`), la spécialité ou un plat de la carte de l'hôte (`order_drink`, colonnes `visits.choice`, `waiting`, `ordered_at`), au plus une fois toutes les 5 secondes.
 - Il peut recommander après avoir été servi : la visite repasse « en attente » et l'hôte le sert de nouveau, ou son aide au bout de 3 minutes.
 - La récompense reste unique par ami et par jour. Seule la spécialité rejoint la carte des spécialités du visiteur.
-- Côté jeu, un changement de `ordered_at` fait recommander le client de l'invité (`GuestRoster`), même s'il a déjà bu.
+- Côté jeu, un changement de `ordered_at` fait recommander le client de l'invité (`GuestRoster`), même s'il a déjà bu. Comportements vérifiés en simulation :
+  - en attente : la bulle change tout de suite ;
+  - en train de boire : il repose son verre et attend la nouvelle commande ;
+  - pas encore assis : il s'assoit avec sa dernière commande (`Arrivals` met la file à jour) ;
+  - une boisson glisse déjà vers lui : il la refuse, le serveur n'est pas prévenu, et il attend la nouvelle ;
+  - servi côté serveur, par l'aide de l'hôte au bout de 3 minutes, ou par l'hôte vu depuis la barre du visiteur : si la taverne a une aide, c'est elle qui verse et apporte la boisson (`CounterHelper`, sans attendre son délai) ; sinon la boisson glisse depuis le poste.
 
 **La salle** (`private.room_state`, clé `room` de l'état).
 - Chez soi : les invités présents, servis ou non. Ils restent assis, leur verre à la main, tant qu'ils sont là.
@@ -477,6 +483,7 @@ La capitaine Ysolde vient sous la pluie comme sous la neige.
   - L'hôte se tient derrière le comptoir, à côté de la porte, s'il est connecté et chez lui.
   - Les postes ne réagissent pas aux clics, et les gains de cette salle ne comptent pas.
   - La taverne du joueur continue de tourner : son aide sert ses clients.
+  - La case « Chez … » ouvre un menu (`VisitMenu`) : les trois émotes, « Commander… » et « Rentrer dans ma taverne ». Avec des boutons séparés, la salle disparaissait presque sur un écran de 1366 pixels.
 
 **Le chat.**
 - `say(texte)`, 120 caractères au plus, dans la salle où l'on est : chez son hôte, ou chez soi si des invités sont là.
@@ -552,7 +559,7 @@ Non traités : les sommes « +250 » et « +30 écus » écrites en dur dans que
 2. Pousser le tag `vX.Y.Z` : GitHub construit et publie.
 3. Seulement si l'ancienne version ne peut vraiment plus jouer : `update private.settings set min_client_version = 'X.Y.Z';`.
 
-La 0.3.0 a besoin des scripts `14` et `15`, et la 0.3.1 du script `16` : les exécuter avant de pousser le tag. La 0.2.0 continue de jouer avec eux ; relever la version minimale à `0.3.0` n'est utile que pour que tout le monde voie les visites et le chat.
+La 0.3.0 a besoin des scripts `14` et `15`, la 0.3.1 du script `16`, et la 0.3.2 du script `17` (le jeu marche sans lui, mais le serveur garde alors les défauts corrigés) : les exécuter avant de pousser le tag. La 0.2.0 continue de jouer avec eux ; relever la version minimale à `0.3.0` n'est utile que pour que tout le monde voie les visites et le chat.
 
 Les joueurs en 0.1.3 (le jeu de commerce) n'ont pas ce garde-fou. Ils verront la case « Mise à jour » dès que la 0.2.0 sera publiée, mais leur jeu ne fonctionnera plus d'ici là.
 
@@ -642,6 +649,7 @@ Les joueurs en 0.1.3 (le jeu de commerce) n'ont pas ce garde-fou. Ils verront la
   - textes du jeu en français.
 - **Serveur** : toute nouvelle table reçoit le RLS, un `revoke` pour `anon` et `authenticated`, et un test dans `security_test.sql`. Les canaux Realtime sont privés.
 - **Scripts SQL** :
+  - on les exécute une seule fois, dans l'ordre : rejouer un ancien script annule ce que les suivants ont remplacé ;
   - ils doivent pouvoir être rejoués (`if not exists`, `on conflict`, `create or replace`) ;
   - chaque changement va dans un nouveau script numéroté, et on ne modifie jamais un script déjà écrit.
 - **Sprites** : chaque symbole utilisé doit exister dans `PixelPalette`, sinon la barre plante au chargement.

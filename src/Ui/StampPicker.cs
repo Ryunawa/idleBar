@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Godot;
 using IdleBar.Online;
@@ -11,6 +12,8 @@ public partial class StampPicker : VBoxContainer
     private static readonly Vector2 ButtonSize = new(34, 30);
 
     private readonly HFlowContainer _flow = new();
+    private readonly ButtonGroup _group = new();
+    private readonly Dictionary<string, Button> _buttons = [];
     private string _shown = string.Empty;
 
     public event Action<string>? Chosen;
@@ -27,14 +30,23 @@ public partial class StampPicker : VBoxContainer
 
     public void Show(WorldData world, string chosen)
     {
-        string shown = $"{chosen}|{string.Join(",", world.Stamps.Select(stamp => stamp.Id))}";
-        if (shown == _shown)
+        string shown = string.Join(",", world.Stamps.Select(stamp => stamp.Id));
+        if (shown != _shown)
         {
-            return;
+            _shown = shown;
+            Rebuild(world);
         }
 
-        _shown = shown;
+        foreach ((string id, Button button) in _buttons)
+        {
+            button.SetPressedNoSignal(id == chosen);
+        }
+    }
+
+    private void Rebuild(WorldData world)
+    {
         WindowRows.Clear(_flow);
+        _buttons.Clear();
         foreach (StampInfo stamp in world.Stamps)
         {
             Button button = new()
@@ -42,7 +54,7 @@ public partial class StampPicker : VBoxContainer
                 Icon = StampSprites.For(stamp.Id)?.Texture,
                 TooltipText = stamp.Name,
                 ToggleMode = true,
-                ButtonPressed = stamp.Id == chosen,
+                ButtonGroup = _group,
                 ExpandIcon = true,
                 CustomMinimumSize = ButtonSize,
                 FocusMode = FocusModeEnum.None,
@@ -51,6 +63,7 @@ public partial class StampPicker : VBoxContainer
             };
             string id = stamp.Id;
             button.Pressed += () => Chosen?.Invoke(id);
+            _buttons[id] = button;
             _flow.AddChild(button);
         }
     }

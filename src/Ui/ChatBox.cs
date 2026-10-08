@@ -51,7 +51,10 @@ public partial class ChatBox : Window
     {
         ContentScaleFactor = scale;
         Size = new Vector2I((int)(BaseSize.X * scale), (int)(BaseSize.Y * scale));
-        Position = new Vector2I(anchor.X - Size.X / 2, anchor.Y - Size.Y - Gap);
+        Rect2I usable = DisplayServer.ScreenGetUsableRect(DisplayServer.GetScreenFromRect(new Rect2(anchor, Vector2.One)));
+        Position = new Vector2I(
+            Math.Clamp(anchor.X - Size.X / 2, usable.Position.X, Math.Max(usable.Position.X, usable.End.X - Size.X)),
+            Math.Clamp(anchor.Y - Size.Y - Gap, usable.Position.Y, Math.Max(usable.Position.Y, usable.End.Y - Size.Y)));
         Show();
         GrabFocus();
         _line.GrabFocus();

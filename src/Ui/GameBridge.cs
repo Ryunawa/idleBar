@@ -77,6 +77,7 @@ public sealed class GameBridge : IDisposable
         };
         Tavern.Paid += _session.Record;
         _dialogs = new GameDialogs(_session, _account, _actions, Journal, host);
+        _dialogs.Refused += error => Announced?.Invoke(error, RefusalSeconds);
     }
 
     public event Action<string, float>? Announced;
@@ -164,7 +165,7 @@ public sealed class GameBridge : IDisposable
 
     public Guid? PlayerOf(Patron patron) => Visits?.PlayerOf(patron);
 
-    public void OpenProfile(Guid friend) => _dialogs?.OpenProfile(friend);
+    public void OpenProfile(Guid friend, float scale) => _dialogs?.OpenProfile(friend, scale);
 
     public void Dispose()
     {

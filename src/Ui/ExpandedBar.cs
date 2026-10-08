@@ -39,13 +39,9 @@ public partial class ExpandedBar : MarginContainer
 
     public event Action? TipJarRequested;
 
-    public event Action<string>? EmoteRequested;
-
     public event Action<Vector2I>? ChatRequested;
 
-    public event Action? LeaveRequested;
-
-    public event Action<Vector2I>? OrderRequested;
+    public event Action<Vector2I>? VisitMenuRequested;
 
     public TavernLane Lane { get; private set; } = null!;
 
@@ -105,9 +101,7 @@ public partial class ExpandedBar : MarginContainer
         row.AddChild(_chat);
 
         _visit = new VisitSlot();
-        _visit.EmoteRequested += emote => EmoteRequested?.Invoke(emote);
-        _visit.LeaveRequested += () => LeaveRequested?.Invoke();
-        _visit.OrderRequested += () => OrderRequested?.Invoke(ScreenPoint(_visit));
+        _visit.MenuRequested += () => VisitMenuRequested?.Invoke(ScreenPoint(_visit));
         row.AddChild(_visit);
 
         _update = new BarSlot();

@@ -43,7 +43,7 @@ public sealed class GameDialogs
             await _session.FlushAsync();
             await _actions.BuyAsync(id);
         });
-        _tavern.Friends.ProfileRequested += OpenProfile;
+        _tavern.Friends.ProfileRequested += friend => OpenProfile(friend, _scale);
         _tavern.Friends.Unmuted += player => RunInTavern(() => _actions.MuteAsync(player, false));
         _tavern.Profile.StampSaved += stamp => RunInTavern(() => _actions.SetStampAsync(stamp));
         _profile.MuteRequested += (player, muted) => RunInTavern(() => _actions.MuteAsync(player, muted));
@@ -57,6 +57,8 @@ public sealed class GameDialogs
         _tavern.Profile.SpecialtySaved += specialty => RunInTavern(() => _actions.SetSpecialtyAsync(specialty));
         _session.Changed += RefreshTavern;
     }
+
+    public event Action<string>? Refused;
 
     public void Open(float scale)
     {
@@ -75,19 +77,22 @@ public sealed class GameDialogs
         }
     }
 
-    public async void OpenProfile(Guid friend)
+    public async void OpenProfile(Guid friend, float scale)
     {
         FriendProfile? profile = null;
         string? error = await ActionFeedback.CaptureAsync(async () => profile = await _actions.GetFriendProfileAsync(friend));
-        if (error is not null)
+        if (error is not null && _tavern.Visible)
         {
             _tavern.ShowError(error);
-            return;
+        }
+        else if (error is not null)
+        {
+            Refused?.Invoke(error);
         }
 
         if (profile is not null && _session.World is WorldData world)
         {
-            _profile.Open(_scale, profile, world);
+            _profile.Open(scale, profile, world);
         }
     }
 

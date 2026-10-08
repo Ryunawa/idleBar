@@ -11,11 +11,13 @@ namespace IdleBar.Ui;
 public sealed class RoomDesk
 {
     private const float RefusalSeconds = 5;
+    private const int HeardLimit = 200;
 
     private readonly GameActions _actions;
     private Guid? _host;
     private Guid? _awayHost;
-    private long _lastLine;
+    private readonly HashSet<long> _heardIds = [];
+    private readonly Queue<long> _heardOrder = new();
     private bool _heard;
 
     public RoomDesk(GameActions actions, Doorbell doorbell)
@@ -60,7 +62,7 @@ public sealed class RoomDesk
             }
             else
             {
-                _lastLine = Math.Max(_lastLine, line.Id);
+                Remember(line.Id);
             }
         }
 
@@ -112,12 +114,27 @@ public sealed class RoomDesk
 
     private void Hear(ChatLine line)
     {
-        if (line.Id <= _lastLine || (line.Room is Guid room && room != _host))
+        if ((line.Room is Guid room && room != _host) || !Remember(line.Id))
         {
             return;
         }
 
-        _lastLine = line.Id;
         Spoken?.Invoke(line);
+    }
+
+    private bool Remember(long id)
+    {
+        if (!_heardIds.Add(id))
+        {
+            return false;
+        }
+
+        _heardOrder.Enqueue(id);
+        if (_heardOrder.Count > HeardLimit)
+        {
+            _heardIds.Remove(_heardOrder.Dequeue());
+        }
+
+        return true;
     }
 }

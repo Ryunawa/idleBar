@@ -79,11 +79,7 @@ public sealed class Tavern
     {
         _arrivals.Expect(guests, _patrons);
         _roster.Apply(guests, _patrons);
-
-        Dismiss(_patrons.Where(patron =>
-            patron.Visit is long visit
-            && patron.Phase is not (PatronPhase.Leaving or PatronPhase.Gone)
-            && guests.All(guest => guest.Visit != visit)).ToList());
+        Dismiss(GuestRoster.Departed(guests, _patrons));
     }
 
     public void Arrange(int width)
@@ -117,8 +113,8 @@ public sealed class Tavern
 
         UpdatePatrons(delta);
         _desk.Dispatch(_stations, _patrons);
-        _desk.ServeUnattended(_patrons, _stations, _roster.Served, AutoServe);
-        Helper.Update(delta, Layout, _stations, _patrons, Deliver);
+        _desk.ServeUnattended(_patrons, _stations, Helper.Hired ? GuestRoster.None : _roster.Served, AutoServe);
+        Helper.Update(delta, Layout, _stations, _patrons, _roster.Served, Deliver);
         _desk.Update(delta, slide => Deliver(slide.Patron, slide.Drink));
         _patrons.RemoveAll(patron => patron.Phase == PatronPhase.Gone);
     }
@@ -178,6 +174,11 @@ public sealed class Tavern
 
     private void Deliver(Patron patron, PreparedDrink drink)
     {
+        if (_roster.Refuse(patron))
+        {
+            return;
+        }
+
         patron.Serve(drink, MinDrinking + (float)_random.NextDouble() * (MaxDrinking - MinDrinking));
         if (patron.Visit is long visit)
         {

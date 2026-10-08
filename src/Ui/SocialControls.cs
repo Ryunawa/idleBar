@@ -22,14 +22,28 @@ public static class SocialControls
         OrderMenu orders = new();
         host.AddChild(orders);
         orders.Ordered += rooms.Order;
-        bar.OrderRequested += point =>
+        VisitMenu visit = new();
+        host.AddChild(visit);
+        Vector2I anchor = Vector2I.Zero;
+        bar.VisitMenuRequested += point =>
+        {
+            anchor = point;
+            visit.Open(point);
+        };
+        visit.LeaveRequested += rooms.Leave;
+        visit.OrderRequested += () =>
         {
             if (rooms.Room is { Mine: false } room)
             {
-                orders.Open(room, point);
+                orders.Open(room, anchor);
             }
         };
-        players.ProfileRequested += game.OpenProfile;
+        if (game.Visits is VisitDesk visits)
+        {
+            visit.Emoted += visits.Emote;
+        }
+
+        players.ProfileRequested += friend => game.OpenProfile(friend, scale());
         players.MuteRequested += rooms.Mute;
         players.DoorRequested += rooms.ShowDoor;
         players.LeaveRequested += rooms.Leave;
@@ -42,7 +56,6 @@ public static class SocialControls
         };
         chat.Submitted += rooms.Say;
         bar.ChatRequested += anchor => chat.Open(anchor, scale());
-        bar.LeaveRequested += rooms.Leave;
         game.Spoken += line => bar.Lane.Speak(line.Author, line.Name, line.Text);
     }
 

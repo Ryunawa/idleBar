@@ -125,6 +125,8 @@ public sealed class Patron
 
     public void KeepDrinking() => PhaseTime = 0;
 
+    public void ChangeOrder(Drink order) => Order = order;
+
     public void OrderAgain(Drink order)
     {
         Order = order;

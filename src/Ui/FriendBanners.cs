@@ -25,9 +25,11 @@ public static class FriendBanners
             yield return new Announcement($"{friend.Name} et toi êtes amis !", Seconds);
         }
 
-        foreach (GuestData guest in current.Guests.Where(guest => previous.Guests.All(before => before.Visit != guest.Visit)))
+        HashSet<long> known = Arrivals(previous).Select(guest => guest.Visit).ToHashSet();
+        bool sameRoom = previous.Room?.Mine == current.Room?.Mine;
+        foreach ((long _, string name) in Arrivals(current).Where(guest => sameRoom && !known.Contains(guest.Visit)))
         {
-            yield return new Announcement($"{guest.Name} pousse la porte de ta taverne !", Seconds);
+            yield return new Announcement($"{name} pousse la porte de ta taverne !", Seconds);
         }
 
         if (current.Outing is OutingData outing && previous.Outing?.Visit != outing.Visit)
@@ -35,10 +37,17 @@ public static class FriendBanners
             yield return new Announcement($"Tu pousses la porte de {outing.Host}…", Seconds);
         }
 
-        if (current.Outing is { ServedAt: not null } served && previous.Outing is { ServedAt: null } waiting && waiting.Visit == served.Visit)
+        if (current.Outing is { ServedAt: not null, Waiting: false } served
+            && previous.Outing is { } before && before.Visit == served.Visit && (before.ServedAt is null || before.Waiting))
         {
-            string how = served.Perfect ? ", servi à la perfection" : served.Helped ? " (son aide était au comptoir)" : string.Empty;
-            yield return new Announcement($"{served.Host} t'a servi : {served.Specialty}{how}", Seconds);
+            string how = served.Perfect ? " à la perfection" : served.Helped ? " (son aide était au comptoir)" : string.Empty;
+            yield return new Announcement($"{served.Host} t'a servi{how} !", Seconds);
         }
+    }
+
+    private static IEnumerable<(long Visit, string Name)> Arrivals(TavernData tavern)
+    {
+        IEnumerable<(long, string)> present = tavern.Room is { Mine: true } room ? room.Guests.Select(guest => (guest.Visit, guest.Name)) : [];
+        return tavern.Guests.Select(guest => (guest.Visit, guest.Name)).Concat(present).DistinctBy(guest => guest.Item1);
     }
 }

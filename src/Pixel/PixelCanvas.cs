@@ -20,6 +20,8 @@ public sealed class PixelCanvas
 
     public int Width { get; }
 
+    public float Scale => _scale;
+
     public int Height { get; }
 
     public void Fill(int x, int y, int width, int height, Color color) =>

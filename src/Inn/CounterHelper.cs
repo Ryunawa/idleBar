@@ -59,7 +59,7 @@ public sealed class CounterHelper
         }
     }
 
-    public void Update(float delta, TavernLayout layout, IReadOnlyList<Station> stations, IReadOnlyList<Patron> patrons, Action<Patron, PreparedDrink> deliver)
+    public void Update(float delta, TavernLayout layout, IReadOnlyList<Station> stations, IReadOnlyList<Patron> patrons, IReadOnlySet<long> served, Action<Patron, PreparedDrink> deliver)
     {
         if (!Hired || stations.Count == 0)
         {
@@ -75,7 +75,7 @@ public sealed class CounterHelper
         _elapsed += delta;
         switch (Task)
         {
-            case HelperTask.Resting or HelperTask.Strolling or HelperTask.Wiping when Needy(patrons).FirstOrDefault() is Patron patron:
+            case HelperTask.Resting or HelperTask.Strolling or HelperTask.Wiping when Needy(patrons, served).FirstOrDefault() is Patron patron:
                 _goal = StationFor(stations, patron.Order);
                 Begin(HelperTask.Fetching, 0);
                 break;
@@ -90,7 +90,7 @@ public sealed class CounterHelper
                 Begin(HelperTask.Resting, Between(MinRest, MaxRest));
                 break;
             case HelperTask.Fetching when Walk(delta):
-                _orders.AddRange(Needy(patrons).Take(Capacity).Select(each => new HelperOrder(each, new PreparedDrink(each.Order, false, true))));
+                _orders.AddRange(Needy(patrons, served).Take(Capacity).Select(each => new HelperOrder(each, new PreparedDrink(each.Order, false, true))));
                 Begin(HelperTask.Pouring, PourSeconds * _orders.Count);
                 break;
             case HelperTask.Pouring when _elapsed >= _duration:
@@ -138,10 +138,10 @@ public sealed class CounterHelper
         Heading = 1;
     }
 
-    private IEnumerable<Patron> Needy(IReadOnlyList<Patron> patrons)
+    private IEnumerable<Patron> Needy(IReadOnlyList<Patron> patrons, IReadOnlySet<long> served)
     {
         float delay = Delay(Level);
-        return patrons.Where(patron => patron.Visit is null && patron.Wants(patron.Order) && patron.Waited >= delay).OrderByDescending(patron => patron.Waited);
+        return patrons.Where(patron => patron.Wants(patron.Order) && (patron.Visit is long visit ? served.Contains(visit) : patron.Waited >= delay)).OrderByDescending(patron => patron.Waited);
     }
 
     private static int StationFor(IReadOnlyList<Station> stations, Drink drink) =>
