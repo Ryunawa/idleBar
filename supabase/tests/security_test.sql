@@ -53,6 +53,8 @@ select pg_temp.expect_denied('select * from public.tasted');
 select pg_temp.expect_denied('select * from public.invitations');
 select pg_temp.expect_denied('select * from public.rounds');
 select pg_temp.expect_denied('select * from public.greetings');
+select pg_temp.expect_denied('select * from public.stamp_owners');
+select pg_temp.expect_denied('insert into public.stamp_owners values (''dragon'', auth.uid())');
 select pg_temp.expect_denied('select private.ring(auth.uid(), ''refresh'', ''{}'')');
 select pg_temp.expect_denied('update public.taverns set coins = 1000000');
 select public.get_world();

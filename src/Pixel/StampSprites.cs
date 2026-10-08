@@ -14,6 +14,7 @@ public static class StampSprites
         ["flower"] = PixelSprite.Parse("..r.r..", ".rrgrr.", "..rrr..", "...V...", ".VVV...", "...V..."),
         ["note"] = PixelSprite.Parse("..hhhh.", "..h..h.", "..h..h.", ".hh.hh.", "hhhhhh.", ".hh.hh."),
         ["crown"] = PixelSprite.Parse("g..g..g", "gg.g.gg", "ggggggg", "grgqgrg", "ggggggg"),
+        ["dragon"] = PixelSprite.Parse("..r.....", ".rgg....", "rgkggg..", "rggggggh", "rgg..aLa", "rgggg.a.", ".rr....."),
     };
 
     public static PixelSprite? For(string stamp) => Sprites.GetValueOrDefault(stamp);

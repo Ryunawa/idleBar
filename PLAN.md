@@ -190,6 +190,7 @@ Premiers habitués envisagés :
 | 4. Entre amis | Avatar, code ami, client Realtime, visites en direct et en différé, émotes, livre d'or, spécialités et leur carte | Fait, à tester en jeu (scripts `07` à `09`) |
 | 5. Passants et tournées | Joueurs connectés dans la rue, salut, invitation, demande d'ami, tournée générale | Fait, à tester en jeu (scripts `10` et `11`) |
 | 6. Saisons | Météo, saisons, fêtes et leurs objets | Fait, à tester en jeu (sur le PC, sans script) |
+| Easter eggs | Le Sceau du dragon, tampon exclusif du livre d'or | Fait, à tester en jeu (script `12`) |
 
 ## Étape 1 : le comptoir tel qu'il est
 
@@ -440,6 +441,18 @@ La capitaine Ysolde vient sous la pluie comme sous la neige.
   - un client ordinaire sur trois en bonnet rouge.
 
 **À vérifier en jeu.** Les chauves-souris, la neige et le rythme des feuilles sur un vrai écran.
+
+## Easter eggs
+
+**Le Sceau du dragon** (`12_easter_eggs.sql`). C'est un tampon du livre d'or réservé à un seul compte : celui du créateur (« ryū » veut dire dragon).
+- Les tampons peuvent être exclusifs (`stamps.exclusive`). Seuls les comptes inscrits dans `stamp_owners` les voient dans leur liste (`get_world`), en premier, et peuvent les utiliser (`start_visit`).
+- Les autres joueurs le voient seulement dans leur livre d'or, quand le créateur leur a rendu visite.
+- L'adresse email n'est pas dans le dépôt, qui est public. Pour attribuer le sceau, exécuter une fois dans l'éditeur SQL de Supabase, puis relancer le jeu :
+  ```sql
+  insert into public.stamp_owners (stamp_id, player_id)
+  select 'dragon', id from auth.users where email = '<adresse du compte>'
+  on conflict do nothing;
+  ```
 
 ## Repères dans le code
 
