@@ -117,7 +117,7 @@ Premiers habitués envisagés :
 
 - Le jour et la nuit suivent l'horloge du joueur.
 - La météo change, et les saisons et les fêtes (Halloween, Noël) apportent du décor et des clients de saison.
-- Le son est coupé par défaut ; une ambiance de taverne sera disponible dans les réglages.
+- Le son n'est pas encore fait : une ambiance de taverne, coupée par défaut, viendrait dans les réglages.
 
 ## Entre joueurs
 
@@ -189,7 +189,7 @@ Premiers habitués envisagés :
 | 3. Les habitués | Les 12 habitués, leurs conditions de venue, l'amitié, les histoires en chapitres, le carnet | Fait, à tester en jeu (scripts `05` et `06`) |
 | 4. Entre amis | Avatar, code ami, client Realtime, visites en direct et en différé, émotes, livre d'or, spécialités et leur carte | Fait, à tester en jeu (scripts `07` à `09`) |
 | 5. Passants et tournées | Joueurs connectés dans la rue, salut, invitation, demande d'ami, tournée générale | Fait, à tester en jeu (scripts `10` et `11`) |
-| 6. Saisons | Météo, saisons, fêtes et leurs objets | À faire |
+| 6. Saisons | Météo, saisons, fêtes et leurs objets | Fait, à tester en jeu (sur le PC, sans script) |
 
 ## Étape 1 : le comptoir tel qu'il est
 
@@ -406,6 +406,40 @@ Chaque script peut être rejoué.
 - Le menu au-dessus de la barre sur un écran dont la barre n'est pas tout en bas.
 - Les noms de taverne visibles par des inconnus : il n'y a pas de modération.
 
+## Étape 6 : saisons et fêtes, telles qu'elles sont
+
+Tout se calcule sur le PC, à partir de la date et de l'heure locales : il n'y a pas de script SQL.
+
+**Saisons.** Hiver de décembre à février, printemps de mars à mai, été de juin à août, automne de septembre à novembre.
+
+**Météo.** Elle change par tranches de 3 heures et reste la même pour tout le monde au même moment (`Weather`).
+
+| Saison | Temps couvert | Ce qu'on voit par les fenêtres |
+|---|---|---|
+| Automne | 35 % du temps, pluie | Feuilles mortes par beau temps |
+| Hiver | 30 % du temps, neige | Neige et rebord blanc |
+| Printemps | 25 % du temps, pluie | Pétales par beau temps |
+| Été | 10 % du temps, pluie | Ciel dégagé |
+
+La capitaine Ysolde vient sous la pluie comme sous la neige.
+
+**Coin de saison**, au fond de la salle : deux citrouilles en automne, une pile de bûches en hiver, un vase de fleurs au printemps, un tournesol en été.
+
+**Fêtes** (`Calendar`), annoncées une fois à chaque lancement.
+
+- **Halloween**, du 25 octobre au 1ᵉʳ novembre :
+  - toiles d'araignée près des poteaux ;
+  - citrouilles allumées à la place des bougies du comptoir, tas de citrouilles dans le coin ;
+  - chauves-souris derrière les fenêtres la nuit ;
+  - un client ordinaire sur trois déguisé en citrouille ou en sorcière ;
+  - le Fantôme et Brindille viennent aussi le jour.
+- **Noël**, du 18 décembre au 2 janvier :
+  - guirlande à boules sous la poutre ;
+  - sapin décoré dans le coin ;
+  - un client ordinaire sur trois en bonnet rouge.
+
+**À vérifier en jeu.** Les chauves-souris, la neige et le rythme des feuilles sur un vrai écran.
+
 ## Repères dans le code
 
 - `supabase/` : les scripts SQL numérotés, à exécuter dans l'ordre, et `tests/` (lancés par `run.sh` dans Docker).
@@ -429,7 +463,8 @@ Chaque script peut être rejoué.
   - `PatronPainter`, `PatronSprites` et `PatronLook` : les clients, à partir de gabarits recolorés (chiffres `1` à `8` dans les grilles).
   - `DrinkPainter`, `TavernSprites` et `KitchenSprites` : les boissons, les plats et les postes.
   - `RegularLooks` et `SouvenirSprites` : l'apparence des habitués et leurs souvenirs.
-  - `Outdoors` (le ciel et la météo, `Weather`) et `RoomView` : ce que le peintre de la salle reçoit à chaque image.
+  - `Outdoors` (le ciel, la météo `Weather`, la saison et la fête de `Calendar`) et `RoomView` : ce que le peintre de la salle reçoit à chaque image.
+  - `SkyEffects` (pluie, neige, feuilles, pétales, chauves-souris), `FestivalPainter` et `FestivalSprites` (décor des fêtes, coin de saison), `Costumes` (clients déguisés).
 - `src/Ui/` :
   - `GameBridge` relie la salle, la session et les fenêtres ; `StatusBuilder` décrit la barre ; `SessionBanners` les annonces.
   - `TavernLane` : la scène dans la barre et les clics ; `LaneOverlay` : les gains et les annonces.

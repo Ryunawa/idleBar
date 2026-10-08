@@ -44,8 +44,10 @@ public static class RoomPainter
         DecorPainter.PaintPosts(canvas, top, plan);
         DecorPainter.PaintShelf(canvas, top, 1, StationShelfWidth);
         DecorPainter.PaintWall(canvas, top, plan, view.Decor, view.Outdoors, time);
+        FestivalPainter.PaintWall(canvas, top, plan, view.Outdoors);
         PaintSouvenirs(canvas, top, view);
         PropPainter.PaintFloor(canvas, top, plan, view.Decor, time);
+        FestivalPainter.PaintCorner(canvas, top, view.Outdoors, time);
         PaintDoor(canvas, top, view.Layout.DoorX, view.Outdoors.Sky, view.DoorOpen);
         canvas.Fill(0, top, canvas.Width, 1, Beam);
         canvas.Fill(0, top + 1, canvas.Width, 1, Trim);

@@ -63,9 +63,9 @@ public sealed class RegularBook : IRegularBook
         {
             "any" => true,
             "day" => !night,
-            "night" => night,
-            "rain" => Weather.Raining(now),
-            "clear-night" => night && !Weather.Raining(now),
+            "night" => night || Calendar.FestivalOf(now) == Festival.Halloween,
+            "rain" => Weather.Wet(now),
+            "clear-night" => night && !Weather.Wet(now),
             "menu" when parts.Length == 2 => _tavern!.Menu.Contains(parts[1]),
             "decor" when parts.Length == 2 => _decor.Contains(parts[1]),
             "tier" when parts.Length == 2 && int.TryParse(parts[1], out int tier) => _tavern!.Tier >= tier,

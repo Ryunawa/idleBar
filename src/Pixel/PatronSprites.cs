@@ -7,6 +7,10 @@ namespace IdleBar.Pixel;
 public static class PatronSprites
 {
     public const int Width = 9;
+    public const int HeadCount = 6;
+    public const int PumpkinHead = 6;
+    public const int Witch = 7;
+    public const int Cap = 8;
     public const int Height = 13;
     public const int MouthRow = 5;
     private const int CacheLimit = 256;
@@ -24,6 +28,9 @@ public static class PatronSprites
         ["...777...", "..77777..", "888888888", ".1222221.", ".2322232.", "..22422.."],
         ["..22222..", ".2222222.", ".2222222.", ".2322232.", ".1222221.", "..11411.."],
         ["...111...", "..11111..", ".1222221.", ".2322232.", ".2222222.", "..22422.."],
+        ["....V....", "..aaaaa..", ".aaaaaaa.", ".akaaaka.", ".aakkkaa.", "..aaaaa.."],
+        ["....7....", "...777...", "..77777..", "888888888", ".1322231.", "..22422.."],
+        [".....rrh.", "...rrrr..", "..rrrrrr.", ".hhhhhhh.", ".2322232.", "..22422.."],
     ];
 
     private static readonly string[] Body =
@@ -38,8 +45,6 @@ public static class PatronSprites
     ];
 
     private static readonly Dictionary<PatronKey, PixelSprite> Cache = [];
-
-    public static int HeadCount => Heads.Length;
 
     public static PixelSprite For(PatronLook look, Gaze gaze)
     {

@@ -16,6 +16,7 @@ public sealed class GameBridge : IDisposable
     private const int HttpTimeoutSeconds = 10;
     private const double LongestStep = 0.25;
     private const float RefusalSeconds = 5;
+    private const float FestivalSeconds = 9;
     private const string SessionPath = "user://session.dat";
 
     private readonly HttpClient? _http;
@@ -25,6 +26,7 @@ public sealed class GameBridge : IDisposable
     private readonly Account? _account;
     private readonly GameDialogs? _dialogs;
     private readonly RegularBook _book = new();
+    private bool _festivalAnnounced;
 
     public GameBridge(Node host)
     {
@@ -54,6 +56,8 @@ public sealed class GameBridge : IDisposable
             {
                 Announced?.Invoke(announcement.Text, announcement.Seconds);
             }
+
+            AnnounceFestival();
         };
         Tavern.Paid += _session.Record;
         _dialogs = new GameDialogs(_session, _account, _actions, host);
@@ -103,7 +107,8 @@ public sealed class GameBridge : IDisposable
         }
     }
 
-    public PatronLook? LookOf(Patron patron) => Visits?.LookOf(patron) ?? RegularLooks.For(patron.Regular);
+    public PatronLook? LookOf(Patron patron) =>
+        (Visits?.LookOf(patron) ?? RegularLooks.For(patron.Regular)) ?? Costumes.For(patron.Look, Calendar.FestivalOf(DateTime.Now));
 
     public string? Describe(Patron patron)
     {
@@ -125,6 +130,16 @@ public sealed class GameBridge : IDisposable
     {
         _doorbell?.Dispose();
         _http?.Dispose();
+    }
+
+    private void AnnounceFestival()
+    {
+        Festival festival = Calendar.FestivalOf(DateTime.Now);
+        if (!_festivalAnnounced && festival != Festival.None)
+        {
+            _festivalAnnounced = true;
+            Announced?.Invoke(Calendar.Describe(festival), FestivalSeconds);
+        }
     }
 
     private void Synchronize()

@@ -10,7 +10,6 @@ namespace IdleBar.Ui;
 
 public partial class TavernLane : Control
 {
-    private const float DoorReach = 7f;
     private const int BannerMargin = 16;
 
     private readonly LaneOverlay _overlay = new();
@@ -137,7 +136,8 @@ public partial class TavernLane : Control
             _tavern.Arrange(canvas.Width);
         }
 
-        RoomPainter.Paint(canvas, _top, new RoomView(_tavern.Layout, Decor, Souvenirs, Outdoors.At(DateTime.Now), DoorOpen()), _time);
+        Outdoors outdoors = Outdoors.At(DateTime.Now);
+        RoomPainter.Paint(canvas, _top, new RoomView(_tavern.Layout, Decor, Souvenirs, outdoors, LaneHits.DoorOpen(_tavern)), _time);
         DecorPlan plan = RoomPainter.PlanFor(_tavern.Layout, canvas.Width, Souvenirs.Count);
         _windows = plan.Wall.Where(piece => piece.Kind == DecorKind.Window && piece.X + WindowPainter.Width < canvas.Width).Select(piece => piece.X).ToList();
         if (Street?.Current is StreetWalk walk)
@@ -148,6 +148,7 @@ public partial class TavernLane : Control
         PatronPainter.PaintBodies(canvas, _top, _tavern, _time, LookOf);
         CounterPainter.Paint(canvas, _top);
         PropPainter.PaintCounter(canvas, _top, plan, _time);
+        FestivalPainter.PaintCounter(canvas, _top, plan, outdoors, _time);
         if (_hovered >= 0 && _hovered < _tavern.Stations.Count)
         {
             CounterPainter.Highlight(canvas, _top, StationPainter.Bounds(_tavern.Stations[_hovered], _top));
@@ -164,36 +165,14 @@ public partial class TavernLane : Control
         _overlay.Paint(canvas, GetThemeDefaultFont(), _top, (_tavern.Layout.SeatXs[^1] + BannerMargin + canvas.Width) / 2);
     }
 
-    private bool DoorOpen() =>
-        _tavern!.Patrons.Any(patron =>
-            patron.Phase is PatronPhase.Entering or PatronPhase.Leaving && Math.Abs(patron.X - _tavern.Layout.DoorCenter) < DoorReach);
-
-    private StreetWalk? WalkAt(Vector2 position) =>
-        Street?.Current is StreetWalk walk && PasserbyPainter.Pane(walk.WindowX, _top).Grow(1).HasPoint(ArtPixel(position)) ? walk : null;
-
     private Vector2I ScreenPoint(Vector2 position) =>
         GetWindow().Position + (Vector2I)((GetGlobalPosition() + position) * GetWindow().ContentScaleFactor);
 
     private Vector2I ArtPixel(Vector2 position) => new((int)(position.X / _artScale), (int)(position.Y / _artScale));
 
-    private int StationAt(Vector2 position)
-    {
-        Vector2I pixel = ArtPixel(position);
-        for (int index = 0; index < _tavern!.Stations.Count; index++)
-        {
-            if (StationPainter.Bounds(_tavern.Stations[index], _top).HasPoint(pixel))
-            {
-                return index;
-            }
-        }
+    private StreetWalk? WalkAt(Vector2 position) => LaneHits.Walk(Street, ArtPixel(position), _top);
 
-        return -1;
-    }
+    private int StationAt(Vector2 position) => LaneHits.Station(_tavern!, ArtPixel(position), _top);
 
-    private Patron? PatronAt(Vector2 position)
-    {
-        Vector2I pixel = ArtPixel(position);
-        return _tavern!.Patrons.FirstOrDefault(patron =>
-            new Rect2I((int)MathF.Round(patron.X) - PatronSprites.Width / 2, _top + TavernRows.PatronTop, PatronSprites.Width, TavernRows.CounterTop - TavernRows.PatronTop).HasPoint(pixel));
-    }
+    private Patron? PatronAt(Vector2 position) => LaneHits.Patron(_tavern!, ArtPixel(position), _top);
 }
