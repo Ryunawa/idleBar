@@ -1,3 +1,3 @@
 namespace IdleBar.Ui;
 
-public sealed record BarStatus(string Coins, string Situation, string Compact, SlotContent Slot, LaneScene Scene, SlotContent? News = null, double? CoinValue = null, PurseView? Purse = null);
+public sealed record BarStatus(double Coins, string Situation, string Compact);

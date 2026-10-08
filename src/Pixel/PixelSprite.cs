@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Godot;
 
@@ -6,6 +7,8 @@ namespace IdleBar.Pixel;
 public sealed class PixelSprite
 {
     private const char Transparent = '.';
+
+    private static readonly Dictionary<char, Color> NoColors = [];
 
     private PixelSprite? _mirrored;
 
@@ -24,7 +27,9 @@ public sealed class PixelSprite
 
     public PixelSprite Mirrored => _mirrored ??= Flip();
 
-    public static PixelSprite Parse(params string[] rows)
+    public static PixelSprite Parse(params string[] rows) => Parse(NoColors, rows);
+
+    public static PixelSprite Parse(IReadOnlyDictionary<char, Color> colors, params string[] rows)
     {
         int width = rows.Max(row => row.Length);
         Image image = Image.CreateEmpty(width, rows.Length, false, Image.Format.Rgba8);
@@ -33,9 +38,10 @@ public sealed class PixelSprite
         {
             for (int x = 0; x < rows[y].Length; x++)
             {
-                if (rows[y][x] != Transparent)
+                char symbol = rows[y][x];
+                if (symbol != Transparent)
                 {
-                    image.SetPixel(x, y, PixelPalette.Resolve(rows[y][x]));
+                    image.SetPixel(x, y, colors.TryGetValue(symbol, out Color color) ? color : PixelPalette.Resolve(symbol));
                 }
             }
         }

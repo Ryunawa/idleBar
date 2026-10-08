@@ -1,174 +1,256 @@
-# IdleBar — plan d'attaque
+# IdleBar — la Taverne
 
-Un jeu de commerce en pixel art qui vit dans une barre discrète ancrée en bas de l'écran Windows. Chaque joueur choisit un métier. Les artisans tiennent un atelier dans une ville et n'en bougent jamais ; les caravaniers voyagent de ville en ville. Tout avance en temps réel, même PC éteint, et on y passe de temps en temps pour décider, vendre, relancer.
+Une petite taverne en pixel art qui vit dans une barre discrète en bas de l'écran. On y sert des clients d'un geste, on fait connaissance avec des habitués qui ont chacun leur histoire, et nos amis viennent boire un verre à notre comptoir, en direct quand ils sont connectés.
 
 ## Décisions validées
 
-- **La barre reste discrète, en bas de l'écran.** C'est la seule chose à garder à tout prix. Elle se replie à 24 px ; les fenêtres ne s'ouvrent qu'à la demande.
-- **Tout est en pixel art.** Les sprites de la barre sont des grilles de caractères dans le code, sans fichier image. Les icônes des marchandises dans les fenêtres sont des PNG 32×32 générés avec PixelLab.
-- **Supabase a le dernier mot.** Le compte est obligatoire, chaque action est une fonction SQL `security definer` qui vérifie tout, et le RLS est activé sur toutes les tables.
-- **Deux familles de métiers.**
-  - Sédentaires : forgeron, charron, tisserand, herboriste, négociant. Ils ont un atelier et ne voyagent jamais. Ils peuvent déménager, mais c'est payant et rare.
-  - Itinérants : le caravanier ; le cartographe viendra plus tard.
-- **Les marchandises circulent par plusieurs voies** : le marché de la ville, le comptoir entre joueurs, et des contrats de transport. Le caravanier qui prend un contrat dépose une caution égale à la valeur du chargement. Si aucun joueur ne prend le contrat, un transporteur géré par le jeu livre, plus lentement et plus cher.
-- **Les prix sont communs à tous les joueurs.** Ils bougent avec les achats et les ventes, puis reviennent à la normale en quelques heures.
-- **Ce qu'on reçoit d'un échange arrive à l'entrepôt de la ville.**
-- **Plus tard** : un second métier plafonné au niveau compagnon, et les rencontres sur la route.
+- **La Taverne**, choisie le 8 octobre 2026 parmi trois concepts (taverne, rivière, jardin croisé). Elle remplace le jeu de commerce (artisans et caravanes), abandonné parce qu'il se jouait dans des fenêtres à onglets et pas dans la barre.
+- **La barre reste discrète, en bas de l'écran.** C'est toujours la seule chose à garder à tout prix. Elle se replie à 24 px.
+- **Tout se joue dans la barre.** Chaque clic produit un geste visible. Les fenêtres ne servent qu'au carnet des habitués, aux amis et aux réglages.
+- **Chill.** On ne perd jamais rien en s'absentant et aucun geste ne peut rater. Bien faire rapporte un bonus, faire vite n'est jamais obligatoire.
+- **Tout est en pixel art.**
+- **Interactions entre amis et avec des passants.**
+  - Les interactions voulues (visites, tournées, spécialités) se font entre amis, ajoutés par un code ami.
+  - D'autres joueurs connectés passent dans la rue pour que la barre reste vivante.
+  - Pas de texte libre entre joueurs : seulement des émotes et des tampons.
+- **En direct dès le départ**, avec Supabase Realtime, tant que le forfait gratuit suffit. Sinon, le même jeu fonctionne en différé (voir « Le direct et le quota »).
+- **Ça marche à 3 joueurs comme à 300.** Les clients du jeu remplissent la taverne et les vrais joueurs s'y ajoutent.
 
-## Où on en est
+## La barre
+
+De gauche à droite :
+
+```
+ ┌──────────────┬────────────────────────────────────────────────────────────────────┐
+ │ 128 écus     │ étagère  lanterne  porte   fenêtre   (bière)  (thé)     fenêtre      │
+ │ 2 clients    │  FÛT  THÉIÈRE      ▐  ▌     o        o        o (Léa)  ...          │
+ │ attendent    │ ════════════════════════ le comptoir ════════════════════════════  │
+ └──────────────┴────────────────────────────────────────────────────────────────────┘
+   écus, état     tes postes        entrée     les clients, face à toi, bulle au-dessus
+```
+
+- **Tu es le tavernier.** La barre montre la salle depuis ton côté du comptoir, au premier plan. Les clients sont en face, avec leur commande dans une bulle au-dessus de la tête.
+- **Ton avatar** ne se voit pas chez toi : c'est lui qui va boire chez tes amis.
+- **La barre est à 100 % par défaut, soit 84 px de haut.** C'est l'ancien 150 % : `BarSizes.Base` (1,5) multiplie toutes les tailles, textes compris. Les réglages enregistrent la taille sous la clé `scale`, et l'ancienne clé `size` est ignorée.
+- **La scène occupe toute la hauteur de la barre**, avec 28 rangées d'art au moins. Chaque pixel d'art occupe un nombre entier de pixels d'écran, et les rangées en plus vont en haut, dans la charpente :
+
+  | Taille | Hauteur | Pixels d'écran par pixel d'art | Rangées |
+  |---|---|---|---|
+  | 75 % | 63 px | 2 | 31 |
+  | 100 % | 84 px | 3 | 28 |
+  | 125 % | 105 px | 3 | 35 |
+  | 150 % | 126 px | 4 | 31 |
+  | 175 % | 147 px | 5 | 29 |
+  | 200 % | 168 px | 6 | 28 |
+- **Les tabourets s'ajoutent** vers la droite à mesure qu'on les achète : la largeur de l'écran le permet.
+- **Les fenêtres** du mur du fond montrent le ciel (jour, crépuscule, étoiles). Les passants y défileront.
+- **Le décor** est tiré au hasard, mais toujours le même pour une largeur donnée, sur toute la largeur de l'écran, sans motif qui se répète (`DecorPlan`) :
+  - au mur, espacés de 22 à 56 pixels avec une fenêtre au moins tous les 3 décors : fenêtres, étagères, tableau, portrait, trophée, bouclier, panneau d'affichage, bannières, horloge à balancier, cible, et parfois un poteau de charpente ;
+  - au sol, après les tabourets, tous les 80 à 180 pixels : cheminée avec un feu animé (au plus une tous les 260 pixels), tonneaux, parfois un chat endormi dessus, plantes ;
+  - au plafond, dans un espace sur trois entre les décors du mur : surtout des lanternes, parfois de l'ail, des herbes ou une marmite ;
+  - sur le comptoir, après les tabourets, tous les 70 à 170 pixels : bougies, bols, chopes vides.
+- **Barre repliée** : le nom de la taverne, les écus et le nombre de clients qui attendent.
+
+## La boucle de jeu
+
+### Servir
+
+Les clients entrent par la porte, prennent un tabouret libre et une bulle montre ce qu'ils veulent. Chaque poste a son propre geste :
+
+| Poste | Boisson ou plat | Geste | Réussite (bonus) |
+|---|---|---|---|
+| Fût | Bière | Maintenir le clic : la chope se remplit | Relâcher quand la mousse touche le trait |
+| Théière | Thé | Un clic pour infuser, la vapeur change de couleur | Recliquer quand elle est dorée |
+| Marmite | Soupe | Trois clics pour touiller | Touiller en rythme |
+| Pressoir | Cidre | Cliquer en cadence | Garder la cadence |
+| Four | Tourte | Enfourner, puis sortir | Sortir avant la fumée |
+
+- Ce qu'on prépare glisse tout seul sur le comptoir jusqu'au client qui l'a commandé et attend depuis le plus longtemps. Si personne n'en veut encore, la boisson attend sur le comptoir, devant son poste.
+- Un geste raté sert quand même : seul le pourboire de « service parfait » est perdu.
+- Un client qui attend trop ne part jamais fâché : l'aide au comptoir le sert, plus lentement et sans pourboire. Sans aide, il laisse une pièce et s'en va.
+- Quand tu es là, un client arrive toutes les 20 à 40 secondes ; parfois une tablée entière (« les aventuriers rentrent de mission »).
+
+### Pendant l'absence
+
+- L'aide au comptoir (le chat de la taverne, puis un commis) sert à ta place, moins bien que toi.
+- Ce qu'elle gagne tombe dans le **pot à pourboires**, plafonné à 8 h. Au retour, on le vide d'un clic dans la barre.
+
+### Grandir
+
+Les écus achètent :
+- des **tabourets** ;
+- des **postes**, et chaque poste ajoute une boisson à la carte et attire d'autres clients ;
+- du **décor** : lanternes, cheminée, plantes, enseigne, scène pour le barde ;
+- des améliorations de l'**aide au comptoir**.
+
+La **renommée** de la taverne monte avec les clients servis. Elle débloque les postes et fait venir les habitués. La taverne s'agrandit au fil des paliers : bicoque, estaminet, taverne, auberge.
+
+**Objectifs du jour.** Trois petites demandes par jour (« trois tirages parfaits », « recevoir un ami », « servir un habitué »), avec une récompense.
+
+### Les habitués
+
+C'est le moteur de l'envie de revenir, à la manière de Neko Atsume ou de Coffee Talk.
+
+- Douze habitués pour commencer, chacun avec :
+  - une boisson préférée ;
+  - une condition de venue : la nuit, sous la pluie, s'il y a une scène, si la carte propose du cidre…
+  - une histoire en cinq chapitres.
+- Les bien servir fait monter leur amitié, et chaque palier débloque un chapitre (une réplique dans une bulle, puis la page du carnet).
+- Au dernier chapitre, l'habitué offre un objet de décor qui lui ressemble.
+- Le **carnet des habitués** (une fenêtre) montre leurs portraits et l'avancée de leur histoire.
+
+Premiers habitués envisagés :
+- Gaspard, chevalier à la retraite (bière) ;
+- Mélisande, herboriste (thé) ;
+- Brindille, apprentie sorcière qui a perdu son crapaud ;
+- Odette, la factrice toujours pressée ;
+- le Fantôme, la nuit seulement ;
+- Bartholomé le barde, s'il y a une scène ;
+- la capitaine Ysolde, les jours de pluie ;
+- Pip le gobelin (soupe) ;
+- frère Anselme (cidre) ;
+- madame Lune, astrologue des nuits claires ;
+- Fennec, voleur repenti ;
+- Hugues, marchand de cartes.
+
+### L'ambiance
+
+- Le jour et la nuit suivent l'horloge du joueur.
+- La météo change, et les saisons et les fêtes (Halloween, Noël) apportent du décor et des clients de saison.
+- Le son est coupé par défaut ; une ambiance de taverne sera disponible dans les réglages.
+
+## Entre joueurs
+
+### Les amis
+
+- **Avatar.** Au premier lancement, on compose son personnage : silhouette, coiffure, couleurs et chapeau. Ce sont des sprites dans le code avec des changements de palette, donc les variantes sont illimitées et gratuites.
+- **Code ami.** Six caractères à échanger. Une fenêtre liste les amis et montre qui est en ligne.
+- **Visiter.** On choisit un ami. Ton avatar sort de ta taverne (l'aide prend le comptoir) et entre dans la barre de ton ami :
+  - **en direct**, si l'ami est connecté : il te voit entrer, te sert avec le même geste qu'un client, et vous échangez des émotes (santé, cœur, rire) ;
+  - **en différé**, s'il ne l'est pas : son aide te sert, et il trouve ton tampon dans son livre d'or au retour.
+- **Ce que la visite rapporte.**
+  - L'hôte touche un gros pourboire d'ami, payé par le jeu et non par le visiteur, et de la renommée.
+  - Le visiteur goûte la spécialité de la maison.
+  - Une récompense par ami et par jour, pour éviter les allers-retours sans fin.
+- **Spécialité de la maison.** Chaque taverne compose sa boisson signature : un nom assemblé à partir de listes de mots (« Hydromel de la Lune », « Cidre du Dragon ») et une couleur. Goûter les spécialités de ses amis remplit une **carte des spécialités** : la collection avance grâce aux autres.
+- **Livre d'or.** Les visiteurs y laissent un tampon en pixel art, pas de texte.
+- **Tournée générale.** Elle coûte des écus. Chez chaque ami connecté, tous les clients trinquent et les pourboires doublent pendant 5 minutes. Les amis hors ligne trouvent un mot au retour.
+
+### Les passants
+
+- Des joueurs connectés qui ne sont pas tes amis passent dans ta rue, avec leur avatar et leur nom.
+- Un clic dessus permet de saluer (émote), d'inviter à boire un verre (ce qui déclenche une visite s'il accepte) ou de proposer d'être amis.
+
+## Le direct et le quota
+
+**Forfait gratuit de Supabase Realtime** : 200 connexions simultanées, 2 millions de messages par mois, 100 messages par seconde. Un message diffusé compte une fois pour l'envoi, plus une fois par client qui le reçoit ([limites](https://supabase.com/docs/guides/realtime/limits), [facturation](https://supabase.com/docs/guides/platform/manage-your-usage/realtime-messages)).
+
+**Organisation.**
+- Une connexion par joueur en ligne.
+- Un canal par taverne (`taverne:<id>`), privé, protégé par le RLS de `realtime.messages` : seuls le propriétaire et ses amis peuvent le rejoindre.
+- La présence ne sert que dans ces petits canaux (l'hôte et ses visiteurs). Il n'y a **pas de canal de présence global**, dont le coût croîtrait comme le carré du nombre de joueurs.
+- Les passants viennent de la base (`last_seen` mis à jour par la lecture de l'état), pas du temps réel.
+- Les fonctions SQL sonnent à la porte avec `realtime.send` quand quelque chose arrive à un autre joueur : visite, tournée, invitation, demande d'ami.
+
+**Estimation.**
+- Une visite en direct coûte environ 20 messages : présence, commande, service, émotes.
+- En comptant large, un joueur en ligne coûte 150 messages par heure. Le quota couvre donc environ 13 000 heures de jeu par mois, soit une cinquantaine de joueurs connectés 8 h par jour.
+- Un groupe de 10 amis connectés 8 h par jour, 5 jours sur 7, consomme environ 260 000 messages, soit 13 % du quota.
+- **Le direct tient donc largement dans le forfait gratuit.** On vérifiera la page « Usage » de Supabase après la première semaine de l'étape 4.
+
+**Repli.** Tout est d'abord écrit en base ; le temps réel ne fait que prévenir tout de suite. Si Realtime est indisponible ou si le quota est atteint, le client relit son état toutes les 30 secondes : le jeu reste le même, en différé.
+
+**Client.** Le protocole de Supabase Realtime (Phoenix sur WebSocket) est codé directement dans `src/Cloud/`, sans dépendance, comme le reste des appels à Supabase.
+
+## Qui a le dernier mot
+
+- **Le serveur** décide de tout ce qui est partagé : amis, visites, récompenses d'amitié, tournées, spécialités, livre d'or, ainsi que la sauvegarde.
+- **Le client** joue le service, parce qu'un geste à la souris ne peut pas attendre un aller-retour réseau. Il envoie ses services par lots (clients servis, gestes parfaits). Le serveur les plafonne selon ce qui est possible : nombre de tabourets, postes, temps écoulé.
+- Sans marché commun ni classement, tricher ne profite qu'à soi. C'est un changement assumé par rapport au jeu de commerce, où tout passait par le serveur.
+
+## Ce qu'on garde de l'ancien jeu
+
+| On garde | On jette |
+|---|---|
+| `src/Desktop/` : ancrage dans la barre des tâches (Windows), barre flottante (macOS), écrans | `src/Trade/` : tout le modèle du commerce |
+| `src/Cloud/` : comptes, session, appels RPC, flux des versions | Les fenêtres de ville, de fondation et leurs onglets |
+| Barre repliée, réglages (taille, écran), icône de la zone de notification, avis de mise à jour | Les peintres de rue, de caravane, d'atelier et de ville |
+| Fenêtres en pixel art (`WindowSkin`, barre de titre maison), police Jersey 10, fenêtre de connexion | Les scripts SQL `01` à `22` et leurs tests |
+| `PixelCanvas`, `PixelSprite`, `PixelPalette` : sprites dans le code | Les icônes de marchandises |
+| Publication des versions sur GitHub à chaque tag `v…` | |
+
+## Les étapes
 
 | Étape | Contenu | État |
 |---|---|---|
-| 1. Le voyage | Monde (8 villes, 12 routes), marchés aux prix partagés, caravane, chariots, barre pixel art | Fait |
-| 2. Métiers et ateliers | Fondation avec métier et ville, 4 artisans, recettes, production en temps réel, entrepôt, amélioration d'atelier, barre propre à chaque métier | Fait, à tester en jeu |
-| Réglages de la barre | Bouton engrenage et menu de l'icône : taille de 75 % à 200 %, choix de l'écran, mémorisés dans `user://preferences.cfg` | Fait, à tester sur plusieurs écrans |
-| Relance rapide | Atelier à l'arrêt : un clic sur l'emplacement de la barre relance la dernière recette au maximum possible (mémorisée dans `user://workshop.cfg`) | Fait |
-| 3. Les échanges | Comptoir, entrepôts pour tous, contrats de transport et caution, transporteur du jeu, négociant jouable | Fait, à tester en jeu |
-| 4. Les événements | Route (bandits, orage, péage…), atelier (commande spéciale, panne…), consignes par défaut | Fait, à tester en jeu |
-| 5. La maîtrise | Apprenti → compagnon → maître, qualité, signature des chefs-d'œuvre, talents, améliorations de caravane fabriquées par les artisans | Fait, à tester en jeu |
-| 6. Réputation et personnel | Réputation par ville (5 paliers, avantages locaux), puis personnel embauché et payé chaque jour : contremaître, courtier, intendant, commis | Réputation faite, à tester en jeu ; personnel : **prochaine étape** |
-| Petits services | Tous les métiers rendent de menus services entre deux tâches : une bourse se remplit de 10, 15 ou 20 écus de l'heure selon le rang, jusqu'à 8 h, et se vide d'un clic dans la barre. Le personnage fait ses courses en ville quand son activité est à l'arrêt | Fait, à tester en jeu (script `17`) |
-| Habillage et publication | Fenêtres en pixel art (police Jersey 10, palette par ville, barre de titre maison), barre animée (jour et nuit, passants, gains), inscription, macOS, versions publiées sur GitHub à chaque tag `v…` | Fait ; export macOS à vérifier sur un Mac |
-| Commandes d'approvisionnement | Les artisans et le négociant commandent une marchandise livrée dans leur ville (onglet Contrats) ; les caravaniers voient toutes les commandes et les livrent sur place | Fait, à tester en jeu (script `18`) |
-| 7. La suite | Second métier, rencontres sur la route, carte du monde, notifications Windows | À faire |
+| 0. Table rase | Retirer le jeu de commerce, garder le socle ci-dessus, vider l'ancien schéma Supabase (`reset_trade_game.sql`) | Fait ; le script reste à exécuter sur Supabase |
+| 1. Le comptoir | Prototype **sans serveur** : la scène de la taverne, des clients qui entrent, commandent et repartent, le fût et la théière avec leur geste, le service, les pourboires, le jour et la nuit. On vérifie que c'est agréable avant de construire le reste | Fait, à tester en jeu |
+| 2. La taverne grandit | Sauvegarde sur Supabase, écus, tabourets, marmite, pressoir, four, décor, aide au comptoir, pot à pourboires, renommée et paliers, objectifs du jour | À faire |
+| 3. Les habitués | Les 12 habitués, leurs conditions de venue, l'amitié, les histoires en chapitres, le carnet | À faire |
+| 4. Entre amis | Avatar, code ami, client Realtime, visites en direct et en différé, émotes, livre d'or, spécialités et leur carte | À faire |
+| 5. Passants et tournées | Joueurs connectés dans la rue, salut, invitation, demande d'ami, tournée générale | À faire |
+| 6. Saisons | Météo, saisons, fêtes et leurs objets | À faire |
 
-## Étape 3 : les règles des échanges
+## Étape 1 : le comptoir tel qu'il est
 
-**Où l'on agit.** Un caravanier agit dans la ville où sa caravane est arrêtée, un artisan dans sa ville. Le négociant agit dans sa ville et dans chacune de ses succursales ; le client lui fait choisir la ville en haut de la fenêtre et l'envoie au serveur (`p_town_id`), qui la vérifie (`private.acting_town`).
+**Effacer l'ancien jeu sur Supabase.** Exécuter une fois `supabase/reset_trade_game.sql` dans l'éditeur SQL.
+- Il supprime les 37 tables, les 29 fonctions publiques et le schéma `private` du jeu de commerce, et garde les comptes (`auth.users`).
+- Rejoué, il ne fait rien.
+- Il ne porte pas de numéro, pour ne pas faire partie des scripts à exécuter dans l'ordre.
 
-**Ce qu'on a sous la main.** Pour un caravanier, c'est la cale ; pour un sédentaire, l'entrepôt de la ville. On achète, on vend et on propose une offre avec ce qu'on a sous la main. Ce qu'on reçoit d'un échange arrive toujours à l'entrepôt de la ville.
-
-**Entrepôts.** Le caravanier dépose et retire dans la ville où il se trouve (`deposit_goods`, `withdraw_goods`). Son entrepôt contient `depot_capacity` places par ville. Celui d'un sédentaire suit le niveau de son atelier ou de son comptoir, dans chaque ville. Les arrivées qu'on ne choisit pas (production, livraisons, offres expirées) peuvent dépasser la capacité. Ce qu'on choisit, en revanche, est refusé quand l'entrepôt est plein : achats, dépôts, échanges acceptés, offres retirées et contrats annulés.
-
-**Comptoir.** `post_offer` bloque ce qui est proposé (écus ou marchandise) pour `offer_hours`, avec au plus `max_open_offers` offres ouvertes. `accept_offer` fait l'échange en une seule opération. `cancel_offer` peut se faire depuis n'importe où ; la marchandise revient à l'entrepôt de la ville, s'il y a la place. Une offre expirée rend aussi ce qu'elle bloquait à l'entrepôt. Les autres joueurs ne voient que le nom du vendeur : la table `offers` n'est lisible que par son vendeur, et les offres de la ville passent par `get_state`.
-
-**Contrats de transport.**
-- **Publier.** `post_contract` prend la marchandise dans l'entrepôt de la ville. L'expéditeur bloque le plus élevé entre la récompense qu'il offre et le prix du transporteur du jeu. La destination doit être une ville où il peut récupérer la marchandise : toutes pour un caravanier, son siège et ses succursales pour un négociant. Un artisan ne peut donc pas expédier.
-- **Accepter et charger.** Accepter vaut chargement : le caravanier doit être dans la ville d'origine, avoir la place dans sa cale et payer la caution. La caution vaut le prix de base du chargement. Le surplus bloqué est alors rendu à l'expéditeur. La marchandise sous contrat occupe la cale mais reste à part : on ne peut pas la vendre.
-- **Livrer.** La livraison est automatique quand la caravane arrive à destination avant l'échéance. L'échéance vaut le trajet le plus court, plus `contract_slack_minutes`. Le caravanier touche alors la récompense et récupère sa caution.
-- **Retard.** L'expéditeur reçoit la caution et sa récompense lui est rendue. Le caravanier garde la marchandise, qu'il a payée avec sa caution.
-- **Transporteur du jeu.** Un contrat que personne ne prend en `takeover_minutes` est confié au transporteur du jeu. Celui-ci livre en trajet × `game_carrier_slowness`, au prix de `freight_fee` (valeur × (`freight_base_rate` + `freight_hourly_rate` × heures)).
-- **Annuler.** On peut annuler tant que personne n'a pris le contrat.
-- **Commandes d'approvisionnement.** Un sédentaire (artisan ou négociant) commande une marchandise livrée dans sa ville : c'est une offre du comptoir « je donne des écus contre une marchandise », au prix unitaire et à la récompense qu'il choisit. Tout caravanier voit ces commandes depuis n'importe quelle ville (`supply_requests` dans `get_state`) et les livre sur place avec `accept_offer`, en puisant d'abord dans l'entrepôt de la ville, puis dans sa cale. Elles expirent comme les offres, et les écus reviennent alors au commanditaire.
-- **Réglé à la lecture.** Tout se règle quand l'expéditeur ou le transporteur lit son état ou agit (`private.settle_player`, appelé par `get_state` et `private.lock_player`), sans tâche planifiée.
-
-**Négociant.** Son « atelier » est son comptoir : le niveau fixe la taille de ses entrepôts. `open_branch` ouvre une succursale (300, 540, 970 écus, `max_branches` au plus). Le droit d'ouvrir des succursales vient de la colonne `crafts.opens_branches`. Le cartographe apparaît comme métier « bientôt ».
-
-**Nouvelles.** `get_state` renvoie `news` : les offres conclues ou expirées et les contrats livrés ou en retard, pas encore vus. La barre affiche alors un emplacement « Comptoir · 2 conclues ». Un clic ouvre l'onglet concerné. Voir l'onglet Comptoir ou Contrats appelle `mark_exchanges_seen`.
+**Règles.** Elles sont toutes dans `src/Inn/` et se règlent par des constantes.
+- **Salle.** 4 tabourets. Premier client 2 s après le lancement, puis un toutes les 10 à 26 s tant qu'il reste un tabouret libre. Chaque client choisit un tabouret libre au hasard.
+- **Commande.** Le client réfléchit 1,6 s, puis demande une bière (60 %) ou un thé (40 %). Il attend 90 s au plus ; ensuite il laisse 1 écu et s'en va.
+- **Fût.** Maintenir le clic remplit la chope en 2 s, et lâcher avant 80 % met le tirage en pause. Lâcher entre 80 % et 100 % donne un tirage parfait. Au-delà, la mousse déborde ; à 130 %, la chope part toute seule, sans bonus.
+- **Théière.** Un clic lance l'infusion. La vapeur est blanche, dorée de 3 à 6 s, puis brune. Un second clic sert, et c'est parfait pendant la vapeur dorée. À 10 s, le thé part tout seul, sans bonus.
+- **Repérer le moment parfait.**
+  - **Avant :** une jauge apparaît sur la façade du comptoir, sous le poste actif. On y voit la zone dorée à atteindre et la zone ratée (rouge pour la mousse qui déborde, brune pour le thé trop infusé), avec un curseur blanc.
+  - **Pendant :** le cadre de la jauge clignote en or. La chope devient dorée et scintille ; la théière s'entoure d'un halo doré qui pulse, sautille et scintille. Au survol, le texte à gauche de la barre dit « Lâche maintenant ! » ou « Clique maintenant ! ».
+  - **Après :** « Parfait ! » s'affiche en or au-dessus du poste.
+- **Service.** La boisson glisse vers le client. Il boit pendant 10 à 18 s, puis repart, ou recommande une fois (30 %).
+- **Prix.**
+  - La bière vaut 4 écus et le thé 6.
+  - Le geste parfait ajoute 3 écus.
+  - Un service en moins de 20 s ajoute 1 écu.
+  - Le montant s'affiche au-dessus du client.
+- **Sauvegarde.** Les écus, le nombre de clients servis et de services parfaits sont dans `user://tavern.cfg`, enregistrés toutes les 15 s et à la fermeture. Le serveur viendra à l'étape 2.
+- **Vue.** Les clients ont 6 coiffures (cheveux courts ou longs, capuche, chapeau, barbe, chignon) et des couleurs tirées au hasard. Ils clignent des yeux et regardent où ils vont. Les buveurs de bière portent leur chope à la bouche.
 
 **À vérifier en jeu.**
-- Les formulaires d'offre et de contrat, et le sélecteur de ville du négociant.
-- L'emplacement des nouvelles.
-- Le pixel art du comptoir.
-- La lisibilité des onglets à 75 % et à 200 %.
+- Le geste du fût et de la théière : la fenêtre du parfait est-elle trop large ou trop étroite ?
+- La cadence des clients et la patience.
+- La lisibilité à 100 %, la taille par défaut.
+- La nuit : fenêtres étoilées et lanternes.
 
+## Repères dans le code
 
-## Étape 4 : les règles des événements
+- `src/Inn/` : les règles de la taverne, sans Godot.
+  - `Tavern` : la salle (arrivées, service, paiements).
+  - `Patron` : un client et son parcours (entrée, réflexion, attente, boisson, départ).
+  - `TapStation` et `TeapotStation` : les postes et leur geste.
+  - `SlidingDrink` : une boisson qui glisse sur le comptoir.
+  - `TavernLayout` : la place des postes, de la porte et des tabourets.
+  - `DrinkMenu` : les prix et les pourboires.
+- `src/Pixel/` : le dessin.
+  - `TavernRows` : les rangées de la scène.
+  - `RoomPainter` et `WindowPainter` : le mur, les étagères, les fenêtres, la porte et les lanternes.
+  - `CounterPainter` et `StationPainter` : le comptoir et les postes.
+  - `PatronPainter`, `PatronSprites` et `PatronLook` : les clients, à partir de gabarits recolorés (chiffres `1` à `8` dans les grilles).
+  - `DrinkPainter` : la chope et la tasse.
+  - `TavernSprites` : les postes et les bouteilles.
+  - `DecorPlan` : la place du décor ; `DecorPainter`, `PropPainter`, `DecorSprites` et `PropSprites` : son dessin et ses animations.
+- `src/Ui/` :
+  - `TavernLane` : la scène dans la barre, les clics et les gains affichés ;
+  - `TavernSession` : la partie locale et sa sauvegarde ;
+  - `ExpandedBar` et `CollapsedBar` : la barre dépliée et repliée.
+- `src/Desktop/` : l'ancrage de la barre dans Windows (`AppBar`) et au-dessus du Dock sur macOS (`FloatingDock`). Ne pas casser.
+- `src/Cloud/` : les comptes et les appels à Supabase, gardés pour l'étape 2. `LoginWindow` aussi.
 
-**Principe.** Tout est tiré et réglé par le serveur, à la lecture, sans tâche planifiée. Un événement à venir reste caché : la table `pending_events` n'est lisible par personne. En route, le joueur a une heure pour répondre ; à l'atelier, les **consignes** du joueur (onglet Consignes) s'appliquent tout de suite.
+## Les dessins
 
-**Route.**
-- **Tirage.** `depart` tire peut-être un événement, avec une probabilité de 1 − e^(−durée / `road_event_minutes`), soit 18 % pour 30 min et 86 % pour 5 h. Le type dépend du biome de la route (`road_event_odds`). L'événement tombe entre 20 % et 80 % du trajet. Il est réglé quand ce moment est passé (`private.settle_trip`), avant les contrats, si bien qu'un orage peut faire rater une échéance.
-- **Décision.**
-  - Un événement à choix (bandits, orage, péage) ouvre une décision, visible dans `get_state` (`trip_event`). La caravane s'arrête : son arrivée est repoussée de `decision_minutes` (60, multiplié par le facteur de voyage), le pire cas.
-  - Le joueur répond avec `answer_event` : le temps qu'il n'a pas attendu lui est rendu, puis l'effet s'applique.
-  - Sans réponse à `decide_by`, la **directive du voyage** tranche. Elle est choisie au départ (`depart(destination, directive)`) et retenue d'un voyage à l'autre : Prudence (payer les bandits, s'abriter, payer le péage), Rapidité (payer, forcer l'orage, payer) ou Économie (fuir, s'abriter, contourner). Les tables sont `directives` et `directive_choices`.
-  - La trouvaille n'appelle aucun choix : elle reste immédiate.
-  - Les consignes permanentes (`set_standing_order`) ne concernent plus que l'atelier.
-- **Bandits.** Payer coûte `bandit_ransom_rate` (8 %) de ce que transporte la caravane, bourse et valeur de la marchandise au prix de base, `bandit_ransom_cap` (150) écus au plus. Les écus partent d'abord ; s'il en manque, les bandits se servent dans la cargaison, en commençant par la marchandise la plus précieuse (`private.seize_cargo`). Une caravane vide passe sans rien payer. Fuir fait perdre un quart de la marchandise la plus précieuse et allonge le trajet de 10 %.
-- **Orage.** S'abriter allonge le trajet de 30 %. Forcer le passage ne l'allonge que de 5 %, mais un dixième du plus gros chargement prend l'eau.
-- **Péage.** Payer coûte 3 écus par chariot et 1 par dizaine de marchandises. Contourner allonge le trajet de 35 %, et c'est ce qui arrive aussi quand la bourse ne suffit pas.
-- **Trouvaille.** De 3 à 8 marchandises brutes, dans la limite de la place en cale.
-- **Hors d'atteinte.** La marchandise sous contrat n'est jamais touchée.
-
-**Atelier.**
-- **Panne.** Elle peut être tirée au lancement d'une fabrication, puis pour chaque ajout de lots tant qu'aucune panne n'est prévue, avec une probabilité de 1 − e^(−heures / `breakdown_hours`). L'atelier renvoie l'heure de reprise (`paused_until`). Les lots finis avant la panne sont livrés. Faire réparer coûte 20 écus par niveau et arrête l'atelier 10 min. Réparer soi-même l'arrête 1 h, et c'est aussi ce qui arrive faute d'écus.
-- **Commande spéciale.** Pour tous les sédentaires, une commande arrive en moyenne toutes les `special_order_hours`, une seule à la fois. Pour un artisan, elle demande un produit du métier pour environ `special_order_minutes` (60) minutes de fabrication, payé au coût réel : les matières au prix d'achat de sa ville, plus `special_order_input_markup` (10 %), plus `special_order_labour_rate` (2 écus) par minute de fabrication, sans jamais descendre sous `special_order_price_ratio` (95 %) du prix d'achat du marché. Seules les pièces fabriquées dans l'atelier après la commande comptent (`special_orders.produced`, compté par `private.reward_production`), pour qu'on ne la remplisse pas en achetant au marché. Pour le négociant, elle demande une marchandise rare dans sa ville pour environ `special_order_value` écus, payée 95 % du prix d'achat, et se livre avec n'importe quel stock. Le délai est de `special_order_window_hours`. Avec « Livrer dès que possible », elle part toute seule dès qu'elle est prête, en comptant la production faite avant l'échéance. Sinon le joueur livre ou refuse depuis le journal (`fulfill_special_order`, `decline_special_order`).
-
-**Journal.** Chaque événement écrit une ligne dans `event_log`, gardée 7 jours. Une bannière l'annonce et un emplacement « Journal » apparaît dans la barre. Voir l'onglet Journal appelle `mark_journal_seen`.
-
-**Client.**
-- **En route.** La fenêtre de ville s'ouvre aussi pendant le trajet, réduite aux onglets Journal et Maîtrise. Le journal y montre l'événement en cours, avec ses réponses et l'heure limite. Le choix de la directive se fait dans l'onglet Routes.
-- **Décision dans la barre.** Une case urgente (« Bandits · réponds avant 14:35 ») et une bannière l'annoncent. La caravane s'arrête devant les bandits ou la barrière du péage, et il pleut pendant l'orage.
-- **Barre.** Il pleut sur la route après un orage. Un atelier en panne affiche « en réparation » et l'heure de reprise.
-- **Coupure.** `events_enabled = false` coupe tous les tirages, ce que font les tests qui ne portent pas sur les événements.
-
-**À vérifier en jeu.**
-- La fréquence des événements et des commandes.
-- La pluie.
-- La décision en route : case urgente, réponses dans le journal, directive au départ.
-
-
-## Étape 5 : les règles de la maîtrise
-
-**Rangs.** Chaque joueur a une expérience par métier (`masteries`). On est apprenti, puis compagnon à `journeyman_xp` (600), puis maître à `master_xp` (3 000). Chaque passage de rang s'inscrit au journal. On progresse en exerçant son métier :
-- **artisan** : chaque lot fabriqué rapporte les minutes de sa recette ;
-- **caravanier** : chaque trajet terminé rapporte les minutes de la route (`private.settle_journey`), et chaque contrat livré les minutes du trajet le plus court, en proportion de sa valeur jusqu'à `contract_xp_value` (300 écus) ;
-- **négociant** : 1 XP par 20 écus échangés, que ce soit en vente au marché, en offre conclue, d'un côté ou de l'autre, ou en valeur de contrat livré. Les écus restants sont reportés (`masteries.trade_credit`), et un échange minuscule ne rapporte presque rien.
-
-**Talents.** On choisit un talent au rang de compagnon, puis un autre au rang de maître, parmi deux (`choose_talent`). Les talents dépendent de la famille du métier (`crafts.family` : artisan, caravanier, négociant) et sont décrits dans `talents`, avec un effet et un montant :
-- **artisan** : cadence (vitesse × 1,15) ou économe (− 15 % de matières premières, arrondi au hasard pour que l'économie soit juste en moyenne), puis main sûre (pannes quatre fois plus rares) ou renommée (commandes spéciales deux fois plus fréquentes) ;
-- **caravanier** : bât (+ 15 places en cale) ou marchandage (achats − 3 %, ventes + 3 %), puis raccourcis (trajets − 10 %) ou éclaireur (deux fois moins d'événements) ;
-- **négociant** : réseau (+ 1 succursale) ou sens du négoce (marchandage), puis logistique (transporteur du jeu − 30 %) ou grands entrepôts (+ 40 places par entrepôt).
-
-`private.bonus(joueur, effet)` additionne les talents et les équipements de caravane. Les règles concernées l'appliquent (capacité, vitesse, prix, tirages…), et `get_state` renvoie le total dans `mastery.bonuses`.
-
-**Qualité et chefs-d'œuvre.** Chaque lot fini peut donner un chef-d'œuvre, en plus de la production normale : 2 % de chances pour un compagnon, 6 % pour un maître. La pièce porte le nom de son auteur (`masterpieces.maker_name`) et reste à l'entrepôt de l'atelier. Elle se vend au marché de sa ville `masterpiece_value` (10) fois le prix de base local (`sell_masterpiece`).
-
-**Améliorations de caravane fabriquées par les artisans.**
-- **Chariot.** Le charron fabrique des chariots (2 roues, 3 caisses, 4 ferrures, 30 min). Un chariot en cale s'attelle avec `attach_wagon`, à la place du chariot vendu au prix fort par la ville (`buy_wagon`). Le marché rachète les chariots mais n'en vend pas (`goods.market_sells`) : on les achète à un charron, au comptoir.
-- **Équipements.** On en installe quatre, une fois chacun, en fournissant des produits d'artisans depuis la cale (`install_fitting`, tables `fittings` et `fitting_costs`) :
-  - bâchage (4 bâches) : l'orage ne mouille plus rien et l'abri dure deux fois moins ;
-  - roues cerclées (4 roues, 8 ferrures) : trajets − 10 % ;
-  - coffre ferré (3 outils, 6 caisses) : les bandits prennent deux fois moins ;
-  - pharmacie de route (4 remèdes, 4 onguents) : les retards en route sont deux fois plus courts.
-
-**Client.**
-- **Onglet Maîtrise.** Il montre le rang, la barre d'expérience, les talents et les chefs-d'œuvre, et reste ouvert en route.
-- **Onglet Caravane.** On y installe les équipements et on y attelle un chariot du charron.
-- **Barre.** Elle affiche le rang (« Compagnon forgeron à Ferrenoire »). La caravane montre sa bâche verte et ses roues cerclées, et les chefs-d'œuvre apparaissent en étoiles dorées devant l'atelier.
-
-**À vérifier en jeu.**
-- Le rythme de progression.
-- L'équilibre des talents et la valeur des chefs-d'œuvre.
-- La lisibilité de l'onglet Maîtrise.
-
-## Étape 6 : réputation et personnel
-
-**Pourquoi.** Aujourd'hui, tout s'achète en une vingtaine d'heures de jeu actif : 5 660 écus de chariots, 4 750 écus de niveaux d'atelier. Ensuite, l'argent ne sert plus et seul le rang de maître reste à viser. Le but est double. D'une part, des récompenses fréquentes au début puis de plus en plus espacées, pour progresser sans frustration pendant des semaines. D'autre part, des dépenses qui ne s'arrêtent jamais.
-
-**Réputation.** Chaque joueur a une réputation dans chaque ville, qui ne baisse jamais : une absence ne doit pas être punie. Elle se gagne dans la ville concernée :
-- 1 point par 20 écus achetés ou vendus au marché ;
-- 1 point par 20 écus d'une offre conclue au comptoir, pour les deux joueurs ;
-- 1 point par 10 écus de marchandise livrée par contrat : le transporteur le gagne dans la ville d'arrivée, l'expéditeur dans la ville de départ ;
-- 1 point par 10 écus d'une commande spéciale livrée.
-
-| Palier | Points | Volume d'échanges correspondant | Avantages dans la ville, cumulés |
-|---|---|---|---|
-| Connu | 200 | environ 4 000 écus | Achat 1 % moins cher, vente 1 % plus chère |
-| Estimé | 800 | environ 16 000 écus | +20 places d'entrepôt ; on peut y embaucher un courtier |
-| Notable | 3 000 | environ 60 000 écus | Prix à 2 % ; transporteur du jeu 25 % moins cher depuis ou vers la ville ; un intendant peut y faire étape |
-| Bourgeois | 10 000 | environ 200 000 écus | Prix à 3 % ; commandes spéciales 50 % plus grosses |
-| Patricien | 30 000 | environ 600 000 écus | Prix à 4 % ; +60 places d'entrepôt ; titre affiché au comptoir |
-
-On devient Connu dans sa première ville en une ou deux heures, Estimé en une demi-journée de jeu, Notable en quelques jours. Bourgeois puis Patricien demandent des semaines, et il y a 8 villes. Les villes lointaines comme Ambrevault deviennent intéressantes à cultiver. L'avantage de prix s'ajoute au marchandage, au moment de calculer le prix et non après.
-
-**Personnel.** On l'embauche une fois, puis on le paie chaque jour. Comme l'atelier, tout se règle à la lecture, sans tâche planifiée. Le salaire est prélevé au prorata. Quand la bourse est vide, l'employé s'arrête, le note au journal et reprend dès qu'on peut le payer : jamais de dette.
-
-| Employé | Pour qui | Ce qu'il fait | Condition | Embauche | Salaire par jour |
-|---|---|---|---|---|---|
-| Contremaître | Artisans | Relance la dernière recette dès que la file est vide, avec le stock de l'entrepôt | Compagnon | 1 500 écus | 600 écus |
-| Courtier | Tous, un par ville | Ordres permanents : vendre une marchandise quand son prix dépasse un seuil, en acheter quand il passe dessous, dans la limite d'un budget et de l'entrepôt | Estimé dans la ville | 1 000 écus | 300 écus |
-| Commis | Négociant | Expédie un contrat quand le stock d'une marchandise dépasse un seuil dans l'une de ses villes | Notable dans les deux villes | 2 000 écus | 600 écus |
-| Intendant | Caravanier | Fait tourner la caravane en boucle sur 2 à 4 villes, avec des consignes d'achat et de vente à chaque étape. Les événements suivent la directive | Compagnon, et Notable dans chaque ville de la boucle | 3 000 écus | 1 500 écus |
-
-Chaque embauche coûte 3 à 10 heures de gains du début de partie, et chaque salaire environ un cinquième de ce que l'employé rapporte. L'argent garde ainsi un usage, et chaque recrue fait passer le joueur de la gestion à la main à un commerce qui tourne seul.
-
-**Ordre de réalisation.**
-1. Fait : la réputation (script `16`) : table `reputations` (joueur, ville, points), `private.gain_reputation` branchée sur le marché, le comptoir, les contrats et les commandes, prix et entrepôt par ville, affichage dans l'en-tête de la ville et dans l'onglet Maîtrise, journal et bannière au changement de palier.
-2. Le contremaître, le plus simple : il prolonge la production déjà réglée à la lecture.
-3. Le courtier : les prix reviennent vers la normale selon une courbe connue, donc on sait calculer à quel moment un seuil est franchi.
-4. Le commis et l'intendant, qui enchaînent plusieurs étapes à la lecture.
+- **Dans la barre**, tout est dessiné dans le code (grilles de caractères et `PixelPalette`). C'est rapide à retoucher, et les avatars varient à l'infini par changement de palette.
+- **PixelLab** est réservé aux portraits du carnet des habitués. Le compte est en essai, sans crédit : il reste les 5 générations offertes chaque jour (cumulables jusqu'à 20).
+- **L'atelier de pixel art de PixelLab** (`pixelart_workbench`) est gratuit et peut servir à dessiner ou retoucher des sprites à la main.
 
 ## Reprendre sur un autre PC
 
@@ -180,65 +262,12 @@ Chaque embauche coûte 3 à 10 heures de gains du début de partie, et chaque sa
    ```bash
    git config user.email "robin.douet@gmail.com"
    ```
-3. **Mettre Supabase à jour** : dans l'éditeur SQL, exécuter `supabase/01_world.sql` puis tous les suivants jusqu'au dernier numéro, dans l'ordre. Ils peuvent être rejoués sans risque, et ils migrent une base de l'étape 1. Le client ne fonctionne qu'avec ces scripts à jour.
-   - Pour tester vite :
-     ```sql
-     update private.settings set travel_time_factor = 0.02, craft_time_factor = 0.02;
-     ```
-     Le facteur de voyage raccourcit aussi le délai avant le transporteur du jeu et l'échéance des contrats. Pour revenir aux vraies durées :
-     ```sql
-     update private.settings set travel_time_factor = 1, craft_time_factor = 1;
-     ```
-     Pour provoquer des événements à coup sûr, ou les couper :
-     ```sql
-     update private.settings set road_event_minutes = 1, breakdown_hours = 0.01, special_order_hours = 0.05, decision_minutes = 3;
-     update private.settings set events_enabled = false;
-     ```
-   - L'ancienne table `saves` (la mine d'or) peut être supprimée.
+3. **Mettre Supabase à jour** : dans l'éditeur SQL, exécuter les scripts de `supabase/` dans l'ordre, jusqu'au dernier numéro.
 4. **Lancer les tests SQL** (Docker requis) :
    ```bash
    bash supabase/tests/run.sh
    ```
 5. **Compiler et lancer** : compiler avec `dotnet build IdleBar.csproj`, puis lancer avec F5 dans Godot, ou avec `Godot_v4.7.2-stable_mono_win64.exe --path <dossier du dépôt>`.
-
-## Repères dans le code
-
-- `supabase/` : les scripts SQL, à exécuter dans l'ordre.
-  - `01` : le monde (villes, routes, marchandises, marchés, métiers, recettes).
-  - `02` : les joueurs, les caravanes, les entrepôts, les ateliers, les succursales, les offres et les contrats, avec la migration depuis l'étape 1.
-  - `03` : les règles internes (schéma `private`), dont le trajet le plus court, le prix du transporteur et le règlement des échanges.
-  - `04` : l'état du jeu et la fondation.
-  - `05` : le marché.
-  - `06` : le voyage.
-  - `07` : l'atelier.
-  - `08` : les échanges vus par le joueur, l'entrepôt du caravanier, les succursales et le comptoir.
-  - `09` : les contrats de transport et les nouvelles vues.
-  - `10` : les événements (route, panne, commandes spéciales), les consignes et le journal. Leurs tables sont dans `01` (types, réactions, chances par biome) et `02` (consignes, événements à venir, commandes, journal).
-  - `11` : la maîtrise (rangs, talents, chefs-d'œuvre, équipements et attelage de la caravane). Ses tables sont dans `01` (talents, équipements) et `02` (expérience, talents choisis, chefs-d'œuvre, équipements installés).
-  - `12` : le caravanier puise aussi dans l'entrepôt de la ville pour vendre au marché, publier au comptoir et atteler un chariot du charron (entrepôt d'abord, puis cale).
-  - `13` : le singulier et le pluriel de chaque marchandise (`one_name`, `many_name`), renvoyés par `get_world`.
-  - `14` : l'avantage du négociant, qui achète moins cher et vend plus cher au marché (`merchant_market_rate`) et tient plus d'offres au comptoir (`merchant_open_offers`).
-  - `15` : une passe d'équilibrage (file d'atelier, prix du chariot, succursales, prise en charge des contrats, expérience du négociant).
-  - `16` : la réputation par ville (`reputation_tiers`, `reputations`, `private.gain_reputation`), branchée sur le marché, le comptoir, les contrats et les commandes, et les durées des textes du serveur en minutes ou en heures (`private.duration_text`).
-  - `17` : les petits services (`odd_jobs_since` sur le joueur, `private.odd_jobs_state`, `public.collect_odd_jobs`), une bourse plafonnée commune à tous les métiers.
-  - `18` : les commandes d'approvisionnement (`private.supply_requests`), visibles des caravaniers dans toutes les villes, et `accept_offer` qui puise dans l'entrepôt de la ville avant la cale.
-  - `19` : les commandes spéciales au coût réel (`private.recipe_unit_cost`, `special_orders.crafted` et `produced`), à fabriquer dans l'atelier.
-  - `20` : le journal des achats et des ventes (`trade_log`, `private.log_trade`), alimenté par le marché, le comptoir, les commandes spéciales et les chefs-d'œuvre ; les achats répétés de la même marchandise au même endroit en moins de deux minutes (`trade_log_merge_seconds`) sont regroupés, l'historique garde `trade_log_days` (14) jours.
-  - `21` : la rançon des bandits sur la bourse et la cargaison (`private.cargo_value`, `private.seize_cargo`).
-  - `22` : les marchés vivants (`markets.home_price` et `target_price`, `private.market_cycle`, `private.roll_market_trends`, `private.settle_markets`) et la mémoire des prix sur un jour (`private.current_pressure`).
-  - `tests/` : les tests SQL.
-- `src/Cloud/` : l'authentification Supabase et les appels aux fonctions SQL.
-- `src/Trade/` : le modèle de jeu.
-  - `GameSession` : l'état et la synchronisation avec le serveur.
-  - `GameActions` : les commandes du joueur.
-- `src/Pixel/` : la palette (`PixelPalette`), les sprites et les peintres (paysage, caravane, ateliers, comptoir du négociant, ville, pluie). La caravane change d'allure selon ses équipements (`CaravanLook`).
-- `src/Ui/` : la barre (dépliée et repliée), la voie animée (`RoadLane`) et les fenêtres (compte, installation, ville).
-  - `TownWindow` : une page par onglet (`ITownPanel`), qui reçoit un `TownContext` (monde, état, horloge, ville choisie) et émet des `TownCommand` exécutées par `GameDialogs`.
-  - `BarStatusBuilder`, `CounterStatus` et `NewsSlot` : ce qu'affiche la barre.
-  - `SessionBanners` : les bannières (arrivée, production, échanges, journal) ; `SeenMarker` : ce qui est marqué comme vu.
-- `assets/goods/` : une icône PNG par marchandise, nommée d'après son identifiant (`sel.png`, `chef_oeuvre.png`…), affichée par `GoodBadge`. Une marchandise sans fichier s'affiche sans icône.
-- `src/Desktop/` : l'ancrage de la barre dans Windows (`AppBar`) et la détection des écrans (`DisplayScreens`), et ailleurs une barre flottante au-dessus du Dock (`FloatingDock`), derrière la même interface `IBarDock`. Ne pas casser.
-- `src/Ui/BarPlacement.cs` : le repli, la taille et l'écran de la barre ; `SettingsWindow` : la fenêtre Réglages.
 
 ## Conventions
 
@@ -247,28 +276,8 @@ Chaque embauche coûte 3 à 10 heures de gains du début de partie, et chaque sa
   - fichiers de moins de 200 lignes ;
   - types explicites et records pour les données ;
   - textes du jeu en français.
-- **Règles du jeu** : elles vivent toutes côté serveur. Toute nouvelle table reçoit le RLS, un `revoke` pour `anon` et `authenticated`, et un test dans `security_test.sql`.
-- **Scripts SQL** : ils doivent pouvoir être rejoués (`if not exists`, `on conflict`, `create or replace`). Chaque changement va dans un nouveau script numéroté : on ne modifie jamais un script déjà écrit, pour savoir exactement quoi exécuter sur Supabase.
+- **Serveur** : toute nouvelle table reçoit le RLS, un `revoke` pour `anon` et `authenticated`, et un test dans `security_test.sql`. Les canaux Realtime sont privés.
+- **Scripts SQL** :
+  - ils doivent pouvoir être rejoués (`if not exists`, `on conflict`, `create or replace`) ;
+  - chaque changement va dans un nouveau script numéroté, et on ne modifie jamais un script déjà écrit.
 - **Sprites** : chaque symbole utilisé doit exister dans `PixelPalette`, sinon la barre plante au chargement.
-
-## Équilibrage à revoir après les premières parties
-
-- **Départ** : 400 écus.
-- **Caravane** : 40 places au départ, puis 20 de plus par chariot, jusqu'à 6 chariots.
-- **Atelier de niveau 1** : 60 places en entrepôt et une file de 8 fabrications (6 + 2 par niveau), soit 48 min à 4 h de travail selon la recette.
-- **Recettes** : de 6 à 15 minutes par lot, 30 pour le chariot. Le chariot vaut 560 écus pour rester rentable à fabriquer.
-- **Prix** : environ 1 % de variation par unité achetée ou vendue ; la marque s'efface en `market_recovery_hours` (24 h, constante de temps : 63 % en un jour, 86 % en deux).
-- **Besoins des villes** : toutes les `market_cycle_hours` (24 h), chaque ville a `market_trending_goods` (2) marchandises recherchées, à 135-160 % de leur prix habituel, et 2 surabondantes, à 55-75 %. Les prix glissent vers cette cible avec une constante de `market_drift_hours` (6 h), recalculés au plus toutes les `market_settle_minutes` (15 min) à la lecture de l'état (`private.settle_markets`). Les couleurs du marché et les icônes du bandeau suivent la situation du moment (`trend` dans les cotes du marché).
-- **Négociant** : achète 5 % moins cher et vend 5 % plus cher au marché, en plus du talent « Sens du négoce » ; 16 offres ouvertes au comptoir au lieu de 8.
-- **Expérience** : 60 par heure de fabrication ou de route ; le négociant gagne 1 point pour 10 écus vendus (`trade_xp_value`). Compagnon à 600, maître à 3 000.
-- **Entrepôt du caravanier** : 60 places par ville.
-- **Comptoir** : 8 offres ouvertes au plus, pendant 48 h.
-- **Contrats** : 5 en cours par expéditeur, 3 transportés par caravanier. Le transporteur du jeu prend la relève après 1 h 30, roule 2 fois plus lentement et coûte 5 % de la valeur, plus 6 % par heure de trajet. L'échéance vaut le trajet plus 6 h.
-- **Succursales** : 3 au plus, à 200, 360 et 650 écus.
-- **Événements de route** : `road_event_minutes` = 150, soit 18 % de chances pour 30 min de route.
-- **Pannes** : `breakdown_hours` = 6, soit 15 % de chances pour une heure de fabrication.
-- **Commandes spéciales** : une toutes les 8 h en moyenne, à livrer sous 6 h. Pour un artisan, environ 1 h de fabrication, payée matières + 10 % + 2 écus par minute, au moins 95 % du prix du marché, soit 145 à 390 écus de bénéfice selon la recette et la ville. Pour le négociant, environ 400 écus à 95 % du prix du marché.
-- **Petits services** : 10 écus de l'heure pour un apprenti, 5 de plus par rang (`odd_jobs_hourly`, `odd_jobs_rank_step`), bourse plafonnée à 8 h (`odd_jobs_cap_hours`).
-- **Maîtrise** : compagnon à 600 XP, maître à 3 000 XP. Chefs-d'œuvre à 2 % et 6 % par lot, vendus 10 fois le prix de base local. Chariot du charron : prix de base 480.
-
-Tout se règle dans `private.settings` et dans les tables du monde, sans recompiler.

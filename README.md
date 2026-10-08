@@ -1,6 +1,6 @@
 # IdleBar
 
-Un jeu de commerce idle en pixel art qui vit dans une barre en bas de ton écran. Artisan sédentaire ou caravanier sur les routes, tu produis, achètes, revends et livres entre les villes pendant que tu fais autre chose.
+Une petite taverne en pixel art qui vit dans une barre en bas de ton écran. Tire les bières et fais infuser le thé d'un clic pour les clients qui passent la porte, pendant que tu fais autre chose.
 
 ## Télécharger
 
@@ -28,7 +28,7 @@ xattr -dr com.apple.quarantine /Applications/IdleBar.app
 
 ### Premiers pas
 
-Crée ton compte depuis la fenêtre de connexion (« Pas encore de compte ? Créer un compte »), puis choisis ton métier et ta ville.
+Les clients arrivent tout seuls. Maintiens le clic sur le fût pour tirer une bière et lâche quand la mousse touche le bord ; clique sur la théière, puis reclique quand la vapeur est dorée. La boisson glisse jusqu'au client qui l'a commandée.
 
 ## Publier une nouvelle version
 

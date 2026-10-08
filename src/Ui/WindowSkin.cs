@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Godot;
 using IdleBar.Pixel;
 
@@ -9,19 +8,6 @@ public static class WindowSkin
     public const string Card = "Card";
     public const string Chip = "Chip";
     public const string WarningBar = "WarningBar";
-
-    private static readonly Dictionary<string, Theme> Skins = [];
-
-    public static Theme For(string townId)
-    {
-        if (!Skins.TryGetValue(townId, out Theme? skin))
-        {
-            skin = Create(WindowStyles.For(townId));
-            Skins[townId] = skin;
-        }
-
-        return skin;
-    }
 
     public static Theme Create(WindowStyle style)
     {

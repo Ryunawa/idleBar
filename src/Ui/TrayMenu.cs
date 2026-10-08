@@ -7,15 +7,12 @@ public partial class TrayMenu : Node
 {
     private const int ToggleId = 0;
     private const int QuitId = 1;
-    private const int SignOutId = 2;
     private const int SettingsId = 3;
 
     private PopupMenu _menu = null!;
     private StatusIndicator _indicator = null!;
 
     public event Action? ToggleRequested;
-
-    public event Action? SignOutRequested;
 
     public event Action? SettingsRequested;
 
@@ -26,7 +23,6 @@ public partial class TrayMenu : Node
         _menu = new PopupMenu { PreferNativeMenu = true };
         _menu.AddItem("Replier", ToggleId);
         _menu.AddItem("Réglages…", SettingsId);
-        _menu.AddItem("Se déconnecter", SignOutId);
         _menu.AddSeparator();
         _menu.AddItem("Quitter", QuitId);
         _menu.IdPressed += OnItemPressed;
@@ -40,11 +36,7 @@ public partial class TrayMenu : Node
     public void SetCollapsed(bool collapsed) =>
         _menu.SetItemText(_menu.GetItemIndex(ToggleId), collapsed ? "Déplier" : "Replier");
 
-    public void Refresh(string tooltip, bool signedIn)
-    {
-        _indicator.Tooltip = tooltip;
-        _menu.SetItemDisabled(_menu.GetItemIndex(SignOutId), !signedIn);
-    }
+    public void Refresh(string tooltip) => _indicator.Tooltip = tooltip;
 
     public void Dismiss() => _indicator.Visible = false;
 
@@ -65,9 +57,6 @@ public partial class TrayMenu : Node
         {
             case ToggleId:
                 ToggleRequested?.Invoke();
-                break;
-            case SignOutId:
-                SignOutRequested?.Invoke();
                 break;
             case SettingsId:
                 SettingsRequested?.Invoke();
