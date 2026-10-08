@@ -51,6 +51,7 @@ reset role;
 insert into public.friendships (player_id, friend_id) values
   ('bbbbbbbb-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000002'),
   ('bbbbbbbb-0000-0000-0000-000000000002', 'bbbbbbbb-0000-0000-0000-000000000001');
+update public.taverns set last_seen = now() - interval '1 hour' where player_id::text not like 'bbbbbbbb-%';
 delete from realtime.messages;
 
 set role authenticated;

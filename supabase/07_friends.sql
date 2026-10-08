@@ -101,7 +101,6 @@ on conflict (id) do update set label = excluded.label, measure = excluded.measur
 do $$
 begin
   if to_regclass('realtime.messages') is not null then
-    execute 'alter table realtime.messages enable row level security';
     execute 'drop policy if exists "Recevoir sa sonnette" on realtime.messages';
     execute $policy$
       create policy "Recevoir sa sonnette" on realtime.messages

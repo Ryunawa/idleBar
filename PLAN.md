@@ -376,7 +376,7 @@ Chaque script peut être rejoué.
 
 **À vérifier en jeu, à deux comptes.**
 - La demande d'ami, la visite en direct, le service, les émotes et le livre d'or.
-- La sonnette privée : si elle ne sonne jamais, vérifier dans Supabase (Realtime → Settings) que les canaux privés sont autorisés, et que la règle « Recevoir sa sonnette » existe.
+- La sonnette privée : dans Supabase, Realtime → Settings, désactiver « Allow public access », puisque le jeu n'utilise que des canaux privés. Si elle ne sonne jamais, vérifier que la règle « Recevoir sa sonnette » existe sur `realtime.messages`. Supabase y active déjà le RLS : une migration ne doit jamais faire `alter table realtime.messages`, ce qui échoue avec « must be owner of table messages ».
 
 ## Étape 5 : passants et tournées, tels qu'ils sont
 
