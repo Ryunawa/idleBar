@@ -6,10 +6,11 @@ namespace IdleBar.Inn;
 
 public static class Lounge
 {
-    private const double MingleChance = 0.4;
-    private const int MaxMinglers = 4;
-    private const float MinMingle = 25f;
-    private const float MaxMingle = 60f;
+    private const double MingleChance = 0.6;
+    private const int MaxMinglers = 8;
+    private const int MaxGroup = 3;
+    private const float MinMingle = 45f;
+    private const float MaxMingle = 120f;
     private const int SeatClearance = 18;
     private const int GroupClearance = 26;
     private const int PairGap = 11;
@@ -27,7 +28,7 @@ public static class Lounge
         }
 
         patron.Mingle(x, MinMingle + (float)random.NextDouble() * (MaxMingle - MinMingle), partner);
-        if (partner is not null)
+        if (partner is not null && partner.Partner is not { Phase: PatronPhase.Mingling })
         {
             partner.Partner = patron;
         }
@@ -47,16 +48,16 @@ public static class Lounge
 
     public static (int X, Patron? Partner)? Spot(TavernLayout layout, IReadOnlyList<Patron> patrons, Random random)
     {
-        List<Patron> mingling = patrons.Where(patron => patron.Phase == PatronPhase.Mingling).ToList();
-        if (mingling.FirstOrDefault(patron => patron.Partner is null) is Patron lone)
+        List<Patron> mingling = patrons.Where(patron => patron.Phase == PatronPhase.Mingling).OrderBy(patron => patron.StandX).ToList();
+        foreach (List<Patron> group in Groups(mingling).Where(group => group.Count < MaxGroup).OrderBy(_ => random.Next()))
         {
-            int first = random.Next(2) == 0 ? 1 : -1;
-            foreach (int side in new[] { first, -first })
+            (Patron End, int Side)[] ends = [(group[0], -1), (group[^1], 1)];
+            foreach ((Patron end, int side) in random.Next(2) == 0 ? ends : ends.Reverse())
             {
-                int x = lone.StandX + side * PairGap;
-                if (Free(layout, mingling, x, lone))
+                int x = end.StandX + side * PairGap;
+                if (Fits(layout, x) && mingling.Except(group).All(other => Math.Abs(other.StandX - x) >= GroupClearance))
                 {
-                    return (x, lone);
+                    return (x, end);
                 }
             }
         }
@@ -64,13 +65,32 @@ public static class Lounge
         int from = layout.DoorX + TavernLayout.DoorWidth + EdgeMargin;
         List<int> spots = Enumerable.Range(0, Math.Max(0, (layout.Width - EdgeMargin - from) / Step))
             .Select(index => from + index * Step)
-            .Where(x => Free(layout, mingling, x, null) && (Fits(layout, x + PairGap) || Fits(layout, x - PairGap)))
+            .Where(x => Fits(layout, x)
+                && mingling.All(other => Math.Abs(other.StandX - x) >= GroupClearance)
+                && (Fits(layout, x + PairGap) || Fits(layout, x - PairGap)))
             .ToList();
         return spots.Count == 0 ? null : (spots[random.Next(spots.Count)], null);
     }
 
-    private static bool Free(TavernLayout layout, IReadOnlyList<Patron> mingling, int x, Patron? partner) =>
-        Fits(layout, x) && mingling.Where(other => other != partner).All(other => Math.Abs(other.StandX - x) >= GroupClearance);
+    private static IEnumerable<List<Patron>> Groups(IReadOnlyList<Patron> sorted)
+    {
+        List<Patron> group = [];
+        foreach (Patron patron in sorted)
+        {
+            if (group.Count > 0 && patron.StandX - group[^1].StandX > PairGap)
+            {
+                yield return group;
+                group = [];
+            }
+
+            group.Add(patron);
+        }
+
+        if (group.Count > 0)
+        {
+            yield return group;
+        }
+    }
 
     private static bool Fits(TavernLayout layout, int x) =>
         x >= layout.DoorX + TavernLayout.DoorWidth + EdgeMargin

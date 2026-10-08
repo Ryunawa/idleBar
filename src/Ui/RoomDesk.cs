@@ -84,7 +84,7 @@ public sealed class RoomDesk
         }
 
         TavernSetup.Configure(Away, room.Stools, room.Menu, room.Helper);
-        Away.Expect(room.Guests.Select(guest => new GuestVisit(guest.Visit, guest.Name, DrinkMenu.FromId(guest.Drink) ?? Drink.Beer, guest.Served)).ToList());
+        Away.Expect(room.Guests.Select(VisitDesk.Guest).ToList());
         Decor = TavernSetup.Decor(world, room.Upgrades);
         Souvenirs = room.Souvenirs;
     }
@@ -92,6 +92,8 @@ public sealed class RoomDesk
     public void Tick(float delta) => Away?.Update(delta);
 
     public void Say(string text) => Run(() => _actions.SayAsync(text));
+
+    public void Order(string drink) => Run(() => _actions.OrderDrinkAsync(drink));
 
     public void Leave() => Run(_actions.LeaveVisitAsync);
 

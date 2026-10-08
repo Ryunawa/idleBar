@@ -19,6 +19,16 @@ public static class SocialControls
         host.AddChild(players);
         ChatBox chat = new();
         host.AddChild(chat);
+        OrderMenu orders = new();
+        host.AddChild(orders);
+        orders.Ordered += rooms.Order;
+        bar.OrderRequested += point =>
+        {
+            if (rooms.Room is { Mine: false } room)
+            {
+                orders.Open(room, point);
+            }
+        };
         players.ProfileRequested += game.OpenProfile;
         players.MuteRequested += rooms.Mute;
         players.DoorRequested += rooms.ShowDoor;

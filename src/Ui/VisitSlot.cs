@@ -15,6 +15,8 @@ public partial class VisitSlot : HBoxContainer
 
     public event Action? LeaveRequested;
 
+    public event Action? OrderRequested;
+
     public override void _Ready()
     {
         Visible = false;
@@ -41,6 +43,18 @@ public partial class VisitSlot : HBoxContainer
             ClickBinding.OnLeftPress(button, () => EmoteRequested?.Invoke(emote));
             AddChild(button);
         }
+
+        Button order = new()
+        {
+            Text = "Commander",
+            FocusMode = FocusModeEnum.None,
+            MouseDefaultCursorShape = CursorShape.PointingHand,
+            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+            TooltipText = "Choisir ce que ton hôte va te servir",
+        };
+        order.AddThemeFontSizeOverride("font_size", PixelFont.Size(12));
+        ClickBinding.OnLeftPress(order, () => OrderRequested?.Invoke());
+        AddChild(order);
 
         Button leave = new()
         {

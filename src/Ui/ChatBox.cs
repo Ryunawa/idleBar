@@ -1,13 +1,15 @@
 using System;
 using Godot;
+using IdleBar.Pixel;
 
 namespace IdleBar.Ui;
 
-public partial class ChatBox : PopupPanel
+public partial class ChatBox : Window
 {
     private const int MaxLength = 120;
     private const int Gap = 8;
-    private static readonly Vector2I BaseSize = new(360, 34);
+    private const int Margin = 6;
+    private static readonly Vector2I BaseSize = new(380, 44);
 
     private LineEdit _line = null!;
 
@@ -15,6 +17,24 @@ public partial class ChatBox : PopupPanel
 
     public override void _Ready()
     {
+        Title = "IdleBar · Parler";
+        Borderless = true;
+        Unresizable = true;
+        Transient = false;
+        AlwaysOnTop = true;
+        Visible = false;
+        Theme = WindowSkin.Create(WindowStyles.Default);
+        Panel background = new();
+        AddChild(background);
+        background.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        MarginContainer margin = new();
+        foreach (string side in new[] { "margin_left", "margin_right", "margin_top", "margin_bottom" })
+        {
+            margin.AddThemeConstantOverride(side, Margin);
+        }
+
+        AddChild(margin);
+        margin.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         _line = new LineEdit
         {
             MaxLength = MaxLength,
@@ -22,18 +42,22 @@ public partial class ChatBox : PopupPanel
             CaretBlink = true,
         };
         _line.TextSubmitted += Send;
-        AddChild(_line);
+        margin.AddChild(_line);
+        FocusExited += Hide;
+        CloseRequested += Hide;
     }
 
     public void Open(Vector2I anchor, float scale)
     {
-        Vector2I size = new((int)(BaseSize.X * scale), (int)(BaseSize.Y * scale));
         ContentScaleFactor = scale;
-        Popup(new Rect2I(anchor.X - size.X / 2, anchor.Y - size.Y - Gap, size.X, size.Y));
+        Size = new Vector2I((int)(BaseSize.X * scale), (int)(BaseSize.Y * scale));
+        Position = new Vector2I(anchor.X - Size.X / 2, anchor.Y - Size.Y - Gap);
+        Show();
+        GrabFocus();
         _line.GrabFocus();
     }
 
-    public override void _UnhandledKeyInput(InputEvent @event)
+    public override void _Input(InputEvent @event)
     {
         if (@event is InputEventKey { Pressed: true, Keycode: Key.Escape })
         {

@@ -44,7 +44,7 @@ De gauche à droite :
   | 200 % | 168 px | 6 | 28 |
 - **Les tabourets se répartissent sur tout le comptoir** (`TavernLayout`) : de 24 à 110 pixels d'art entre deux tabourets, le dernier cinquième de la salle restant au décor. Sur un écran étroit, l'écart descend jusqu'à 12 pixels pour que tous les tabourets restent visibles.
 - **L'aide au comptoir se voit** (`CounterHelper`, `HelperPainter`) : un apprenti, un commis à casquette ou une serveuse à chignon, en tablier. Elle va au poste, verse, porte sur son plateau jusqu'à 2, 3 ou 4 boissons selon son niveau, les sert de gauche à droite, puis essuie le comptoir entre deux services.
-- **Des clients s'attardent** (`Lounge`) : après leur verre, 4 clients sur 10 restent debout au comptoir 25 à 60 secondes, par deux, à bavarder avec de petites bulles (« … », « ! », une note, un cœur), leur chope à la main. Ils libèrent leur tabouret, ne se placent jamais devant un tabouret, et on n'en voit pas plus de 4 à la fois.
+- **Des clients s'attardent** (`Lounge`) : après leur verre, 6 clients sur 10 restent debout au comptoir 45 à 120 secondes, par deux ou trois, à bavarder avec de petites bulles (« … », « ! », une note, un cœur), leur chope à la main. Ils libèrent leur tabouret, ne se placent jamais devant un tabouret, et on n'en voit pas plus de 8 à la fois.
 - **Les fenêtres** du mur du fond montrent le ciel (jour, crépuscule, étoiles). Les passants y défileront.
 - **Le décor** est tiré au hasard, mais toujours le même pour une largeur donnée, sur toute la largeur de l'écran, sans motif qui se répète (`DecorPlan`) :
   - au mur, espacés de 22 à 56 pixels avec une fenêtre au moins tous les 3 décors : fenêtres, étagères, tableau, portrait, trophée, bouclier, panneau d'affichage, bannières, horloge à balancier, cible, et parfois un poteau de charpente ;
@@ -70,7 +70,7 @@ Les clients entrent par la porte, prennent un tabouret libre et une bulle montre
 - Ce qu'on prépare glisse tout seul sur le comptoir jusqu'au client qui l'a commandé et attend depuis le plus longtemps. Si personne n'en veut encore, la boisson attend sur le comptoir, devant son poste.
 - Un geste raté sert quand même : seul le pourboire de « service parfait » est perdu.
 - Un client qui attend trop ne part jamais fâché : l'aide au comptoir le sert, plus lentement et sans pourboire. Sans aide, il laisse une pièce et s'en va.
-- Un client arrive toutes les 10 à 26 secondes s'il reste un tabouret libre. Il commande au hasard parmi la carte : bière 35, thé 25, soupe 20, cidre 12, tourte 8 (poids relatifs).
+- Un client arrive toutes les 6 à 16 secondes s'il reste un tabouret libre (10 à 26 avant la 0.3.1). Il commande au hasard parmi la carte : bière 35, thé 25, soupe 20, cidre 12, tourte 8 (poids relatifs).
 
 ### Pendant l'absence
 
@@ -87,7 +87,7 @@ Les écus achètent :
 
 La **renommée** de la taverne monte avec les clients servis. Elle débloque les postes et fait venir les habitués. La taverne s'agrandit au fil des paliers : bicoque, estaminet, taverne, auberge, grande auberge.
 
-**Rythme visé** (mesuré le 8 octobre 2026 en simulant la salle) : l'aide seule sert de 180 à 270 clients par heure et gagne de 1 000 à 1 500 écus. Avec les seuils et les prix doublés par le script `15`, une barre ouverte 8 heures par jour achète presque tout en une semaine et atteint la Grande auberge vers la troisième semaine.
+**Rythme visé** (mesuré le 8 octobre 2026 en simulant la salle) : l'aide seule sert de 170 à 440 clients par heure selon les tabourets et gagne de 1 000 à 2 500 écus ; la salle compte en moyenne de 5 à 12 personnes, dont 2 à 4 debout. Avec les seuils et les prix doublés par le script `15`, une barre ouverte 8 heures par jour achète presque tout en une semaine et atteint la Grande auberge entre la deuxième et la troisième semaine.
 
 **Objectifs du jour.** Trois petites demandes par jour (« servir 20 clients », « réussir 5 services parfaits », « servir 10 thés »…), avec une récompense versée dès qu'elles sont remplies.
 
@@ -199,6 +199,7 @@ Premiers habitués envisagés :
 | Mises à jour | Version minimale imposée par le serveur, procédure de publication | Fait (script `13`) |
 | 7. Ensemble | Vue de la taverne d'un ami pendant la visite, présence, chat filtré, masquage, raccompagnement, fiche d'ami, tampon-signature, journal, FAQ, aide visible, clients répartis et qui s'attardent | Fait, à tester en jeu (script `14`) |
 | Équilibre et revue | Seuils et prix ×2, relevé plafonné au temps réel, sonneries limitées, plafond d'amis, noms de taverne nettoyés | Fait (script `15`) |
+| Rester et commander | Visites sans départ automatique (invités assoupis), commande au choix et nouvelles commandes, chat dans une vraie fenêtre, renommée en chiffres exacts | Fait, à tester en jeu (script `16`) |
 
 ## Étape 1 : le comptoir tel qu'il est
 
@@ -216,7 +217,7 @@ Premiers habitués envisagés :
   - **Avant :** une jauge apparaît sur la façade du comptoir, sous le poste actif. On y voit la zone dorée à atteindre et la zone ratée (rouge pour la mousse qui déborde, brune pour le thé trop infusé), avec un curseur blanc.
   - **Pendant :** le cadre de la jauge clignote en or. La chope devient dorée et scintille ; la théière s'entoure d'un halo doré qui pulse, sautille et scintille. Aucun texte n'annonce le moment : seuls la jauge et l'éclat doré le montrent.
   - **Après :** « Parfait ! » s'affiche en or au-dessus du poste.
-- **Service.** La boisson glisse vers le client. Il boit pendant 10 à 18 s, puis repart, ou recommande une fois (30 %).
+- **Service.** La boisson glisse vers le client. Il boit pendant 18 à 30 s (10 à 18 avant la 0.3.1), puis repart, ou recommande une fois (40 %).
 - **Prix.**
   - La bière vaut 4 écus et le thé 6.
   - Le geste parfait ajoute 3 écus.
@@ -458,10 +459,15 @@ La capitaine Ysolde vient sous la pluie comme sous la neige.
 - Les deux laissent jouer la 0.2.0 : ils ajoutent des clés à l'état et remplacent des fonctions sans en changer la signature.
 
 **Présence.**
-- Une visite reste ouverte tant que le visiteur ne part pas (`leave_visit`, ou une autre visite) et que son jeu se manifeste.
-- La 0.3 relit l'état avec `sync_state(p_present)`, qui prolonge `visits.present_until` de 90 secondes pendant une visite.
-- Un jeu fermé s'efface au plus tard 90 secondes après la dernière relecture. La 0.2.0, qui ne prolonge rien, part comme avant 60 secondes après avoir été servie.
-- Retirer un ami ferme les visites dans les deux sens. Une nouvelle visite est refusée moins de 10 secondes après la précédente.
+- Depuis le script `16`, une visite reste ouverte jusqu'à ce que le visiteur rentre (`leave_visit`), aille chez un autre ami, soit raccompagné (`show_door`) ou que l'amitié soit rompue. Le jeu fermé n'y change rien : le visiteur reste assis, assoupi (yeux fermés, petits « z », clé `online` des invités), et se retrouve chez son ami en revenant.
+- La 0.3 relit l'état avec `sync_state(p_present)`, qui renseigne `visits.present_until` : c'est ce qui distingue ses visites (`private.is_present`). La 0.2.0, qui ne le renseigne jamais, part comme avant 60 secondes après avoir été servie.
+- Une nouvelle visite est refusée moins de 10 secondes après la précédente.
+
+**Commander** (script `16`).
+- Le visiteur choisit, par « Commander » dans la case « Chez … » (`OrderMenu`), la spécialité ou un plat de la carte de l'hôte (`order_drink`, colonnes `visits.choice`, `waiting`, `ordered_at`), au plus une fois toutes les 5 secondes.
+- Il peut recommander après avoir été servi : la visite repasse « en attente » et l'hôte le sert de nouveau, ou son aide au bout de 3 minutes.
+- La récompense reste unique par ami et par jour. Seule la spécialité rejoint la carte des spécialités du visiteur.
+- Côté jeu, un changement de `ordered_at` fait recommander le client de l'invité (`GuestRoster`), même s'il a déjà bu.
 
 **La salle** (`private.room_state`, clé `room` de l'état).
 - Chez soi : les invités présents, servis ou non. Ils restent assis, leur verre à la main, tant qu'ils sont là.
@@ -482,7 +488,7 @@ La capitaine Ysolde vient sous la pluie comme sous la neige.
 - Les messages sont gardés 24 heures. Un visiteur ne voit que ceux écrits depuis son arrivée.
 - Chaque membre de la salle reçoit une sonnette `chat`, sauf ceux qui ont masqué l'auteur.
 - Dans la barre, le message s'affiche en bulle au-dessus de son auteur (`LaneOverlay.PaintSpeech`). Celui de l'hôte s'affiche au-dessus de sa place derrière le comptoir, et tous sont inscrits dans le journal.
-- Bouton « Parler » (`ChatBox`).
+- Bouton « Parler » (`ChatBox`). La ligne de saisie est une vraie fenêtre qui prend le focus. La barre a `no_focus` pour ne jamais voler le clavier : une fenêtre surgissante qui lui serait rattachée ne recevrait ni le clavier ni les clics.
 
 **Se protéger.**
 - Clic droit sur un joueur au comptoir (`PlayerMenu`) :
@@ -546,7 +552,7 @@ Non traités : les sommes « +250 » et « +30 écus » écrites en dur dans que
 2. Pousser le tag `vX.Y.Z` : GitHub construit et publie.
 3. Seulement si l'ancienne version ne peut vraiment plus jouer : `update private.settings set min_client_version = 'X.Y.Z';`.
 
-La 0.3.0 a besoin des scripts `14` et `15` : les exécuter avant de pousser le tag `v0.3.0`. La 0.2.0 continue de jouer avec eux ; relever la version minimale à `0.3.0` n'est utile que pour que tout le monde voie les visites et le chat.
+La 0.3.0 a besoin des scripts `14` et `15`, et la 0.3.1 du script `16` : les exécuter avant de pousser le tag. La 0.2.0 continue de jouer avec eux ; relever la version minimale à `0.3.0` n'est utile que pour que tout le monde voie les visites et le chat.
 
 Les joueurs en 0.1.3 (le jeu de commerce) n'ont pas ce garde-fou. Ils verront la case « Mise à jour » dès que la 0.2.0 sera publiée, mais leur jeu ne fonctionnera plus d'ici là.
 

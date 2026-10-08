@@ -46,6 +46,8 @@ public sealed class GameActions
 
     public Task SetStampAsync(string stamp) => _session.PerformAsync(token => _api.SetStampAsync(token, stamp));
 
+    public Task OrderDrinkAsync(string drink) => _session.PerformAsync(token => _api.OrderDrinkAsync(token, drink));
+
     public Task LeaveVisitAsync() => _session.PerformAsync(_api.LeaveVisitAsync);
 
     public Task ShowDoorAsync(long visit) => _session.PerformAsync(token => _api.ShowDoorAsync(token, visit));

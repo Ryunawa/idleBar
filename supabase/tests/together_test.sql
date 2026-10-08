@@ -180,13 +180,13 @@ reset role;
 update public.visits set present_until = now() - interval '1 second' where visitor_id = pg_temp.player('3');
 set role authenticated;
 select pg_temp.act('1');
-select pg_temp.check(jsonb_array_length(public.get_state() -> 'tavern' -> 'room' -> 'guests') = 1, 'un invité parti sans prévenir s''efface');
+select pg_temp.check(jsonb_array_length(public.get_state() -> 'tavern' -> 'room' -> 'guests') = 2, 'un invité qui ne se manifeste plus reste assis jusqu''à son départ');
 
 select pg_temp.act('2');
 select public.leave_visit();
 select pg_temp.check((public.get_state() -> 'tavern' -> 'room' ->> 'mine')::boolean, 'après le départ, on est chez soi');
 select pg_temp.act('1');
-select pg_temp.check(jsonb_array_length(public.get_state() -> 'tavern' -> 'room' -> 'guests') = 0, 'la salle de l''hôte se vide');
+select pg_temp.check(jsonb_array_length(public.get_state() -> 'tavern' -> 'room' -> 'guests') = 1, 'seul l''invité parti quitte la salle');
 
 select pg_temp.act('2');
 select public.start_visit(pg_temp.player('1'), 'mug');

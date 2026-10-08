@@ -60,10 +60,13 @@ public sealed class VisitDesk
         }
 
         _tavern.Expect(tavern?.Room is { Mine: true }
-            ? present.Select(guest => new GuestVisit(guest.Visit, guest.Name, DrinkMenu.FromId(guest.Drink) ?? Drink.Beer, guest.Served)).ToList()
+            ? present.Select(Guest).ToList()
             : waiting.Select(guest => new GuestVisit(guest.Visit, guest.Name, DrinkMenu.FromId(guest.Drink) ?? Drink.Beer)).ToList());
         _outing = tavern?.Outing;
     }
+
+    public static GuestVisit Guest(RoomGuest guest) =>
+        new(guest.Visit, guest.Name, DrinkMenu.FromId(guest.Drink) ?? Drink.Beer, guest.Served, !guest.Online, guest.OrderedAt);
 
     public PatronLook? LookOf(Patron patron) =>
         patron.Visit is long visit && _looks.TryGetValue(visit, out PatronLook? look) ? look : RegularLooks.For(patron.Regular);

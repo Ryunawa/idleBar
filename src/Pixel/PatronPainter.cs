@@ -23,6 +23,9 @@ public static class PatronPainter
     private const float ChatShown = 1.7f;
     private const int Glyphs = 4;
     private const int NoteGlyph = 2;
+    private const int SnoreGlyph = 4;
+    private const float SnoreEvery = 3f;
+    private const float SnoreShown = 1.6f;
 
     private static readonly Color Outline = new("1a1411");
     private static readonly Color Cream = PixelPalette.Resolve('f');
@@ -37,7 +40,7 @@ public static class PatronPainter
             {
                 < 0 => Gaze.Left,
                 > 0 => Gaze.Right,
-                _ => Blinking(patron, time) ? Gaze.Closed : Gaze.Front,
+                _ => patron.Dozing || Blinking(patron, time) ? Gaze.Closed : Gaze.Front,
             };
             int bob = patron.Heading != 0 && (int)(time * StepRate + patron.Look % 7) % 2 == 0 ? 1 : 0;
             float ghostly = patron.Regular == RegularLooks.Ghost ? GhostAlpha : 1;
@@ -56,7 +59,7 @@ public static class PatronPainter
                 continue;
             }
 
-            bool sipping = glass.Drink == Drink.Beer && (patron.PhaseTime + patron.Look % 5) % SipEvery < SipSeconds && patron.PhaseTime > 1;
+            bool sipping = !patron.Dozing && glass.Drink == Drink.Beer && (patron.PhaseTime + patron.Look % 5) % SipEvery < SipSeconds && patron.PhaseTime > 1;
             int bottom = sipping ? top + TavernRows.PatronTop + PatronSprites.MouthRow + 3 : top + TavernRows.CounterTop - 1;
             DrinkPainter.Paint(canvas, glass, (int)MathF.Round(patron.X) + (sipping ? -1 : 1), bottom);
         }
@@ -84,6 +87,10 @@ public static class PatronPainter
                 float worry = Math.Clamp((patron.Waited / Patron.Patience - 0.5f) * 2, 0, 1);
                 PaintBubble(canvas, center, y, Cream.Lerp(Impatient, worry * 0.55f), beside);
                 canvas.Draw(DrinkPainter.Icon(patron.Order), center - 2, y + 1);
+            }
+            else if (patron.Dozing && patron.Phase == PatronPhase.Drinking && (time + patron.Look % 3) % SnoreEvery < SnoreShown)
+            {
+                PaintChat(canvas, beside ? head + SideOffset : head, y, SnoreGlyph, beside ? 1 : 0);
             }
             else if (patron.Phase == PatronPhase.Mingling && patron.Heading == 0 && Chatting(patron, time) is int glyph)
             {
@@ -137,6 +144,12 @@ public static class PatronPainter
             case 1:
                 canvas.Fill(x + 2, row, 1, 2, Outline);
                 canvas.Fill(x + 2, row + 3, 1, 1, Outline);
+                break;
+            case SnoreGlyph:
+                canvas.Fill(x + 1, row, 3, 1, Outline);
+                canvas.Fill(x + 2, row + 1, 1, 1, Outline);
+                canvas.Fill(x + 1, row + 2, 1, 1, Outline);
+                canvas.Fill(x + 1, row + 3, 3, 1, Outline);
                 break;
             case NoteGlyph:
                 canvas.Fill(x + 3, row, 1, 3, Outline);

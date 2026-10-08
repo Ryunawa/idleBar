@@ -23,7 +23,7 @@ public partial class TavernPanel : VBoxContainer
         TierInfo? next = world.Tiers.FirstOrDefault(each => each.Tier == tavern.Tier + 1);
         _rows.AddChild(WindowRows.Heading($"{tavern.Name} · {tier.Name}"));
         VBoxContainer renown = new();
-        renown.AddChild(new Label { Text = $"Renommée : {NumberFormat.Amount(tavern.Renown)}" });
+        renown.AddChild(new Label { Text = $"Renommée : {NumberFormat.Exact(tavern.Renown)}" });
         if (next is not null)
         {
             renown.AddChild(new ProgressBar
@@ -35,7 +35,7 @@ public partial class TavernPanel : VBoxContainer
                 CustomMinimumSize = new Vector2(0, 10),
             });
             renown.AddChild(WindowRows.Muted(
-                $"Encore {NumberFormat.Amount(next.Renown - tavern.Renown)} pour devenir « {next.Name} ». Chaque client servi rapporte 1, et 1 de plus si le service est parfait."));
+                $"Encore {NumberFormat.Exact(next.Renown - tavern.Renown)} pour devenir « {next.Name} » ({NumberFormat.Exact(next.Renown)}). Un client servi rapporte 1, 2 si le service est parfait ; une visite d'ami 5, une tournée générale 10."));
         }
         else
         {

@@ -26,6 +26,9 @@ public sealed class TavernApi
     public Task<StateData> SetStampAsync(string token, string stamp) =>
         _rpc.CallAsync<StampArguments, StateData>(token, "set_stamp", new StampArguments(stamp));
 
+    public Task<StateData> OrderDrinkAsync(string token, string drink) =>
+        _rpc.CallAsync<DrinkArguments, StateData>(token, "order_drink", new DrinkArguments(drink));
+
     public Task<StateData> LeaveVisitAsync(string token) => _rpc.CallAsync<NoArguments, StateData>(token, "leave_visit", new NoArguments());
 
     public Task<StateData> ShowDoorAsync(string token, long visit) =>

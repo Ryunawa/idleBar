@@ -30,6 +30,7 @@ select pg_temp.expect_denied('select public.send_emote(1, ''cheers'')');
 select pg_temp.expect_denied('select public.offer_round()');
 select pg_temp.expect_denied('select public.greet_passerby(gen_random_uuid())');
 select pg_temp.expect_denied('select public.show_door(1)');
+select pg_temp.expect_denied('select public.order_drink(''beer'')');
 reset role;
 
 select set_config('request.jwt.claim.sub', '33333333-3333-3333-3333-333333333333', false);

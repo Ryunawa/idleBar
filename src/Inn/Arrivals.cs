@@ -7,8 +7,8 @@ namespace IdleBar.Inn;
 public sealed class Arrivals
 {
     private const float FirstArrival = 2f;
-    private const float MinArrival = 10f;
-    private const float MaxArrival = 26f;
+    private const float MinArrival = 6f;
+    private const float MaxArrival = 16f;
 
     private readonly Random _random;
     private readonly List<GuestVisit> _guests = [];
@@ -43,7 +43,7 @@ public sealed class Arrivals
             GuestVisit guest = _guests[0];
             _guests.RemoveAt(0);
             Drink order = tavern.Stations.Any(station => station.Drink == guest.Order) ? guest.Order : tavern.Stations[0].Drink;
-            return new Patron(_random.Next(), seat, tavern.Layout.DoorCenter, order) { Visit = guest.Visit, Guest = guest.Name };
+            return new Patron(_random.Next(), seat, tavern.Layout.DoorCenter, order) { Visit = guest.Visit, Guest = guest.Name, Dozing = guest.Dozing };
         }
 
         if (_untilArrival > 0)

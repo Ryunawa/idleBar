@@ -54,6 +54,8 @@ public sealed class Patron
 
     public Patron? Partner { get; set; }
 
+    public bool Dozing { get; set; }
+
     public int Facing => Phase == PatronPhase.Mingling && Heading == 0 && Partner is { Phase: PatronPhase.Mingling } partner ? Math.Sign(partner.X - X) : 0;
 
     public bool Seated => Phase is PatronPhase.Thinking or PatronPhase.Waiting or PatronPhase.Drinking;

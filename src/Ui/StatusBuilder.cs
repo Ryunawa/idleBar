@@ -40,7 +40,7 @@ public static class StatusBuilder
     private static VisitView? Outing(OutingData? outing) => outing switch
     {
         null => null,
-        { ServedAt: null } => new VisitView($"Chez {outing.Host}", "On te sert…"),
+        { ServedAt: null } or { Waiting: true } => new VisitView($"Chez {outing.Host}", "On te sert…"),
         { Perfect: true } => new VisitView($"Chez {outing.Host}", "Servi, parfait !"),
         _ => new VisitView($"Chez {outing.Host}", "Servi"),
     };

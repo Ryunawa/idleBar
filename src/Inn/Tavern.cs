@@ -7,9 +7,9 @@ namespace IdleBar.Inn;
 public sealed class Tavern
 {
     private const int StartingSeats = 4;
-    private const float MinDrinking = 10f;
-    private const float MaxDrinking = 18f;
-    private const double SecondRoundChance = 0.3;
+    private const float MinDrinking = 18f;
+    private const float MaxDrinking = 30f;
+    private const double SecondRoundChance = 0.4;
     private const int MaxRounds = 2;
 
     private readonly Random _random;
@@ -17,7 +17,7 @@ public sealed class Tavern
     private readonly List<Station> _stations = [];
     private readonly ServiceDesk _desk = new();
     private readonly Arrivals _arrivals;
-    private readonly HashSet<long> _served = [];
+    private readonly GuestRoster _roster = new();
     private int _seats = StartingSeats;
     private float _boost;
     private int _width = TavernLayout.MinWidth;
@@ -78,8 +78,8 @@ public sealed class Tavern
     public void Expect(IReadOnlyList<GuestVisit> guests)
     {
         _arrivals.Expect(guests, _patrons);
-        _served.Clear();
-        _served.UnionWith(guests.Where(guest => guest.Served).Select(guest => guest.Visit));
+        _roster.Apply(guests, _patrons);
+
         Dismiss(_patrons.Where(patron =>
             patron.Visit is long visit
             && patron.Phase is not (PatronPhase.Leaving or PatronPhase.Gone)
@@ -117,7 +117,7 @@ public sealed class Tavern
 
         UpdatePatrons(delta);
         _desk.Dispatch(_stations, _patrons);
-        _desk.ServeUnattended(_patrons, _stations, _served, AutoServe);
+        _desk.ServeUnattended(_patrons, _stations, _roster.Served, AutoServe);
         Helper.Update(delta, Layout, _stations, _patrons, Deliver);
         _desk.Update(delta, slide => Deliver(slide.Patron, slide.Drink));
         _patrons.RemoveAll(patron => patron.Phase == PatronPhase.Gone);

@@ -11,6 +11,8 @@ public static class NumberFormat
     public static string Amount(double value) =>
         value < 1000 ? Math.Floor(value).ToString("0", French) : WithSuffix(value);
 
+    public static string Exact(double value) => Math.Floor(value).ToString("#,0", French);
+
     public static string Rate(double value) =>
         value < 1000 ? value.ToString("0.#", French) : WithSuffix(value);
 

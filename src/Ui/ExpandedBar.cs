@@ -45,6 +45,8 @@ public partial class ExpandedBar : MarginContainer
 
     public event Action? LeaveRequested;
 
+    public event Action<Vector2I>? OrderRequested;
+
     public TavernLane Lane { get; private set; } = null!;
 
     public override void _Ready()
@@ -105,6 +107,7 @@ public partial class ExpandedBar : MarginContainer
         _visit = new VisitSlot();
         _visit.EmoteRequested += emote => EmoteRequested?.Invoke(emote);
         _visit.LeaveRequested += () => LeaveRequested?.Invoke();
+        _visit.OrderRequested += () => OrderRequested?.Invoke(ScreenPoint(_visit));
         row.AddChild(_visit);
 
         _update = new BarSlot();
