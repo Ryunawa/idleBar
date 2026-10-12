@@ -64,7 +64,11 @@ public partial class ExpandedBar : MarginContainer
         _situation.AddThemeConstantOverride("line_spacing", SituationLineSpacing);
         stats.AddChild(_gold);
         stats.AddChild(_situation);
-        row.AddChild(stats);
+        Control column = new() { CustomMinimumSize = new Vector2(StatsWidth, 0), MouseFilter = MouseFilterEnum.Ignore };
+        row.AddChild(column);
+        column.AddChild(stats);
+        stats.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        stats.GrowVertical = GrowDirection.Both;
 
         Lane = new FrontierLane { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         row.AddChild(Lane);
