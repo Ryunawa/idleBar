@@ -47,6 +47,11 @@ public static class LaneHits
             }
         }
 
+        if (state.VeteranName is not null && layout.Sign && x >= layout.SignX && x <= layout.SignX + 9 && y >= 10)
+        {
+            return new LaneTarget(TargetKind.Sign);
+        }
+
         if (layout.Crier && x >= layout.CrierX && x <= layout.CrierX + 7 && y >= 12)
         {
             return new LaneTarget(TargetKind.Crier);

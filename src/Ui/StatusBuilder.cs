@@ -8,21 +8,23 @@ public static class StatusBuilder
 {
     private const string Title = "La Frontière";
 
-    public static BarStatus Describe(FrontierSession? session, FrontierGame game)
+    public static BarStatus Describe(FrontierSession? session, FrontierGame? game)
     {
         if (session is null)
         {
             return Waiting("IdleBar", "Supabase n'est pas configuré");
         }
 
-        return session.Status switch
+        return (session.Status, game) switch
         {
-            SessionStatus.SignedOut => Waiting("Bienvenue !", "Clique ici pour te connecter"),
-            SessionStatus.NeedsStart => Waiting(Title, "Clique ici pour prendre la route"),
-            SessionStatus.UpdateRequired => Waiting("Mise à jour requise", "Clique ici pour la télécharger"),
-            SessionStatus.Connecting => Waiting("Connexion…", string.Empty),
-            SessionStatus.Offline => Playing(game.State, " · hors ligne"),
-            _ => Playing(game.State, string.Empty),
+            (SessionStatus.SignedOut, _) => Waiting("Bienvenue !", "Clique ici pour te connecter"),
+            (SessionStatus.UpdateRequired, _) => Waiting("Mise à jour requise", "Clique ici pour la télécharger"),
+            (SessionStatus.NeedsStart, _) => Waiting(Title, "Clique ici pour prendre la route"),
+            (SessionStatus.Elsewhere, FrontierGame paused) => Playing(paused.State, "Partie ouverte ailleurs · clique pour la reprendre ici", true),
+            (SessionStatus.Offline, null) => Waiting("Hors ligne", "Serveur injoignable"),
+            (_, null) => Waiting("Connexion…", string.Empty),
+            (SessionStatus.Offline, FrontierGame offline) => Playing(offline.State, Situation(offline.State) + " · hors ligne", false),
+            (_, FrontierGame playing) => Playing(playing.State, Situation(playing.State), playing.State.Monster is { Boss: true }),
         };
     }
 
@@ -37,11 +39,8 @@ public static class StatusBuilder
         return $"{rate} · niv {state.Stage} · {state.Kills}/{Balance.MonstersPerStage}";
     }
 
-    private static BarStatus Playing(FrontierState state, string suffix)
-    {
-        string situation = Situation(state) + suffix;
-        return new BarStatus(Title, state.Gold, situation, $"{NumberFormat.Gold(state.Gold)} · niv {state.Stage}{suffix}", state.Monster is { Boss: true });
-    }
+    private static BarStatus Playing(FrontierState state, string situation, bool alert) =>
+        new(Title, state.Gold, situation, $"{NumberFormat.Gold(state.Gold)} · niv {state.Stage}", alert);
 
     private static BarStatus Waiting(string headline, string situation) =>
         new(headline, null, situation, $"{headline} {situation}".Trim());

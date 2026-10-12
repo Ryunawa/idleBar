@@ -15,7 +15,7 @@ public static class LandscapePainter
             return;
         }
 
-        int start = layout.Crier ? layout.CrierX + 16 : layout.PalisadeX + 14;
+        int start = layout.Sign ? layout.SignX + 14 : layout.Crier ? layout.CrierX + 16 : layout.PalisadeX + 14;
         int end = layout.FrontX - FrontMargin;
         int x = start;
         int item = 0;

@@ -9,7 +9,7 @@ public static class SaveCodec
 {
     public const int CurrentVersion = 1;
 
-    private static readonly JsonSerializerOptions Options = new() { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
+    public static JsonSerializerOptions Options { get; } = new() { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
 
     public static FrontierSave Capture(FrontierState state) => new(
         CurrentVersion,
@@ -68,7 +68,12 @@ public static class SaveCodec
 
     public static string Serialize(FrontierSave save) => JsonSerializer.Serialize(save, Options);
 
-    public static FrontierSave? Deserialize(string json) => JsonSerializer.Deserialize<FrontierSave>(json, Options);
+    public static FrontierSave? Deserialize(string json)
+    {
+        FrontierSave? save = JsonSerializer.Deserialize<FrontierSave>(json, Options);
+        bool complete = save is { Version: > 0, Fighters: not null, Buildings: not null, Cooldowns: not null, Achievements: not null };
+        return complete ? save : null;
+    }
 
     private static int[] Fit(IReadOnlyList<int> values, int length) =>
         [.. Enumerable.Range(0, length).Select(index => index < values.Count ? Math.Max(0, values[index]) : 0)];

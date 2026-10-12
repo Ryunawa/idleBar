@@ -36,6 +36,10 @@ public sealed record FrontierLayout(int Width, int Top, int VillageX, int SlotWi
 
     public int CrierX => PalisadeX + 14;
 
+    public bool Sign => Crier && RoadWidth >= 48;
+
+    public int SignX => CrierX + 13;
+
     public int MageX => FrontX + (Compact ? 1 : 4);
 
     public int ArcherX => FrontX + (Compact ? 16 : 22);

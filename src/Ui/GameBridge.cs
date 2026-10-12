@@ -13,6 +13,7 @@ public sealed class GameBridge : IDisposable
 {
     private const int HttpTimeoutSeconds = 10;
     private const string SessionPath = "user://session.dat";
+    private const float GiftSeconds = 6;
 
     private readonly HttpClient? _http;
     private readonly FrontierSession? _session;
@@ -31,17 +32,31 @@ public sealed class GameBridge : IDisposable
         _http = new HttpClient { Timeout = TimeSpan.FromSeconds(HttpTimeoutSeconds) };
         SessionKeeper keeper = new(new SupabaseAuth(_http, settings), new SessionStore(ProjectSettings.GlobalizePath(SessionPath)));
         _session = new FrontierSession(keeper, new FrontierApi(new SupabaseRpc(_http, settings)));
+        _session.Loaded += Load;
+        _session.Changed += () =>
+        {
+            if (_session.Status == SessionStatus.SignedOut && Game is not null)
+            {
+                SetGame(null);
+            }
+        };
+        _session.Noticed += text => Journal.Add(text);
+        _session.Gifted += Welcome;
         _account = new Account(keeper, _session);
-        _dialogs = new GameDialogs(_session, _account, Journal, host) { Game = Game };
+        _dialogs = new GameDialogs(_session, _account, Journal, host);
     }
 
     public event Action<string, float>? Announced;
 
     public event Action<IReadOnlyList<FrontierEvent>>? Happened;
 
+    public event Action<FrontierGame?>? GameChanged;
+
+    public event Action<IReadOnlyList<string>, float>? Bannered;
+
     public Journal Journal { get; } = new();
 
-    public FrontierGame Game { get; } = new(new FrontierState(), new Random());
+    public FrontierGame? Game { get; private set; }
 
     public BarStatus Status => StatusBuilder.Describe(_session, Game);
 
@@ -51,19 +66,10 @@ public sealed class GameBridge : IDisposable
 
     public void Tick(double delta)
     {
-        Game.Advance(delta);
-        IReadOnlyList<FrontierEvent> events = Game.Events.Drain();
-        if (events.Count > 0)
+        if (Game is FrontierGame game && _session?.Status is not (SessionStatus.Elsewhere or SessionStatus.UpdateRequired))
         {
-            foreach (FrontierEvent frontierEvent in events)
-            {
-                if (FrontierJournal.Describe(frontierEvent, Game.State) is string line)
-                {
-                    Journal.Add(line);
-                }
-            }
-
-            Happened?.Invoke(events);
+            game.Advance(delta);
+            Report(game, game.Events.Drain());
         }
 
         _session?.Tick(delta);
@@ -93,4 +99,61 @@ public sealed class GameBridge : IDisposable
     public void SignOut() => _account?.SignOut();
 
     public void Dispose() => _http?.Dispose();
+
+    private void Report(FrontierGame game, IReadOnlyList<FrontierEvent> events)
+    {
+        if (events.Count == 0)
+        {
+            return;
+        }
+
+        foreach (FrontierEvent frontierEvent in events)
+        {
+            if (FrontierJournal.Describe(frontierEvent, game.State) is string line)
+            {
+                Journal.Add(line);
+            }
+
+            if (frontierEvent is Retreated or AchievementUnlocked or SlotConquered)
+            {
+                _session?.RequestSave();
+            }
+        }
+
+        Happened?.Invoke(events);
+    }
+
+    private void Load(LoadPlan plan)
+    {
+        FrontierGame game = new(plan.State, new Random());
+        if (plan.Away >= 1)
+        {
+            game.Absent(plan.Away);
+        }
+
+        SetGame(game);
+    }
+
+    private void SetGame(FrontierGame? game)
+    {
+        Game = game;
+        if (_session is not null)
+        {
+            _session.Game = game;
+        }
+
+        if (_dialogs is not null)
+        {
+            _dialogs.Game = game;
+        }
+
+        GameChanged?.Invoke(game);
+    }
+
+    private void Welcome(int souls, string? tavern)
+    {
+        string origin = tavern is null ? "Ancien tavernier" : $"Ancien tavernier de « {tavern} »";
+        Journal.Add($"{origin} : tu pars avec {souls} âmes, dégâts et or ×{Economy.SoulMultiplier(souls):0.##}.");
+        Bannered?.Invoke(["CADEAU D'ANCIEN TAVERNIER", $"+{souls} ÂMES"], GiftSeconds);
+    }
 }

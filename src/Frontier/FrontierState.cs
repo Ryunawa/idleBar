@@ -74,6 +74,8 @@ public sealed class FrontierState
 
     public long SkillsUsed { get; set; }
 
+    public string? VeteranName { get; set; }
+
     public int Level(FighterKind kind) => Fighters[(int)kind];
 
     public int Level(BuildingKind kind) => Buildings[(int)kind];

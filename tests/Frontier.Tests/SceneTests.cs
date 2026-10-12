@@ -112,7 +112,7 @@ public sealed class SceneTests
 
     private static FrontierState SampleState(int stage)
     {
-        FrontierState state = new() { Stage = stage, MaxStage = stage, BestStage = stage, Gold = 1e6, ConvoyTimer = 0.1, ChickenTimer = 1 };
+        FrontierState state = new() { Stage = stage, MaxStage = stage, BestStage = stage, Gold = 1e6, ConvoyTimer = 0.1, ChickenTimer = 1, VeteranName = "Le Pot d'Étain" };
         if (stage <= 1)
         {
             return state;

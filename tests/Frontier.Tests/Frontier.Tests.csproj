@@ -11,6 +11,7 @@
     <Compile Include="../../src/Frontier/**/*.cs" Link="Frontier/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../../src/Scene/**/*.cs" Link="Scene/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../../src/Ui/NumberFormat.cs" Link="Ui/NumberFormat.cs" />
+    <Compile Include="../../src/Online/FrontierLoader.cs;../../src/Online/LoadPlan.cs;../../src/Online/LocalSave.cs;../../src/Online/FrontierData.cs" Link="Online/%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />

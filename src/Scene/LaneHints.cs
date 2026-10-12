@@ -15,6 +15,7 @@ public static class LaneHints
         TargetKind.Building => Building((BuildingKind)target.Index, state),
         TargetKind.Convoy => "Convoi de pain : +5 % de dégâts par livraison, 5 au plus",
         TargetKind.Crier => "Le crieur public et ses nouvelles du royaume",
+        TargetKind.Sign => $"Enseigne de « {state.VeteranName} », ta vieille taverne",
         TargetKind.Fog => "Brouillard : chaque boss vaincu le fait reculer",
         _ => null,
     };
