@@ -159,7 +159,7 @@ public static class Battle
         double hp = Economy.MonsterHp(state.Stage) * (boss ? Balance.BossHpFactor : 1);
         int template = boss ? Biomes.BossTemplate(state.Stage) : Biomes.Template(state.Stage, state.Kills);
         state.MonsterSequence++;
-        state.Monster = new Monster(state.MonsterSequence, template, boss, state.Stage, hp, boss ? Balance.BossApproachSeconds : Balance.ApproachSeconds);
+        state.Monster = new Monster(state.MonsterSequence, template, boss, state.Stage, hp, boss ? Balance.BossApproachSeconds : Balance.ApproachSeconds, Economy.BossSeconds(state));
     }
 
     private static void Charge(FrontierState state, double dt)

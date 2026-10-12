@@ -45,7 +45,7 @@ public sealed class SceneTests
         Assert.Equal(width, layout.SkillsX + layout.SkillsWidth);
         Assert.True(layout.FrontX >= 0);
         Assert.True(layout.FogWidth >= 0);
-        Assert.Equal(width < 248, layout.Narrow);
+        Assert.Equal(width < 358, layout.Narrow);
     }
 
     [Theory]
@@ -98,6 +98,8 @@ public sealed class SceneTests
         ["toundra-neige", 815, 28, 170, new SceneLight(0.8f, 0, 0.3f, -1, false, true)],
         ["boss-dragon", 815, 28, 60, SceneLight.Noon],
         ["debut", 815, 28, 1, SceneLight.Noon],
+        ["village-complet", 815, 28, 105, SceneLight.Noon],
+        ["village-nuit", 815, 28, 105, SceneLight.Midnight],
     ];
 
     private static ArtRaster Render(int width, int rows, int stage, SceneLight light)
@@ -125,8 +127,12 @@ public sealed class SceneTests
         }
 
         state.Fighters = [Math.Max(1, stage), stage * 2 / 3, stage / 3];
-        BuildingKind[] kinds = [BuildingKind.Forge, BuildingKind.Bakery, BuildingKind.Farm, BuildingKind.Mill, BuildingKind.Market, BuildingKind.Tower, BuildingKind.Portal];
-        int[] levels = [30, 22, 14, 8, 3, 1, stage >= 60 ? 100 : 0];
+        BuildingKind[] kinds =
+        [
+            BuildingKind.Forge, BuildingKind.Bakery, BuildingKind.Farm, BuildingKind.Mill, BuildingKind.Market, BuildingKind.Tower,
+            BuildingKind.Portal, BuildingKind.Barracks, BuildingKind.Chapel, BuildingKind.Tavern, BuildingKind.Workshop, BuildingKind.Belfry,
+        ];
+        int[] levels = [30, 22, 14, 8, 3, 1, 100, 60, 40, 25, 10, 2];
         for (int plot = 0; plot < kinds.Length; plot++)
         {
             if (levels[plot] > 0 && Economy.Unlocked(state, plot))

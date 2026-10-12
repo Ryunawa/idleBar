@@ -2,7 +2,7 @@ namespace IdleBar.Frontier;
 
 public sealed class Monster
 {
-    public Monster(long id, int template, bool boss, int stage, double hp, double approach)
+    public Monster(long id, int template, bool boss, int stage, double hp, double approach, double bossSeconds = Balance.BossSeconds)
     {
         Id = id;
         Template = template;
@@ -12,7 +12,7 @@ public sealed class Monster
         Hp = hp;
         Approach = approach;
         ApproachTotal = approach;
-        BossLeft = boss ? Balance.BossSeconds : 0;
+        BossLeft = boss ? bossSeconds : 0;
     }
 
     public long Id { get; }

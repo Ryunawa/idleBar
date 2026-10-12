@@ -35,7 +35,7 @@ public partial class FaqPanel : VBoxContainer
             ("Où construire chaque bâtiment ?",
                 "Où tu veux, un exemplaire de chaque. Les premiers emplacements coûtent peu à agrandir : un bâtiment dont l'effet grandit à chaque niveau (forge, tour, marché, portail…) y progresse vite. Ton choix tient jusqu'au prochain repli, qui vide le village."),
             ("Pourquoi des terrains sont-ils dans le brouillard ?",
-                "Ils ne sont pas encore conquis. Chaque boss vaincu (niveaux 10, 20, 30, 40 et 50) libère un nouvel emplacement à bâtir."),
+                "Ils ne sont pas encore conquis. Du niveau 10 au niveau 100, chaque boss vaincu libère un nouvel emplacement à bâtir : douze en tout, pour douze bâtiments."),
             ("C'est quoi, les paliers ?",
                 "Aux niveaux 10, 25, 50, 100 et 250, un emplacement franchit un palier : sa production double et son bâtiment se transforme dans la barre (fanion, silo, seconde cheminée, socle de pierre, toit doré…)."),
             ("Comment acheter plusieurs niveaux d'un coup ?",

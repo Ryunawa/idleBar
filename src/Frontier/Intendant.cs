@@ -9,8 +9,9 @@ public static class Intendant
 
     private static readonly BuildingKind[] Preference =
     [
-        BuildingKind.Forge, BuildingKind.Bakery, BuildingKind.Market, BuildingKind.Tower,
-        BuildingKind.Portal, BuildingKind.Mill, BuildingKind.Farm,
+        BuildingKind.Forge, BuildingKind.Bakery, BuildingKind.Workshop, BuildingKind.Market, BuildingKind.Barracks,
+        BuildingKind.Tower, BuildingKind.Belfry, BuildingKind.Portal, BuildingKind.Chapel, BuildingKind.Mill,
+        BuildingKind.Farm, BuildingKind.Tavern,
     ];
 
     public static bool Run(FrontierState state, EventLog events) =>

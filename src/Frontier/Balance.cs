@@ -63,6 +63,14 @@ public static class Balance
     public const double PortalBonus = 0.01;
     public const double FarmChickenBonus = 0.01;
     public const double FarmChickenMax = 1;
+    public const double BarracksBonus = 0.02;
+    public const double ChapelBonus = 0.01;
+    public const double ChapelMax = 1;
+    public const double TavernBonus = 0.03;
+    public const double WorkshopDiscount = 0.005;
+    public const double WorkshopMax = 0.5;
+    public const double BelfrySeconds = 1;
+    public const double BelfryMax = 30;
 
     public static readonly int[] Tiers = [10, 25, 50, 100, 250];
 

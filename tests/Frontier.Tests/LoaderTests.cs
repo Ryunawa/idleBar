@@ -59,8 +59,8 @@ public sealed class LoaderTests
         Village.Build(state, BuildingKind.Mill, 2, 1);
         SaveArguments arguments = SaveArguments.From(SaveCodec.Capture(state), 7, Guid.Empty);
         Assert.Equal(7, arguments.PRevision);
-        Assert.Equal([null, "mill", null, null, null, null, null], arguments.PPlots);
-        Assert.Equal([0, 2, 0, 0, 0, 0, 0], arguments.PLevels);
+        Assert.Equal([null, "mill", null, null, null, null, null, null, null, null, null, null], arguments.PPlots);
+        Assert.Equal([0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], arguments.PLevels);
     }
 
     private static FrontierData Data(FrontierState state, int revision, double away)

@@ -84,6 +84,24 @@ public static class LightPainter
             case BuildingKind.Portal:
                 Portal(r, cx, time);
                 break;
+            case BuildingKind.Barracks when lit:
+                r.Set(cx - 4, 18, MathF.Sin(time * 11) > 0 ? Palette.Gold : Palette.Orange);
+                r.Set(cx + 4, 18, MathF.Sin(time * 9) > 0 ? Palette.Gold : Palette.Orange);
+                break;
+            case BuildingKind.Chapel when lit:
+                r.Fill(cx - 1, 14, 3, 2, Palette.Gold);
+                break;
+            case BuildingKind.Tavern when lit:
+                r.Fill(cx - 8, 17, 4, 3, Palette.Gold);
+                r.Fill(cx + 5, 17, 4, 3, Palette.Gold);
+                r.Fill(cx - 6, 10, 3, 3, Palette.Yellow);
+                break;
+            case BuildingKind.Workshop when lit:
+                r.Fill(cx - 8, 16, 11, 3, Palette.Rust);
+                break;
+            case BuildingKind.Belfry when lit:
+                r.Fill(cx - 1, 4, 3, 2, Palette.Yellow);
+                break;
         }
 
         if (tier >= 5 && MathF.Sin(time * 3.1f + cx) > 0.8f)

@@ -6,8 +6,8 @@ namespace IdleBar.Frontier;
 public sealed class FrontierState
 {
     public const int FighterCount = 3;
-    public const int BuildingCount = 7;
-    public const int PlotCount = 7;
+    public const int BuildingCount = 12;
+    public const int PlotCount = 12;
     public const int SkillCount = 3;
 
     public double Time { get; set; }

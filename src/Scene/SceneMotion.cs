@@ -43,9 +43,9 @@ public sealed class SceneMotion
 
     public float FleeTime { get; set; }
 
-    public float?[] Build { get; } = new float?[FrontierState.BuildingCount];
+    public float?[] Build { get; } = new float?[FrontierState.PlotCount];
 
-    public float?[] Reveal { get; } = new float?[FrontierState.BuildingCount];
+    public float?[] Reveal { get; } = new float?[FrontierState.PlotCount];
 
     public float?[] Recruit { get; } = new float?[FrontierState.FighterCount];
 

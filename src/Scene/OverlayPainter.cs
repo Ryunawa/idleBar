@@ -56,7 +56,7 @@ public static class OverlayPainter
         foreach (PlotInfo plot in Plots.All.Where(plot => !Economy.Unlocked(state, plot.Index)))
         {
             int cx = layout.SlotCenter(plot.Index);
-            string label = $"BOSS {plot.Unlock - 1}";
+            string label = ArtFont.Width($"BOSS {plot.Unlock - 1}") + 2 <= layout.SlotWidth ? $"BOSS {plot.Unlock - 1}" : $"{plot.Unlock - 1}";
             r.Blit(SceneSprites.Lock, cx - 2, 6);
             ArtFont.Draw(r, label, cx - ArtFont.Width(label) / 2, 15, ink);
         }

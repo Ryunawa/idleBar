@@ -85,7 +85,7 @@ public sealed record FrontierLayout(int Width, int Top, int VillageX, int SlotWi
             return new FrontierLayout(width, top, Margin, 0, 0, Margin, fog, skillSize, !roomy);
         }
 
-        int village = Math.Clamp(remain, NarrowSlot * Slots, ComfortSlot * Slots);
+        int village = Math.Clamp(remain - ComfortRoad - ComfortFog, NarrowSlot * Slots, ComfortSlot * Slots);
         int rest = remain - village;
         int road = Take(ref rest, ComfortRoad);
         int fogWidth = Take(ref rest, ComfortFog);

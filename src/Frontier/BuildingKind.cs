@@ -9,4 +9,9 @@ public enum BuildingKind
     Market,
     Tower,
     Portal,
+    Barracks,
+    Chapel,
+    Tavern,
+    Workshop,
+    Belfry,
 }

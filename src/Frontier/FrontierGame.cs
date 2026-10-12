@@ -98,7 +98,7 @@ public sealed class FrontierGame
                 break;
         }
 
-        State.Cooldowns[index] = Skills.Of(kind).Cooldown;
+        State.Cooldowns[index] = Economy.SkillCooldown(State, kind);
         State.SkillsUsed++;
         return true;
     }

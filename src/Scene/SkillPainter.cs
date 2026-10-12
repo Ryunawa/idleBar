@@ -33,7 +33,7 @@ public static class SkillPainter
             r.Blit(icon, x + (size - icon.Width) / 2, y + (size - icon.Height) / 2);
             if (!ready)
             {
-                int shade = (int)Math.Round((size - 2) * cooldown / skill.Cooldown);
+                int shade = (int)Math.Round((size - 2) * Math.Min(1, cooldown / Economy.SkillCooldown(state, skill.Kind)));
                 r.Fill(x + 1, y + 1, size - 2, shade, Palette.Ink.WithAlpha(0.72f));
                 string label = cooldown >= 60 ? $"{Math.Ceiling(cooldown / 60)}M" : $"{Math.Ceiling(cooldown)}";
                 ArtFont.Draw(r, label, x + (size - ArtFont.Width(label)) / 2, y + (size - ArtFont.Height) / 2, Palette.White, Palette.Ink);

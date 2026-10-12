@@ -5,8 +5,8 @@ namespace IdleBar.Scene;
 
 public static class BuildingPainter
 {
-    private static readonly int[] PennantX = [-1, 9, -3, -6, -1, 6, 0];
-    private static readonly int[] PennantY = [6, 16, 3, 8, 6, 3, 1];
+    private static readonly int[] PennantX = [-1, 9, -3, -6, -1, 6, 0, -13, -9, -13, 11, -7];
+    private static readonly int[] PennantY = [6, 16, 3, 8, 6, 3, 1, 7, 9, 5, 7, 8];
 
     public static void Paint(ArtRaster raster, FrontierState state, FrontierLayout layout, SceneMotion motion, float time)
     {
@@ -73,8 +73,23 @@ public static class BuildingPainter
             case BuildingKind.Tower:
                 ArcanePainters.Tower(raster, cx, tier);
                 break;
-            default:
+            case BuildingKind.Portal:
                 ArcanePainters.Portal(raster, cx, tier);
+                break;
+            case BuildingKind.Barracks:
+                CivicPainters.Barracks(raster, cx, tier);
+                break;
+            case BuildingKind.Chapel:
+                CivicPainters.Chapel(raster, cx, tier);
+                break;
+            case BuildingKind.Tavern:
+                CivicPainters.Tavern(raster, cx, tier);
+                break;
+            case BuildingKind.Workshop:
+                CivicPainters.Workshop(raster, cx, tier);
+                break;
+            default:
+                CivicPainters.Belfry(raster, cx, tier, time);
                 break;
         }
     }

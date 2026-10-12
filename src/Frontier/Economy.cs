@@ -21,6 +21,7 @@ public static class Economy
         {
             FighterKind.Hero => dps * (1 + Balance.ForgeBonus * state.Level(BuildingKind.Forge)),
             FighterKind.Mage => dps * (1 + Balance.TowerBonus * state.Level(BuildingKind.Tower)),
+            FighterKind.Archer => dps * (1 + Balance.BarracksBonus * state.Level(BuildingKind.Barracks)),
             _ => dps,
         };
     }
@@ -44,7 +45,14 @@ public static class Economy
     public static double Interval(FrontierState state, FighterKind kind) =>
         Fighters.Of(kind).Interval / (kind == FighterKind.Hero && state.FuryLeft > 0 ? Balance.FuryFactor : 1);
 
-    public static double ClickDamage(FrontierState state) => Math.Max(1, Dps(state, FighterKind.Hero) * Balance.ClickShare);
+    public static double ClickDamage(FrontierState state) =>
+        Math.Max(1, Dps(state, FighterKind.Hero) * Balance.ClickShare * (1 + Balance.TavernBonus * state.Level(BuildingKind.Tavern)));
+
+    public static double SkillCooldown(FrontierState state, SkillKind kind) =>
+        Skills.Of(kind).Cooldown / (1 + Math.Min(Balance.ChapelMax, Balance.ChapelBonus * state.Level(BuildingKind.Chapel)));
+
+    public static double BossSeconds(FrontierState state) =>
+        Balance.BossSeconds + Math.Min(Balance.BelfryMax, Balance.BelfrySeconds * state.Level(BuildingKind.Belfry));
 
     public static double PlotGold(FrontierState state, int plot) => PlotGoldAt(state, plot, state.Levels[plot]);
 
@@ -104,7 +112,8 @@ public static class Economy
     }
 
     public static double FighterCost(FrontierState state, FighterKind kind) =>
-        Fighters.Of(kind).Cost * Math.Pow(Balance.FighterCostGrowth, state.Level(kind));
+        Fighters.Of(kind).Cost * Math.Pow(Balance.FighterCostGrowth, state.Level(kind))
+        * (1 - Math.Min(Balance.WorkshopMax, Balance.WorkshopDiscount * state.Level(BuildingKind.Workshop)));
 
     public static double PlotCost(FrontierState state, int plot) =>
         Plots.Of(plot).Cost * Math.Pow(Balance.BuildingCostGrowth, state.Levels[plot]);

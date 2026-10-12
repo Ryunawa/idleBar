@@ -1,6 +1,6 @@
 # IdleBar — La Frontière
 
-Un jeu idle incrémental en pixel art qui vit dans une barre discrète en bas de l'écran. Un héros et ses compagnons repoussent les monstres sur la droite. Un village de 7 emplacements grandit sur la gauche. Des convois de pain circulent entre les deux, et le brouillard recule à chaque boss vaincu. Inspirations : Egg Inc., Cookie Clicker, Tap Titans.
+Un jeu idle incrémental en pixel art qui vit dans une barre discrète en bas de l'écran. Un héros et ses compagnons repoussent les monstres sur la droite. Un village de 12 emplacements grandit sur la gauche. Des convois de pain circulent entre les deux, et le brouillard recule à chaque boss vaincu. Inspirations : Egg Inc., Cookie Clicker, Tap Titans.
 
 La Frontière remplace la Taverne (0.2 à 0.3.2), elle-même successeur du jeu de commerce (0.1). L'historique Git garde les deux.
 
@@ -18,7 +18,7 @@ La Frontière remplace la Taverne (0.2 à 0.3.2), elle-même successeur du jeu d
 ## La barre
 
 ```
-| colonne de stats | village : 7 emplacements | palissade, crieur, route | mage, archère, héros ⟷ monstre | brouillard | 3 compétences | [maj] ⚙ – × |
+| colonne de stats | village : 12 emplacements | palissade, crieur, route | mage, archère, héros ⟷ monstre | brouillard | 3 compétences | [maj] ⚙ – × |
 ```
 
 - **Colonne de stats** (`ExpandedBar`).
@@ -29,7 +29,7 @@ La Frontière remplace la Taverne (0.2 à 0.3.2), elle-même successeur du jeu d
 - **Barre repliée (24 px)** : « 1,24 M or · niv 47 ». Le moteur continue de tourner.
 - **Répartition de la largeur** (`FrontierLayout`) :
   - le front fait 92 pixels d'art, ou 74 en dessous de 320 de large ;
-  - le village prend de 7 × 16 à 7 × 40, puis la route et le crieur jusqu'à 120, puis le brouillard jusqu'à 80 ;
+  - le village prend au moins 12 × 16, et jusqu'à 12 × 32 en laissant 60 à la route et 40 au brouillard ; puis il monte à 12 × 40, la route et le crieur à 120, et le brouillard à 80 ;
   - au-delà, du paysage (chênes, meules, champs, clôtures, puits, épouvantail, poteau) remplit la route ;
   - en dessous de 248 pixels d'art (petit écran à grande échelle Windows), le village se cache, les bannières aussi, et il ne reste que le front et les compétences.
 
@@ -61,6 +61,11 @@ Les emplacements (`Plots`) portent l'or et le coût :
 | 5 | 600 | 700 000 | boss 30 |
 | 6 | 1 500 | 1,5 M | boss 40 |
 | 7 | 8 000 | 25 M | boss 50 |
+| 8 | 40 000 | 400 M | boss 60 |
+| 9 | 200 000 | 6 Md | boss 70 |
+| 10 | 1 M | 100 Md | boss 80 |
+| 11 | 5 M | 1,5 Bn | boss 90 |
+| 12 | 25 M | 25 Bn | boss 100 |
 
 Le joueur choisit le bâtiment de chaque emplacement libre (`Construction`), puis l'agrandit (`PlotPurchase`). Un exemplaire de chaque, jusqu'au prochain repli. Les effets suivent le niveau de l'emplacement :
 
@@ -73,6 +78,11 @@ Le joueur choisit le bâtiment de chaque emplacement libre (`Construction`), pui
 | Marché | +2 % d'or des monstres par niveau |
 | Tour du mage | +3 % de dégâts de la mage par niveau |
 | Portail | +1 % d'or de tous les emplacements par niveau |
+| Caserne | +2 % de dégâts de l'archère par niveau |
+| Chapelle | compétences rechargées 1 % plus vite par niveau, jusqu'à 2 fois plus vite |
+| Taverne | clics 3 % plus forts par niveau |
+| Atelier | combattants 0,5 % moins chers par niveau, jusqu'à moitié prix |
+| Beffroi | +1 s au chrono des boss par niveau, jusqu'à +30 s |
 
 - Coût ×1,17 par niveau.
 - Un emplacement bon marché fait vite monter un effet qui grandit à chaque niveau ; un effet fixe (boulangerie) peut aller sur un emplacement cher.
@@ -90,7 +100,7 @@ Le joueur choisit le bâtiment de chaque emplacement libre (`Construction`), pui
 **Repli.**
 - Disponible à partir du niveau 50. Âmes = ⌊(niveau max / 10)²⌋, +2,5 % de dégâts et d'or chacune.
 - Il remet à zéro le niveau, l'or, les bâtiments et les compagnons, et garde les succès et les compteurs.
-- Le premier repli débloque l'Intendant, qui achète la meilleure valeur atteignable en 20 s. Il bâtit d'abord chaque emplacement libre, dans l'ordre forge, boulangerie, marché, tour, portail, moulin, ferme.
+- Le premier repli débloque l'Intendant, qui achète la meilleure valeur atteignable en 20 s. Il bâtit d'abord chaque emplacement libre, dans l'ordre forge, boulangerie, atelier, marché, caserne, tour, beffroi, portail, chapelle, moulin, ferme, taverne.
 
 **Succès.** 30, chacun +2 % d'or et de dégâts.
 
@@ -109,8 +119,8 @@ Le joueur choisit le bâtiment de chaque emplacement libre (`Construction`), pui
 | Boss du niveau 10 | 3 à 5 min | 3,6 min |
 | Repli possible | 2 à 4 h | 2,0 h |
 | Deuxième partie jusqu'au niveau 50 | 1,5 à 5 fois plus rapide | environ 2 fois |
-| Niveau 150 | 1 à 2 semaines | 96 h, soit 12 jours |
-| Premier bâtiment au niveau 100 | 2 jours à 2 semaines | 16 h, soit 2 jours |
+| Niveau 150 | 1 à 2 semaines | 62 h, soit 8 jours |
+| Premier bâtiment au niveau 100 | 2 jours à 2 semaines | 32 h, soit 4 jours |
 
 ## La sauvegarde
 
@@ -118,8 +128,9 @@ Le joueur choisit le bâtiment de chaque emplacement libre (`Construction`), pui
   - `21_purge.sql` supprime toutes les tables et fonctions de la taverne, la table JSON et la liste des vétérans, et nettoie `private.settings`. Il ne garde que les comptes, et impose `min_client_version = '0.4.1'` ;
   - `22_frontier_tables.sql` crée les tables de référence (`fighter_kinds`, `skill_kinds`, `building_kinds`, `plots`), la partie (`frontiers`, une colonne typée par valeur) et ses listes (`frontier_fighters`, `frontier_plots`, `frontier_cooldowns`, `frontier_achievements`), avec leurs contraintes : un exemplaire de chaque bâtiment, pas de niveau sans bâtiment, or fini et positif ;
   - `23_frontier_rules.sql` contient les fonctions privées : réponse, contrôle de forme et vraisemblance ;
-  - `24_frontier_actions.sql` contient les actions du joueur.
-- **`start_frontier(p_session)`** crée la partie : héros niveau 1, 7 emplacements vides, compétences prêtes.
+  - `24_frontier_actions.sql` contient les actions du joueur ;
+  - `25_more_plots.sql` porte le village à 12 emplacements et 12 bâtiments.
+- **`start_frontier(p_session)`** crée la partie : héros niveau 1, 12 emplacements vides, compétences prêtes.
 - **`claim_frontier(p_session)`** fait de ce PC celui qui sauvegarde, et renvoie la partie et `away_seconds`, mesuré par le serveur. Le client l'appelle au démarrage, à la connexion, et quand le joueur reprend la partie ici.
 - **`rejoin_frontier(p_session)`** sert aux reconnexions automatiques après une coupure. Elle ne reprend la main que si aucun autre PC n'a donné signe de vie depuis `frontier_idle_seconds` (120 s) ; sinon elle répond `elsewhere`.
 - **`save_frontier(p_revision, p_session, p_gold, …, p_skills_used)`** reçoit chaque valeur dans un paramètre typé (`SaveArguments`) : tableaux pour les combattants, les emplacements, leurs niveaux et les recharges.
@@ -141,7 +152,7 @@ Le joueur choisit le bâtiment de chaque emplacement libre (`Construction`), pui
 ## Publier la 0.4.1
 
 La purge efface toutes les parties : fais-la au moment de publier.
-1. Dans l'éditeur SQL de Supabase, exécuter dans l'ordre `21_purge.sql`, `22_frontier_tables.sql`, `23_frontier_rules.sql` et `24_frontier_actions.sql`. Dès cet instant, la 0.4.0 affiche « Mise à jour requise ».
+1. Dans l'éditeur SQL de Supabase, exécuter dans l'ordre `21_purge.sql`, `22_frontier_tables.sql`, `23_frontier_rules.sql`, `24_frontier_actions.sql` et `25_more_plots.sql`. Dès cet instant, la 0.4.0 affiche « Mise à jour requise ».
 2. Pousser `main`, puis le tag `v0.4.1` : GitHub lance les tests, construit et publie.
 
 **Ensuite.** Le social v2 repartira de zéro : nouveau code ami et nouvelles tables, rattachés aux comptes.
@@ -157,7 +168,7 @@ La purge efface toutes les parties : fais-la au moment de publier.
 | 4. Sauvegarde | Scripts `18` et `19`, session, copie locale, cadeau | Fait |
 | 5. Finitions | FAQ, README, ce plan, grands nombres, revue et script `20` | Fait |
 | 6. Sortie 0.4.0 | Scripts `18` à `20`, tag `v0.4.0` | Fait le 12 octobre |
-| 7. 0.4.1 | Barre proportionnelle à l'écran, « Max ×N », boss au clic, moulin, bâtiments au choix, purge et vraies tables | Prêt ; voir « Publier la 0.4.1 » |
+| 7. 0.4.1 | Barre proportionnelle à l'écran, « Max ×N », boss au clic, moulin, bâtiments au choix, 12 emplacements, purge et vraies tables | Prêt ; voir « Publier la 0.4.1 » |
 
 **Ensuite.**
 - 0.4.x : les fêtes (Halloween, Noël) dans le village.
