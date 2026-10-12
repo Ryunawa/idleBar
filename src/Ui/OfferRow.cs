@@ -53,7 +53,7 @@ public partial class OfferRow : PanelContainer
 
     public void Show(string title, string detail, string action, FrontierState state, Purchase purchase)
     {
-        Fill(title, detail, action, true);
+        Fill(title, detail, action, true, false);
         _affordable = Shop.MaxCount(state, purchase);
         _buy.Disabled = _affordable < 1;
         _many.Disabled = _affordable < Many;
@@ -84,23 +84,22 @@ public partial class OfferRow : PanelContainer
             }
         }
 
-        Fill(title, ChoiceDetail(), action, false);
-        _choice.Visible = true;
+        Fill(title, ChoiceDetail(), action, false, true);
         _buy.Disabled = !affordable || _options.Count == 0;
     }
 
     public void ShowLocked(string title, string detail, string action)
     {
-        Fill(title, detail, action, false);
+        Fill(title, detail, action, false, false);
         _buy.Disabled = true;
     }
 
-    private void Fill(string title, string detail, string action, bool open)
+    private void Fill(string title, string detail, string action, bool open, bool choosing)
     {
         _title.Text = title;
         _detail.Text = detail;
         _buy.Text = action;
-        _choice.Visible = false;
+        _choice.Visible = choosing;
         _many.Visible = open;
         _max.Visible = open;
     }
