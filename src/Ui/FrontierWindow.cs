@@ -1,0 +1,111 @@
+using Godot;
+using IdleBar.Frontier;
+
+namespace IdleBar.Ui;
+
+public partial class FrontierWindow : Window
+{
+    private const double RefreshSeconds = 0.25;
+
+    private static readonly Vector2I BaseSize = new(620, 470);
+
+    private TabContainer _tabs = null!;
+    private Label _wealth = null!;
+    private CheckButton _intendant = null!;
+    private FightersPanel _fighters = null!;
+    private VillagePanel _village = null!;
+    private RetreatPanel _retreat = null!;
+    private AchievementsPanel _achievements = null!;
+    private double _sinceRefresh;
+    private FrontierGame? _game;
+
+    public JournalPanel Journal { get; private set; } = null!;
+
+    public FrontierGame? Game
+    {
+        get => _game;
+        set
+        {
+            _game = value;
+            if (IsNodeReady())
+            {
+                Bind();
+            }
+        }
+    }
+
+    public override void _Ready()
+    {
+        VBoxContainer content = WindowFrame.Build(this, "IdleBar · La Frontière", 6);
+        HBoxContainer header = new();
+        header.AddThemeConstantOverride("separation", 12);
+        _wealth = BarLabels.Create(16, BarPalette.Gold);
+        _wealth.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        _intendant = new CheckButton { Text = "Intendant", TooltipText = "L'Intendant achète tout seul ce qui rapporte le plus. Il se débloque au premier repli." };
+        _intendant.Toggled += on => _game?.SetIntendant(on);
+        header.AddChild(_wealth);
+        header.AddChild(_intendant);
+        content.AddChild(header);
+        _tabs = new TabContainer { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
+        _fighters = new FightersPanel();
+        _village = new VillagePanel();
+        _retreat = new RetreatPanel();
+        _achievements = new AchievementsPanel();
+        Journal = new JournalPanel();
+        _tabs.AddChild(_fighters);
+        _tabs.AddChild(_village);
+        _tabs.AddChild(_retreat);
+        _tabs.AddChild(_achievements);
+        _tabs.AddChild(Journal);
+        _tabs.AddChild(new FaqPanel());
+        content.AddChild(_tabs);
+        Bind();
+    }
+
+    public void Open(float scale, WindowTab tab)
+    {
+        _tabs.CurrentTab = (int)tab;
+        Refresh();
+        WindowFrame.Present(this, BaseSize, scale);
+    }
+
+    public override void _Process(double delta)
+    {
+        if (!Visible)
+        {
+            return;
+        }
+
+        _sinceRefresh += delta;
+        if (_sinceRefresh >= RefreshSeconds)
+        {
+            _sinceRefresh = 0;
+            Refresh();
+        }
+    }
+
+    private void Bind()
+    {
+        _fighters.Game = _game;
+        _village.Game = _game;
+        _retreat.Game = _game;
+        _achievements.Game = _game;
+    }
+
+    private void Refresh()
+    {
+        if (_game is not FrontierGame game)
+        {
+            return;
+        }
+
+        FrontierState state = game.State;
+        _wealth.Text = $"{NumberFormat.Gold(state.Gold)} · +{NumberFormat.Rate(Economy.GoldPerSecond(state))}/s · niveau {state.Stage}";
+        _intendant.Visible = state.IntendantUnlocked;
+        _intendant.SetPressedNoSignal(state.IntendantOn);
+        _fighters.Refresh();
+        _village.Refresh();
+        _retreat.Refresh();
+        _achievements.Refresh();
+    }
+}

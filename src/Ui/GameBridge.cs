@@ -32,7 +32,7 @@ public sealed class GameBridge : IDisposable
         SessionKeeper keeper = new(new SupabaseAuth(_http, settings), new SessionStore(ProjectSettings.GlobalizePath(SessionPath)));
         _session = new FrontierSession(keeper, new FrontierApi(new SupabaseRpc(_http, settings)));
         _account = new Account(keeper, _session);
-        _dialogs = new GameDialogs(_session, _account, host);
+        _dialogs = new GameDialogs(_session, _account, Journal, host) { Game = Game };
     }
 
     public event Action<string, float>? Announced;
@@ -55,6 +55,14 @@ public sealed class GameBridge : IDisposable
         IReadOnlyList<FrontierEvent> events = Game.Events.Drain();
         if (events.Count > 0)
         {
+            foreach (FrontierEvent frontierEvent in events)
+            {
+                if (FrontierJournal.Describe(frontierEvent, Game.State) is string line)
+                {
+                    Journal.Add(line);
+                }
+            }
+
             Happened?.Invoke(events);
         }
 
@@ -79,6 +87,8 @@ public sealed class GameBridge : IDisposable
 
         _dialogs?.Open(scale);
     }
+
+    public void OpenTab(float scale, WindowTab tab) => _dialogs?.Open(scale, tab);
 
     public void SignOut() => _account?.SignOut();
 

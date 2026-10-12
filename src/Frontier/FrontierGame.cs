@@ -53,6 +53,17 @@ public sealed class FrontierGame
 
     public bool Buy(Purchase purchase) => Shop.Buy(State, purchase, Events);
 
+    public int BuyMany(Purchase purchase, int count)
+    {
+        int bought = 0;
+        while (bought < count && Shop.Buy(State, purchase, Events))
+        {
+            bought++;
+        }
+
+        return bought;
+    }
+
     public int Retreat() => RetreatRules.Apply(State, Events);
 
     public void SetIntendant(bool on) => State.IntendantOn = on && State.IntendantUnlocked;

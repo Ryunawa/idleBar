@@ -24,7 +24,7 @@ public partial class JournalPanel : VBoxContainer
         WindowRows.Clear(_rows);
         if (journal.Entries.Count == 0)
         {
-            _rows.AddChild(WindowRows.Muted("Les annonces de la barre s'inscrivent ici : saluts, visites, objectifs, habitués… pour ne rien manquer quand tu ne regardes pas l'écran."));
+            _rows.AddChild(WindowRows.Muted("Les annonces de la barre s'inscrivent ici : boss, territoires conquis, paliers, succès, replis et retours d'absence, pour ne rien manquer quand tu ne regardes pas l'écran."));
             return;
         }
 

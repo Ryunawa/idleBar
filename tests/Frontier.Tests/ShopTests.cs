@@ -46,6 +46,17 @@ public sealed class ShopTests
     }
 
     [Fact]
+    public void BuyingManyStopsWhenTheGoldRunsOut()
+    {
+        FrontierState state = new() { Gold = 100 };
+        FrontierGame game = new(state, new Random(1));
+        int bought = game.BuyMany(new BuildingPurchase(BuildingKind.Farm), 10);
+        Assert.InRange(bought, 1, 9);
+        Assert.Equal(bought, state.Level(BuildingKind.Farm));
+        Assert.True(state.Gold < Economy.BuildingCost(state, BuildingKind.Farm));
+    }
+
+    [Fact]
     public void RecruitingACompanionMakesHerFight()
     {
         FrontierState state = new() { Gold = 1e6 };

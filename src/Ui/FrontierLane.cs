@@ -65,6 +65,11 @@ public partial class FrontierLane : Control
         }
 
         _pending.Clear();
+        if (_mouse is not null)
+        {
+            Hover();
+        }
+
         QueueRedraw();
     }
 
@@ -92,8 +97,6 @@ public partial class FrontierLane : Control
             DrawTextureRect(_texture, new Rect2(0, Size.Y - frame.Height * _artScale, frame.Width * _artScale, frame.Height * _artScale), false);
         }
     }
-
-    public void Describe(string? hint) => Hint = hint;
 
     private void Upload(ArtRaster frame)
     {
