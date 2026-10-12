@@ -35,6 +35,10 @@ public sealed class SceneTests
     [InlineData(309)]
     [InlineData(490)]
     [InlineData(700)]
+    [InlineData(538)]
+    [InlineData(815)]
+    [InlineData(1135)]
+    [InlineData(1575)]
     public void TheLayoutFillsTheWidthExactly(int width)
     {
         FrontierLayout layout = FrontierLayout.For(width, FrontierLayout.Rows);
@@ -83,15 +87,17 @@ public sealed class SceneTests
 
     public static IEnumerable<object[]> Scenes() =>
     [
-        ["milieu-jour-1920", 543, 28, 47, SceneLight.Noon],
-        ["milieu-nuit-1920", 543, 28, 47, SceneLight.Midnight],
-        ["etroit-1366", 309, 28, 47, SceneLight.Noon],
+        ["milieu-jour-1920", 815, 28, 47, SceneLight.Noon],
+        ["milieu-nuit-1920", 815, 28, 47, SceneLight.Midnight],
+        ["etroit-1366", 538, 28, 47, SceneLight.Noon],
         ["tres-etroit", 177, 28, 47, SceneLight.Noon],
-        ["large-2560", 700, 35, 47, SceneLight.Noon],
-        ["desert-pluie", 543, 28, 120, new SceneLight(0.6f, 0.7f, 0.9f, -1, true, false)],
-        ["toundra-neige", 543, 28, 170, new SceneLight(0.8f, 0, 0.3f, -1, false, true)],
-        ["boss-dragon", 543, 28, 60, SceneLight.Noon],
-        ["debut", 543, 28, 1, SceneLight.Noon],
+        ["large-2560", 1135, 28, 47, SceneLight.Noon],
+        ["windows-125-1920", 779, 35, 47, SceneLight.Noon],
+        ["ultra-large-3440", 1575, 28, 47, SceneLight.Noon],
+        ["desert-pluie", 815, 28, 120, new SceneLight(0.6f, 0.7f, 0.9f, -1, true, false)],
+        ["toundra-neige", 815, 28, 170, new SceneLight(0.8f, 0, 0.3f, -1, false, true)],
+        ["boss-dragon", 815, 28, 60, SceneLight.Noon],
+        ["debut", 815, 28, 1, SceneLight.Noon],
     ];
 
     private static ArtRaster Render(int width, int rows, int stage, SceneLight light)

@@ -7,7 +7,7 @@ La Frontière remplace la Taverne (0.2 à 0.3.2), elle-même successeur du jeu d
 ## Décisions validées (12 octobre 2026)
 
 - **La barre reste en bas de l'écran.** C'est la seule chose à garder à tout prix.
-- **Une seule taille de barre** : l'ancienne taille 100 % (84 px sur un écran à 100 %). Seule l'échelle de Windows la fait varier ; le réglage de taille a été retiré.
+- **Une seule taille de barre** : 56 px de haut sur un écran à 100 %, soit 2 pixels d'écran par pixel d'art (`BarSizes.Scale` = 1). Seule l'échelle de Windows la fait varier ; le réglage de taille a été retiré. La 0.4.0 faisait 84 px (×3), jugés trop hauts.
 - **La largeur est un cadre fixe.** On progresse par améliorations sur place (paliers), par un front infini (biomes) et par le prestige (repli). Les ères, qui repeindront la barre, viennent en v2.
 - **v1 solo.** Les comptes restent. Amis, code ami et social reviendront après la v1, autour du jeu : contrats entre amis, visites de frontière.
 - **Départ neuf pour tout le monde.** Les anciens taverniers reçoivent des âmes selon leur palier de renommée, et l'enseigne de leur taverne est plantée près de la palissade.
