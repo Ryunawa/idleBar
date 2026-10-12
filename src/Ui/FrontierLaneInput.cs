@@ -78,6 +78,9 @@ public partial class FrontierLane
             case TargetKind.Building:
                 ManageRequested?.Invoke(WindowTab.Village);
                 break;
+            case TargetKind.BossCall:
+                game.CallBoss();
+                break;
         }
     }
 

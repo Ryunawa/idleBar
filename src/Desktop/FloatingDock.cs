@@ -31,9 +31,9 @@ public sealed class FloatingDock : IBarDock
         remove { }
     }
 
-    public float DpiScale { get; private set; } = 1f;
+    public float ScreenScale { get; private set; } = 1f;
 
-    public float Scale => DpiScale * _sizeFactor;
+    public float Scale => ScreenScale * _sizeFactor;
 
     public bool FullscreenAppActive => false;
 
@@ -95,7 +95,8 @@ public sealed class FloatingDock : IBarDock
         }
 
         int screen = ScreenOf(_screenDevice);
-        DpiScale = DisplayServer.ScreenGetScale(screen);
+        Vector2I size = DisplayServer.ScreenGetSize(screen);
+        ScreenScale = ScreenFit.Scale(size.X, size.Y, DisplayServer.ScreenGetScale(screen));
         Rect2I usable = DisplayServer.ScreenGetUsableRect(screen);
         int height = (int)MathF.Round(_logicalHeight * Scale);
         Rect2I bounds = new(usable.Position.X, usable.End.Y - height, usable.Size.X, height);

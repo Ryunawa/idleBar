@@ -37,6 +37,10 @@ public static class SceneReactions
                 motion.FleeTime = 0;
                 fx.Float("TROP LENT ! ON S'ENTRAÎNE", layout.HeroX + 6, 1, Palette.Red, 2.2f, 0);
                 break;
+            case BossCalled:
+                motion.Fleeing = target;
+                motion.FleeTime = 0;
+                break;
             case StageReached { Boss: true }:
                 fx.Float("BOSS !", layout.MonsterX + 6, 3, Palette.Red, 1.4f, 0);
                 break;

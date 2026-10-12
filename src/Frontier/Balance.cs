@@ -55,12 +55,13 @@ public static class Balance
     public const double IntendantReach = 20;
     public const double AchievementSeconds = 1;
 
-    public const double MillBonus = 0.5;
+    public const double MillAbsenceSeconds = 600;
+    public const double AbsenceMaxSeconds = 24 * 3600;
     public const double ForgeBonus = 0.01;
     public const double MarketBonus = 0.02;
     public const double TowerBonus = 0.03;
 
     public static readonly int[] Tiers = [10, 25, 50, 100, 250];
 
-    public static readonly GrowthSegment[] HpCurve = [new(50, 1.33), new(100, 1.18), new(int.MaxValue, 1.13)];
+    public static readonly GrowthSegment[] HpCurve = [new(10, 1.33), new(50, 1.34), new(100, 1.19), new(int.MaxValue, 1.13)];
 }

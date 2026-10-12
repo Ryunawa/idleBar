@@ -82,6 +82,8 @@ public sealed class IdlePlayer
         {
         }
 
+        Game.CallBoss();
+
         if (state.IntendantUnlocked && !state.IntendantOn)
         {
             Game.SetIntendant(true);

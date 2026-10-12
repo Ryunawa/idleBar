@@ -38,11 +38,11 @@ public sealed class AppBar : IBarDock
 
     public event Action<bool>? FullscreenAppChanged;
 
-    public float DpiScale { get; private set; } = 1f;
+    public float ScreenScale { get; private set; } = 1f;
 
     public float SizeFactor { get; private set; } = 1f;
 
-    public float Scale => DpiScale * SizeFactor;
+    public float Scale => ScreenScale * SizeFactor;
 
     public string? ScreenDevice { get; private set; }
 
@@ -101,9 +101,9 @@ public sealed class AppBar : IBarDock
     private void Reposition()
     {
         IntPtr monitor = DisplayScreens.Resolve(ScreenDevice);
-        DpiScale = DisplayScreens.ReadDpiScale(monitor);
-        int height = (int)MathF.Round(_logicalHeight * Scale);
         MonitorInfo monitorInfo = DisplayScreens.Describe(monitor);
+        ScreenScale = ScreenFit.Scale(monitorInfo.Monitor.Width, monitorInfo.Monitor.Height, DisplayScreens.ReadDpiScale(monitor));
+        int height = (int)MathF.Round(_logicalHeight * Scale);
 
         AppBarData data = CreateData();
         data.Bounds = monitorInfo.Monitor;

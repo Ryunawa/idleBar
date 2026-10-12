@@ -10,8 +10,9 @@ public sealed class EconomyTests
     {
         Assert.Equal(Balance.MonsterHpBase, Economy.MonsterHp(1), 6);
         Assert.Equal(Balance.HpCurve[0].Growth, Economy.MonsterHp(2) / Economy.MonsterHp(1), 6);
-        Assert.Equal(Balance.HpCurve[1].Growth, Economy.MonsterHp(52) / Economy.MonsterHp(51), 6);
-        Assert.Equal(Balance.HpCurve[2].Growth, Economy.MonsterHp(152) / Economy.MonsterHp(151), 6);
+        Assert.Equal(Balance.HpCurve[1].Growth, Economy.MonsterHp(22) / Economy.MonsterHp(21), 6);
+        Assert.Equal(Balance.HpCurve[2].Growth, Economy.MonsterHp(52) / Economy.MonsterHp(51), 6);
+        Assert.Equal(Balance.HpCurve[3].Growth, Economy.MonsterHp(152) / Economy.MonsterHp(151), 6);
     }
 
     [Fact]
@@ -32,13 +33,14 @@ public sealed class EconomyTests
     }
 
     [Fact]
-    public void TheMillBoostsTheFarm()
+    public void TheMillStretchesTheAbsenceUpToADay()
     {
         FrontierState state = new();
-        state.Buildings[(int)BuildingKind.Farm] = 10;
-        double alone = Economy.BuildingGold(state, BuildingKind.Farm);
-        state.Buildings[(int)BuildingKind.Mill] = 1;
-        Assert.Equal(alone * (1 + Balance.MillBonus), Economy.BuildingGold(state, BuildingKind.Farm), 6);
+        Assert.Equal(8 * 3600, Economy.AbsenceCap(state));
+        state.Buildings[(int)BuildingKind.Mill] = 30;
+        Assert.Equal(13 * 3600, Economy.AbsenceCap(state));
+        state.Buildings[(int)BuildingKind.Mill] = 500;
+        Assert.Equal(24 * 3600, Economy.AbsenceCap(state));
     }
 
     [Fact]

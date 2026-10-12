@@ -44,7 +44,7 @@ public partial class FightersPanel : VBoxContainer
                 ? $"{NumberFormat.Rate(Economy.Dps(state, fighter.Kind))} dégâts/s. {fighter.Effect}"
                 : fighter.Effect;
             string action = $"{(level > 0 ? "Améliorer" : "Recruter")} · {NumberFormat.Gold(cost)}";
-            _rows[(int)fighter.Kind].Show(title, detail, action, state.Gold >= cost, false);
+            _rows[(int)fighter.Kind].Show(title, detail, action, state, new FighterPurchase(fighter.Kind));
         }
     }
 }

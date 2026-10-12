@@ -26,6 +26,8 @@ public sealed class FrontierState
 
     public int Kills { get; set; }
 
+    public bool BossHeld { get; set; }
+
     public int[] Fighters { get; set; } = [1, 0, 0];
 
     public int[] Buildings { get; set; } = new int[BuildingCount];

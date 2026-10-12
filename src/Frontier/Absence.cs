@@ -7,7 +7,7 @@ public static class Absence
     public static double Apply(FrontierState state, double seconds, EventLog events)
     {
         double away = Math.Max(0, seconds);
-        double counted = Math.Min(away, Balance.AbsenceCapSeconds);
+        double counted = Math.Min(away, Economy.AbsenceCap(state));
         double gold = Economy.BaseGoldPerSecond(state) * counted;
         state.Earn(gold);
         for (int index = 0; index < state.Cooldowns.Length; index++)

@@ -80,9 +80,6 @@ public static class Intendant
         return Economy.BaseDps(state, kind, level + 1) - Economy.BaseDps(state, kind, level);
     }
 
-    private static double BuildingGain(FrontierState state, BuildingKind kind)
-    {
-        double gain = Buildings.Of(kind).Gold * Economy.Wealth(state);
-        return kind == BuildingKind.Farm && state.Level(BuildingKind.Mill) > 0 ? gain * (1 + Balance.MillBonus) : gain;
-    }
+    private static double BuildingGain(FrontierState state, BuildingKind kind) =>
+        Buildings.Of(kind).Gold * Economy.Wealth(state);
 }

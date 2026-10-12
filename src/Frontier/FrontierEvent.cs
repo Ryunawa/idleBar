@@ -8,6 +8,8 @@ public sealed record Killed(double Gold, bool Boss) : FrontierEvent;
 
 public sealed record BossFailed : FrontierEvent;
 
+public sealed record BossCalled : FrontierEvent;
+
 public sealed record StageReached(int Stage, bool Boss) : FrontierEvent;
 
 public sealed record SlotConquered(BuildingKind Kind) : FrontierEvent;

@@ -24,6 +24,11 @@ public static class LaneHits
             return Skill(layout, x, y);
         }
 
+        if (BossButton.Contains(state, layout, x, y))
+        {
+            return new LaneTarget(TargetKind.BossCall);
+        }
+
         if (scene.Box(state, layout) is MonsterBox box && x >= box.X - 3 && x <= box.X + box.Width + 3 && y >= box.Y - 5)
         {
             return new LaneTarget(TargetKind.Monster);

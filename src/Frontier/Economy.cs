@@ -49,9 +49,11 @@ public static class Economy
     public static double BuildingGold(FrontierState state, BuildingKind kind)
     {
         int level = state.Level(kind);
-        double gold = Buildings.Of(kind).Gold * level * Math.Pow(Balance.TierFactor, Tier(level)) * Wealth(state);
-        return kind == BuildingKind.Farm && state.Level(BuildingKind.Mill) > 0 ? gold * (1 + Balance.MillBonus) : gold;
+        return Buildings.Of(kind).Gold * level * Math.Pow(Balance.TierFactor, Tier(level)) * Wealth(state);
     }
+
+    public static double AbsenceCap(FrontierState state) =>
+        Math.Min(Balance.AbsenceMaxSeconds, Balance.AbsenceCapSeconds + state.Level(BuildingKind.Mill) * Balance.MillAbsenceSeconds);
 
     public static double BaseGoldPerSecond(FrontierState state)
     {

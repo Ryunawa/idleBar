@@ -9,7 +9,7 @@ public interface IBarDock : IDisposable
 
     event Action<bool>? FullscreenAppChanged;
 
-    float DpiScale { get; }
+    float ScreenScale { get; }
 
     float Scale { get; }
 

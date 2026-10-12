@@ -44,6 +44,7 @@ public sealed class ScenePainter
         EffectsPainter.Lightning(_frame, scene.Motion, layout, scene.Time);
         EffectsPainter.Particles(_frame, scene.Fx);
         OverlayPainter.Monster(_frame, state, layout, scene);
+        BossButton.Paint(_frame, state, layout, scene.Time);
         OverlayPainter.Chicken(_frame, state, layout, scene);
         OverlayPainter.Bubble(_frame, layout, scene.Village.Crier);
         OverlayPainter.Floats(_frame, layout, scene.Fx);

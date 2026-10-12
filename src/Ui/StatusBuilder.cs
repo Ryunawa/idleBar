@@ -36,7 +36,8 @@ public static class StatusBuilder
         }
 
         string rate = $"+{NumberFormat.Rate(Economy.GoldPerSecond(state))}/s";
-        return $"{rate} · niv {state.Stage} · {state.Kills}/{Balance.MonstersPerStage}";
+        string wave = state.BossHeld ? "boss en attente" : $"{state.Kills}/{Balance.MonstersPerStage}";
+        return $"{rate} · niv {state.Stage} · {wave}";
     }
 
     private static BarStatus Playing(FrontierState state, string situation, bool alert) =>

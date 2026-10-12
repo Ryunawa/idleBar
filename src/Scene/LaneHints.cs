@@ -17,6 +17,7 @@ public static class LaneHints
         TargetKind.Crier => "Le crieur public et ses nouvelles du royaume",
         TargetKind.Sign => $"Enseigne de « {state.VeteranName} », ta vieille taverne",
         TargetKind.Fog => "Brouillard : chaque boss vaincu le fait reculer",
+        TargetKind.BossCall => $"Défier le boss du niveau {state.Stage + 1} : 30 s pour le vaincre",
         _ => null,
     };
 

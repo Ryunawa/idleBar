@@ -65,4 +65,37 @@ public sealed class ShopTests
         game.Buy(new FighterPurchase(FighterKind.Archer));
         Assert.True(Economy.Dps(state, FighterKind.Archer) > 0);
     }
+
+    [Theory]
+    [InlineData(1_000)]
+    [InlineData(123_456)]
+    [InlineData(9.87e12)]
+    public void MaxCountBuysExactlyWhatTheGoldAllows(double gold)
+    {
+        FrontierState state = new() { Gold = gold };
+        FrontierGame game = new(state, new Random(1));
+        BuildingPurchase farm = new(BuildingKind.Farm);
+        int count = Shop.MaxCount(state, farm);
+        Assert.Equal(count, game.BuyMany(farm, count));
+        Assert.False(Shop.Affordable(state, farm));
+    }
+
+    [Fact]
+    public void TenLevelsCostTheSumOfEachLevel()
+    {
+        FrontierState state = new() { Gold = 1e12 };
+        FrontierGame game = new(state, new Random(1));
+        FighterPurchase hero = new(FighterKind.Hero);
+        double expected = Shop.CostOf(state, hero, 10);
+        game.BuyMany(hero, 10);
+        Assert.Equal(1e12 - expected, state.Gold, 3);
+    }
+
+    [Fact]
+    public void MaxCountIsZeroWhenOneLevelIsTooExpensive()
+    {
+        FrontierState state = new() { Gold = 1 };
+        Assert.Equal(0, Shop.MaxCount(state, new FighterPurchase(FighterKind.Mage)));
+        Assert.Equal(0, Shop.MaxCount(new FrontierState { Gold = 1e30 }, new BuildingPurchase(BuildingKind.Portal)));
+    }
 }

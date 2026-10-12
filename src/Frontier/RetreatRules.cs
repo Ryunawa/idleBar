@@ -22,6 +22,7 @@ public static class RetreatRules
         state.Stage = 1;
         state.MaxStage = 1;
         state.Kills = 0;
+        state.BossHeld = false;
         state.Fighters = [1, 0, 0];
         state.Buildings = new int[FrontierState.BuildingCount];
         state.Monster = null;

@@ -34,7 +34,7 @@ public sealed class BarPlacement : IDisposable
 
     public string? ScreenDevice => _preferences.ScreenDevice;
 
-    public float DialogScale => _dock.DpiScale;
+    public float DialogScale => _dock.ScreenScale;
 
     public IReadOnlyList<DisplayScreen> DetectScreens() => _dock.DetectScreens();
 

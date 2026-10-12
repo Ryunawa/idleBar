@@ -41,7 +41,7 @@ public partial class VillagePanel : VBoxContainer
             OfferRow row = _rows[(int)building.Kind];
             if (!Economy.Unlocked(state, building.Kind))
             {
-                row.Show($"{building.Name} · inexploré", $"Bats le boss du niveau {building.Unlock - 1} pour conquérir ce terrain. {building.Effect}", $"Boss {building.Unlock - 1}", false, true);
+                row.ShowLocked($"{building.Name} · inexploré", $"Bats le boss du niveau {building.Unlock - 1} pour conquérir ce terrain. {building.Effect}", $"Boss {building.Unlock - 1}");
                 continue;
             }
 
@@ -50,7 +50,7 @@ public partial class VillagePanel : VBoxContainer
             string title = level > 0 ? $"{building.Name} · niv {level} · {Tier(level)}" : $"{building.Name} · à bâtir";
             string detail = level > 0 ? $"+{NumberFormat.Rate(Economy.BuildingGold(state, building.Kind))} or/s. {building.Effect}" : building.Effect;
             string action = $"{(level > 0 ? "Agrandir" : "Construire")} · {NumberFormat.Gold(cost)}";
-            row.Show(title, detail, action, state.Gold >= cost, false);
+            row.Show(title, detail, action, state, new BuildingPurchase(building.Kind));
         }
     }
 

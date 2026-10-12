@@ -66,6 +66,8 @@ public sealed class FrontierGame
 
     public int Retreat() => RetreatRules.Apply(State, Events);
 
+    public bool CallBoss() => Battle.CallBoss(State, Events);
+
     public void SetIntendant(bool on) => State.IntendantOn = on && State.IntendantUnlocked;
 
     public bool UseSkill(SkillKind kind)

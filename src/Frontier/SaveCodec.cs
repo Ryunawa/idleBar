@@ -31,7 +31,8 @@ public static class SaveCodec
         state.BossesKilled,
         state.Chickens,
         state.Clicks,
-        state.SkillsUsed);
+        state.SkillsUsed,
+        state.BossHeld);
 
     public static FrontierState Restore(FrontierSave save)
     {
@@ -47,6 +48,7 @@ public static class SaveCodec
             MaxStage = maxStage,
             BestStage = Math.Max(maxStage, save.BestStage),
             Kills = Math.Clamp(save.Kills, 0, Balance.MonstersPerStage - 1),
+            BossHeld = save.BossHeld && Economy.IsBossStage(stage + 1),
             Fighters = Fit(save.Fighters, FrontierState.FighterCount),
             Buildings = Fit(save.Buildings, FrontierState.BuildingCount),
             Cooldowns = Fit(save.Cooldowns, FrontierState.SkillCount),

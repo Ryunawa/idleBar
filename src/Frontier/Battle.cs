@@ -98,10 +98,29 @@ public static class Battle
         }
 
         state.Kills++;
-        if (state.Kills >= Balance.MonstersPerStage)
+        if (state.Kills >= Balance.MonstersPerStage && state.BossHeld)
+        {
+            state.Kills = 0;
+        }
+        else if (state.Kills >= Balance.MonstersPerStage)
         {
             Advance(state, events);
         }
+    }
+
+    public static bool CallBoss(FrontierState state, EventLog events)
+    {
+        if (!state.BossHeld)
+        {
+            return false;
+        }
+
+        state.BossHeld = false;
+        events.Add(new BossCalled());
+        state.Monster = null;
+        state.RespawnIn = Balance.RespawnSeconds;
+        Advance(state, events);
+        return true;
     }
 
     private static void Advance(FrontierState state, EventLog events)
@@ -131,6 +150,7 @@ public static class Battle
         state.RespawnIn = Balance.BossRetrySeconds;
         state.Stage = Math.Max(1, state.Stage - 1);
         state.Kills = 0;
+        state.BossHeld = true;
     }
 
     private static void Spawn(FrontierState state)

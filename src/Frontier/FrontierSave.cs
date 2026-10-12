@@ -22,4 +22,5 @@ public sealed record FrontierSave(
     long BossesKilled,
     long Chickens,
     long Clicks,
-    long SkillsUsed);
+    long SkillsUsed,
+    bool BossHeld = false);

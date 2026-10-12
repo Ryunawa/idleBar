@@ -39,7 +39,8 @@ public partial class FrontierLane : Control
     {
         ClipContents = true;
         MouseFilter = MouseFilterEnum.Stop;
-        TextureFilter = TextureFilterEnum.Nearest;
+        TextureFilter = TextureFilterEnum.Linear;
+        Material = SharpPixels.Create();
     }
 
     public void Receive(IReadOnlyList<FrontierEvent> events) => _pending.AddRange(events);
@@ -82,14 +83,11 @@ public partial class FrontierLane : Control
             return;
         }
 
-        float contentScale = GetWindow().ContentScaleFactor;
-        float physicalPixel = Math.Max(1, MathF.Floor(Size.Y * contentScale / FrontierLayout.Rows));
-        _artScale = physicalPixel / contentScale;
+        _artScale = Size.Y / FrontierLayout.Rows;
         int width = (int)MathF.Ceiling(Size.X / _artScale);
-        int height = (int)MathF.Floor(Size.Y / _artScale);
-        if (_layout.Width != width || _layout.Top != Math.Max(0, height - FrontierLayout.Rows))
+        if (_layout.Width != width || _layout.Top != 0)
         {
-            _layout = FrontierLayout.For(width, height);
+            _layout = FrontierLayout.For(width, FrontierLayout.Rows);
         }
 
         ArtRaster frame = _painter.Paint(game.State, _layout, _scene, _light, HoveredSkill);
