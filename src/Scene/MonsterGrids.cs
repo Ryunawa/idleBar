@@ -12,8 +12,8 @@ public static class MonsterGrids
 
     public static IReadOnlyList<string> Wolf { get; } =
     [
-        "..d.d........", "..dAAd.......", ".AAkA........", "aAAAAAAAAAAd.",
-        ".aaAAAAAAAAAd", "...AAAAAAAA..", "...A.A..A.A..", "...d.d..d.d..",
+        "..k..k.........", "..lAkl.........", ".kllAll........", "klAdANAkk......", ".lldAdAAdlll...", "..lllAAddddAk..",
+        "...lAAAAddddAk.", "...lAAAANlAdkN.", "....kkAl.lkdall", "....kAll..lldlk", "....kdbk..kaNl.", ".....lla.llANb.",
     ];
 
     public static IReadOnlyList<string> Mushroom { get; } =
@@ -24,14 +24,14 @@ public static class MonsterGrids
 
     public static IReadOnlyList<string> Scorpion { get; } =
     [
-        ".........EE..", "........E..E.", "........E..k.", "oo.EEEEEE....",
-        "o.EkEEEEEE...", "ooEEEEEEEE...", "..e.e.e.e....",
+        ".......ee....", "......eoee...", ".....ee..Ee..", ".....ee...ye.", ".....B....ee.", ".........eye.", "......e.eyb..",
+        "....eeeeyyb..", ".yo.Ryyyyybt.", "eoeeyyyyeeTe.", ".e.ebyebyeewy", ".....eyye..e.", "...eyyee.e.y.", "....ee...e...",
     ];
 
     public static IReadOnlyList<string> Mummy { get; } =
     [
-        "..tttt..", ".tTttTt.", ".YYtYYt.", ".tttttt.", "..tTTt..", ".tttttt.", "tttttttt",
-        "tTtttTt.", ".tTttTt.", ".tttttt.", "..tt.tt.", "..tT.Tt.", ".ttt.ttt",
+        ".....bddd..", "....bwttwd.", "....bbbbdb.", "....bsbwbb.", "....bww..b.", ".bdbbAb.bw.", "bwtlwwbbA..",
+        ".BT.bbwdwb.", "...mdwbb.l.", "...t.d.twl.", ".....sbbwtw", ".....b.wbb.", "....ab..dwb", "...aab...mb",
     ];
 
     public static IReadOnlyList<string> Yeti { get; } =
