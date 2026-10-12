@@ -66,6 +66,6 @@ public static class LaneHints
         }
 
         BuildingInfo building = Buildings.Of(kind);
-        return $"{building.Name} niv {state.Levels[plot]} · +{NumberFormat.Rate(Economy.PlotGold(state, plot))} or/s · {building.Effect}";
+        return $"{building.Name} niv {state.Levels[plot]} · +{NumberFormat.Rate(Economy.PlotGold(state, plot))} or/s · {EffectText.Now(state, kind)}";
     }
 }

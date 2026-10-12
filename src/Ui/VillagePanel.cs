@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Godot;
 using IdleBar.Frontier;
+using IdleBar.Scene;
 
 namespace IdleBar.Ui;
 
@@ -60,7 +61,7 @@ public partial class VillagePanel : VBoxContainer
             int level = state.Levels[plot.Index];
             BuildingInfo building = Buildings.Of(kind);
             string title = $"{building.Name} · {name.ToLowerInvariant()} · niv {level} · {Tier(level)}";
-            string detail = $"+{NumberFormat.Rate(Economy.PlotGold(state, plot.Index))} or/s. {building.Effect}";
+            string detail = $"+{NumberFormat.Rate(Economy.PlotGold(state, plot.Index))} or/s. {building.Effect} Actuellement : {EffectText.Now(state, kind)}.";
             row.Show(title, detail, $"Agrandir · {NumberFormat.Gold(cost)}", state, new PlotPurchase(plot.Index));
         }
     }
