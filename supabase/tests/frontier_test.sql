@@ -57,3 +57,28 @@ select set_config('request.jwt.claim.sub', '88888888-8888-8888-8888-888888888888
 select pg_temp.check(public.start_frontier('00000000-0000-0000-0000-000000000004') #>> '{frontier,veteran_souls}' = '20', 'cadeau gardé après l''effacement des tavernes');
 select pg_temp.check(public.save_frontier('{"best_stage": 1, "souls": 20, "retreats": 0}', 0, '00000000-0000-0000-0000-000000000004') ->> 'status' = 'ok', 'les âmes du cadeau sont plausibles');
 reset role;
+
+insert into auth.users (id) values ('66666666-6666-6666-6666-666666666666');
+insert into public.taverns (player_id, name, friend_code, renown)
+values ('66666666-6666-6666-6666-666666666666', 'La Nouvelle Enseigne', 'YYY666', 50000);
+insert into private.veterans (player_id, tier, tavern_name)
+values ('66666666-6666-6666-6666-666666666666', 1, 'L''Ancienne Enseigne');
+
+select set_config('request.jwt.claim.sub', '77777777-7777-7777-7777-777777777777', false);
+set role authenticated;
+select pg_temp.check(public.save_frontier('{"best_stage": 60, "souls": 2000000000, "retreats": 60000000}', 4, '00000000-0000-0000-0000-000000000002') ->> 'status' = 'refused', 'replis gonflés refusés');
+select pg_temp.check(public.save_frontier('{"stage": 5000, "best_stage": 60, "souls": 36, "retreats": 1}', 4, '00000000-0000-0000-0000-000000000002') ->> 'status' = 'refused', 'niveau courant impossible refusé');
+select pg_temp.check(public.rejoin_frontier('00000000-0000-0000-0000-000000000005') ->> 'status' = 'elsewhere', 'reconnexion sans voler une partie active');
+select pg_temp.check(public.rejoin_frontier('00000000-0000-0000-0000-000000000002') ->> 'status' = 'ok', 'reconnexion de la session active');
+reset role;
+
+update public.frontiers set last_seen = now() - interval '10 minutes' where player_id = '77777777-7777-7777-7777-777777777777';
+
+set role authenticated;
+select pg_temp.check(public.rejoin_frontier('00000000-0000-0000-0000-000000000005') ->> 'status' = 'ok', 'reconnexion quand l''autre PC dort');
+select pg_temp.check(public.save_frontier('{"stage": 2, "best_stage": 60, "souls": 36, "retreats": 1}', 4, '00000000-0000-0000-0000-000000000005') ->> 'status' = 'ok', 'la session reprise sauvegarde');
+
+select set_config('request.jwt.claim.sub', '66666666-6666-6666-6666-666666666666', false);
+select pg_temp.check(public.start_frontier('00000000-0000-0000-0000-000000000006') #>> '{frontier,veteran_souls}' = '20', 'le palier actuel l''emporte sur l''instantané');
+select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000006') #>> '{frontier,veteran_name}' = 'La Nouvelle Enseigne', 'nom actuel de la taverne');
+reset role;

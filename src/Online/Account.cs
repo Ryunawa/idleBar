@@ -35,7 +35,7 @@ public sealed class Account
 
     public void SignOut()
     {
-        _keeper.SignOut();
         _session.Reset();
+        _keeper.SignOut();
     }
 }

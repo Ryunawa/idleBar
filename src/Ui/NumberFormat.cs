@@ -6,7 +6,8 @@ namespace IdleBar.Ui;
 public static class NumberFormat
 {
     private static readonly NumberFormatInfo French = new() { NumberDecimalSeparator = ",", NumberGroupSeparator = " " };
-    private static readonly string[] Suffixes = ["", " k", " M", " Md", " Bn", " Bd", " Tn"];
+    private static readonly string[] Suffixes =
+        ["", " k", " M", " Md", " Bn", " Bd", " Tn", " Td", " Qn", " Qd", " Qt", " Qtd", " Sx", " Sxd", " Sp", " Spd"];
 
     public static string Amount(double value) =>
         value < 1000 ? Math.Floor(value).ToString("0", French) : WithSuffix(value);
@@ -22,7 +23,17 @@ public static class NumberFormat
 
     private static string WithSuffix(double value)
     {
-        int tier = Math.Min((int)Math.Floor(Math.Log10(value) / 3), Suffixes.Length - 1);
+        if (!double.IsFinite(value))
+        {
+            return "∞";
+        }
+
+        int tier = (int)Math.Floor(Math.Log10(value) / 3);
+        if (tier >= Suffixes.Length)
+        {
+            return value.ToString("0.00e0", French);
+        }
+
         double scaled = value / Math.Pow(1000, tier);
         string format = scaled switch
         {

@@ -8,6 +8,7 @@ namespace IdleBar.Scene;
 public sealed class FrontierScene
 {
     private const float ReplayPace = 8;
+    private const float TimeWrap = 3600;
 
     private static readonly Rgba[] MagicSparks = [Palette.Cyan, Palette.White];
 
@@ -37,7 +38,7 @@ public sealed class FrontierScene
     public int Update(float dt, FrontierState state, IReadOnlyList<FrontierEvent> events, FrontierLayout layout, bool night)
     {
         float pace = Motion.Replay > 0 ? ReplayPace : 1;
-        Time += dt * pace;
+        Time = (Time + dt * pace) % TimeWrap;
         Motion.Update(dt);
         foreach (FrontierEvent frontierEvent in events)
         {

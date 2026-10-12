@@ -33,6 +33,7 @@ select pg_temp.expect_denied('select public.show_door(1)');
 select pg_temp.expect_denied('select public.order_drink(''beer'')');
 select pg_temp.expect_denied('select public.start_frontier(gen_random_uuid())');
 select pg_temp.expect_denied('select public.claim_frontier(gen_random_uuid())');
+select pg_temp.expect_denied('select public.rejoin_frontier(gen_random_uuid())');
 select pg_temp.expect_denied('select public.save_frontier(''{}'', 0, gen_random_uuid())');
 reset role;
 
