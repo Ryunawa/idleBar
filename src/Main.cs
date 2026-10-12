@@ -31,6 +31,9 @@ public partial class Main : Control
         Theme = BarTheme.Create();
         _game = new GameBridge(this);
         BuildInterface();
+        _expanded.Lane.Game = _game.Game;
+        _expanded.Lane.GoldArrived += _expanded.Glow;
+        _game.Happened += _expanded.Lane.Receive;
 
         BarPreferences preferences = BarPreferences.Load(PreferencesPath);
         _placement = new BarPlacement(GetWindow(), preferences);
@@ -110,7 +113,6 @@ public partial class Main : Control
 
         _settings = new SettingsWindow();
         AddChild(_settings);
-        _settings.SizeChosen += size => _placement.Resize(size);
         _settings.ScreenChosen += device => _placement.MoveTo(device);
 
         _faq = new FaqWindow();
@@ -141,7 +143,7 @@ public partial class Main : Control
     }
 
     private void OpenSettings() =>
-        _settings.Open(_placement.DialogScale, _placement.Size, _placement.ScreenDevice, _placement.DetectScreens());
+        _settings.Open(_placement.DialogScale, _placement.ScreenDevice, _placement.DetectScreens());
 
     private async void Quit()
     {

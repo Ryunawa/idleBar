@@ -6,7 +6,6 @@ public sealed class BarPreferences
 {
     private const string Section = "bar";
     private const string CollapsedKey = "collapsed";
-    private const string SizeKey = "scale";
     private const string ScreenKey = "screen";
 
     private readonly string _path;
@@ -17,8 +16,6 @@ public sealed class BarPreferences
     }
 
     public bool Collapsed { get; set; }
-
-    public float Size { get; set; } = BarSizes.Default;
 
     public string? ScreenDevice { get; set; }
 
@@ -32,7 +29,6 @@ public sealed class BarPreferences
         }
 
         preferences.Collapsed = file.GetValue(Section, CollapsedKey, false).AsBool();
-        preferences.Size = BarSizes.Nearest(file.GetValue(Section, SizeKey, BarSizes.Default).AsSingle());
         string screen = file.GetValue(Section, ScreenKey, string.Empty).AsString();
         preferences.ScreenDevice = screen.Length == 0 ? null : screen;
         return preferences;
@@ -41,8 +37,8 @@ public sealed class BarPreferences
     public void Save()
     {
         ConfigFile file = new();
+        file.Load(_path);
         file.SetValue(Section, CollapsedKey, Collapsed);
-        file.SetValue(Section, SizeKey, Size);
         file.SetValue(Section, ScreenKey, ScreenDevice ?? string.Empty);
         Error result = file.Save(_path);
         if (result != Error.Ok)

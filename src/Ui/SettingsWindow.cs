@@ -8,16 +8,10 @@ namespace IdleBar.Ui;
 
 public partial class SettingsWindow : Window
 {
-    private static readonly Vector2I BaseSize = new(380, 270);
+    private static readonly Vector2I BaseSize = new(380, 200);
 
     private readonly List<DisplayScreen> _screens = [];
-    private Label _size = null!;
-    private Button _shrink = null!;
-    private Button _grow = null!;
     private OptionButton _screen = null!;
-    private float _currentSize = 1f;
-
-    public event Action<float>? SizeChosen;
 
     public event Action<string>? ScreenChosen;
 
@@ -26,20 +20,6 @@ public partial class SettingsWindow : Window
     public override void _Ready()
     {
         VBoxContainer content = WindowFrame.Build(this, $"IdleBar {GameVersion.Name} · Réglages", 8);
-
-        content.AddChild(CreateHeading("Taille de la barre"));
-        HBoxContainer sizeRow = new() { Alignment = BoxContainer.AlignmentMode.Center };
-        sizeRow.AddThemeConstantOverride("separation", 12);
-        _shrink = new Button { Text = "−", CustomMinimumSize = new Vector2(36, 0), FocusMode = Control.FocusModeEnum.None };
-        _shrink.Pressed += () => StepSize(-1);
-        _size = BarLabels.Create(16, BarPalette.Gold, HorizontalAlignment.Center);
-        _size.CustomMinimumSize = new Vector2(70, 0);
-        _grow = new Button { Text = "+", CustomMinimumSize = new Vector2(36, 0), FocusMode = Control.FocusModeEnum.None };
-        _grow.Pressed += () => StepSize(1);
-        sizeRow.AddChild(_shrink);
-        sizeRow.AddChild(_size);
-        sizeRow.AddChild(_grow);
-        content.AddChild(sizeRow);
 
         content.AddChild(CreateHeading("Écran"));
         _screen = new OptionButton();
@@ -66,11 +46,8 @@ public partial class SettingsWindow : Window
         content.AddChild(buttons);
     }
 
-    public void Open(float scale, float size, string? screenDevice, IReadOnlyList<DisplayScreen> screens)
+    public void Open(float scale, string? screenDevice, IReadOnlyList<DisplayScreen> screens)
     {
-        _currentSize = BarSizes.Nearest(size);
-        RefreshSize();
-
         _screens.Clear();
         _screens.AddRange(screens);
         _screen.Clear();
@@ -100,25 +77,5 @@ public partial class SettingsWindow : Window
         Label heading = BarLabels.Create(13, BarPalette.Text);
         heading.Text = text;
         return heading;
-    }
-
-    private void StepSize(int direction)
-    {
-        float next = BarSizes.Step(_currentSize, direction);
-        if (next == _currentSize)
-        {
-            return;
-        }
-
-        _currentSize = next;
-        RefreshSize();
-        SizeChosen?.Invoke(next);
-    }
-
-    private void RefreshSize()
-    {
-        _size.Text = BarSizes.Describe(_currentSize);
-        _shrink.Disabled = !BarSizes.CanShrink(_currentSize);
-        _grow.Disabled = !BarSizes.CanGrow(_currentSize);
     }
 }

@@ -9,6 +9,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../src/Frontier/**/*.cs" Link="Frontier/%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="../../src/Scene/**/*.cs" Link="Scene/%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="../../src/Ui/NumberFormat.cs" Link="Ui/NumberFormat.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />

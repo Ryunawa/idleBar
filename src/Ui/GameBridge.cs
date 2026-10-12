@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Godot;
 using IdleBar.Cloud;
+using IdleBar.Frontier;
 using IdleBar.Online;
 using HttpClient = System.Net.Http.HttpClient;
 
@@ -35,15 +37,29 @@ public sealed class GameBridge : IDisposable
 
     public event Action<string, float>? Announced;
 
+    public event Action<IReadOnlyList<FrontierEvent>>? Happened;
+
     public Journal Journal { get; } = new();
 
-    public BarStatus Status => StatusBuilder.Describe(_session);
+    public FrontierGame Game { get; } = new(new FrontierState(), new Random());
+
+    public BarStatus Status => StatusBuilder.Describe(_session, Game);
 
     public bool SignedIn => _session?.Status is not (null or SessionStatus.SignedOut);
 
     public void Start() => _session?.Start();
 
-    public void Tick(double delta) => _session?.Tick(delta);
+    public void Tick(double delta)
+    {
+        Game.Advance(delta);
+        IReadOnlyList<FrontierEvent> events = Game.Events.Drain();
+        if (events.Count > 0)
+        {
+            Happened?.Invoke(events);
+        }
+
+        _session?.Tick(delta);
+    }
 
     public Task FlushAsync() => _session?.FlushAsync() ?? Task.CompletedTask;
 

@@ -112,7 +112,7 @@ public partial class ExpandedBar : MarginContainer
     {
         string? hint = Lane.Hint;
         _situation.Text = hint ?? status.Situation;
-        Color situationColor = hint is null ? BarPalette.Muted : BarPalette.Text;
+        Color situationColor = hint is not null ? BarPalette.Text : status.Alert ? BarPalette.Danger : BarPalette.Muted;
         if (situationColor != _situationColor)
         {
             _situationColor = situationColor;

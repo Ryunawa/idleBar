@@ -1,3 +1,3 @@
 namespace IdleBar.Ui;
 
-public sealed record BarStatus(string Headline, double? Gold, string Situation, string Compact);
+public sealed record BarStatus(string Headline, double? Gold, string Situation, string Compact, bool Alert = false);
