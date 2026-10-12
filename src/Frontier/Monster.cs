@@ -1,0 +1,37 @@
+namespace IdleBar.Frontier;
+
+public sealed class Monster
+{
+    public Monster(long id, int template, bool boss, int stage, double hp, double approach)
+    {
+        Id = id;
+        Template = template;
+        Boss = boss;
+        Stage = stage;
+        MaxHp = hp;
+        Hp = hp;
+        Approach = approach;
+        ApproachTotal = approach;
+        BossLeft = boss ? Balance.BossSeconds : 0;
+    }
+
+    public long Id { get; }
+
+    public int Template { get; }
+
+    public bool Boss { get; }
+
+    public int Stage { get; }
+
+    public double MaxHp { get; }
+
+    public double Hp { get; set; }
+
+    public double Approach { get; set; }
+
+    public double ApproachTotal { get; }
+
+    public double BossLeft { get; set; }
+
+    public string Name => Biomes.NameOf(this);
+}

@@ -1,0 +1,142 @@
+using System;
+using System.Collections.Generic;
+using IdleBar.Frontier;
+
+namespace IdleBar.Tests;
+
+public sealed class IdlePlayer
+{
+    private const double ActiveSeconds = 600;
+    private const double ActiveCheck = 10;
+    private const double IdleCheck = 300;
+    private const double ChickenChance = 0.3;
+    private const double StallSeconds = 1_800;
+    private const double RetreatShare = 0.1;
+
+    private readonly Random _random;
+    private readonly Dictionary<string, double> _milestones = [];
+    private readonly List<string> _notes = [];
+    private double _sinceCheck;
+    private double _lastProgress;
+    private int _lastMaxStage;
+
+    public IdlePlayer(int seed)
+    {
+        _random = new Random(seed);
+        Game = new FrontierGame(new FrontierState(), new Random(seed));
+    }
+
+    public FrontierGame Game { get; }
+
+    public double Clock { get; private set; }
+
+    public IReadOnlyDictionary<string, double> Milestones => _milestones;
+
+    public IReadOnlyList<string> Notes => _notes;
+
+    public void Play(double seconds)
+    {
+        for (double elapsed = 0; elapsed < seconds; elapsed += 1)
+        {
+            Game.Advance(1);
+            Clock += 1;
+            React();
+            Note();
+            _sinceCheck += 1;
+            if (_sinceCheck >= (Clock < ActiveSeconds ? ActiveCheck : IdleCheck))
+            {
+                _sinceCheck = 0;
+                CheckIn();
+            }
+        }
+    }
+
+    public void Away(double seconds)
+    {
+        Game.Absent(seconds);
+        Game.Events.Drain();
+        _lastProgress = Clock;
+        CheckIn();
+    }
+
+    private void React()
+    {
+        foreach (FrontierEvent frontierEvent in Game.Events.Drain())
+        {
+            if (frontierEvent is ChickenAppeared && _random.NextDouble() < ChickenChance)
+            {
+                Game.CatchChicken();
+            }
+        }
+    }
+
+    private void CheckIn()
+    {
+        FrontierState state = Game.State;
+        foreach (SkillInfo skill in Skills.All)
+        {
+            Game.UseSkill(skill.Kind);
+        }
+
+        while (Intendant.Choose(state) is Purchase purchase && Game.Buy(purchase))
+        {
+        }
+
+        if (state.IntendantUnlocked && !state.IntendantOn)
+        {
+            Game.SetIntendant(true);
+        }
+
+        int souls = RetreatRules.SoulsFor(state.MaxStage);
+        bool stalled = Clock - _lastProgress >= StallSeconds;
+        if (stalled && souls >= Math.Max(1, state.Souls * RetreatShare))
+        {
+            Mark($"repli-{state.Retreats + 1}");
+            Game.Retreat();
+            _lastMaxStage = 0;
+            _lastProgress = Clock;
+        }
+    }
+
+    private void Note()
+    {
+        FrontierState state = Game.State;
+        if (state.MaxStage > _lastMaxStage)
+        {
+            _lastMaxStage = state.MaxStage;
+            _lastProgress = Clock;
+        }
+
+        if (Array.Exists(state.Buildings, level => level > 0))
+        {
+            Mark("premier-batiment");
+        }
+
+        foreach (int stage in (int[])[11, 50, 100, 150, 200])
+        {
+            if (state.BestStage >= stage)
+            {
+                Mark($"niveau-{stage}");
+            }
+        }
+
+        if (state.MaxStage >= Balance.RetreatStage)
+        {
+            Mark($"repli-possible-{state.Retreats + 1}");
+        }
+
+        if (Array.Exists(state.Buildings, level => level >= 100))
+        {
+            Mark("palier-100");
+        }
+    }
+
+    private void Mark(string milestone)
+    {
+        if (_milestones.TryAdd(milestone, Clock))
+        {
+            FrontierState state = Game.State;
+            _notes.Add($"{milestone}: fighters {string.Join('/', state.Fighters)} buildings {string.Join('/', state.Buildings)} gps {Economy.BaseGoldPerSecond(state):0} dps {Economy.TotalDps(state):0} souls {state.Souls}");
+        }
+    }
+}

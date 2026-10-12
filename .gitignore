@@ -4,3 +4,5 @@
 .idea/
 *.user
 /build/
+tests/**/bin/
+tests/**/obj/

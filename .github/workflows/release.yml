@@ -60,6 +60,9 @@ jobs:
           sed -i -E "s/^config\/version=.*/config\/version=\"${version}\"/" project.godot
           grep -q "^config/version=\"${version}\"" project.godot
 
+      - name: Test the rules
+        run: dotnet test tests/Frontier.Tests -c Release
+
       - name: Build and import
         run: |
           dotnet build IdleBar.csproj -c Release
