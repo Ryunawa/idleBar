@@ -73,7 +73,7 @@ public sealed class FrontierGame
     public bool UseSkill(SkillKind kind)
     {
         int index = (int)kind;
-        if (State.Cooldowns[index] > 0)
+        if (!Skills.Unlocked(State, kind) || State.Cooldowns[index] > 0)
         {
             return false;
         }

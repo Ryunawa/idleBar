@@ -93,9 +93,10 @@ Le joueur choisit le bâtiment de chaque emplacement libre (`Construction`), pui
 **Poule dorée.** Elle passe toutes les 3 à 8 minutes (la première après 90 s), plus souvent avec la ferme. Un clic : or ×7 pendant 20 s.
 
 **Compétences.**
-- Frappe céleste : 25 coups du héros, recharge 10 min.
-- Furie : dégâts ×2 pendant 30 s, recharge 15 min.
-- Pluie d'or : 30 s de production, recharge 30 min.
+- Frappe céleste : 25 coups du héros, recharge 10 min, débloquée au niveau 15.
+- Furie : dégâts ×2 pendant 30 s, recharge 15 min, débloquée au niveau 25.
+- Pluie d'or : 30 s de production, recharge 30 min, débloquée au niveau 35.
+- Comme les emplacements, elles dépendent du niveau max de la partie : le repli les reverrouille. Verrouillées, elles montrent un cadenas et leur niveau ; une bannière annonce chaque déblocage (`SkillUnlocked`).
 
 **Repli.**
 - Disponible à partir du niveau 50. Âmes = ⌊(niveau max / 10)²⌋, +2,5 % de dégâts et d'or chacune.

@@ -26,6 +26,11 @@ public static class LaneHints
     private static string Skill(SkillKind kind, FrontierState state)
     {
         SkillInfo skill = Skills.Of(kind);
+        if (!Skills.Unlocked(state, kind))
+        {
+            return $"{skill.Name}, verrouillée : atteins le niveau {skill.Unlock} pour la débloquer. {skill.Effect}";
+        }
+
         double cooldown = state.Cooldowns[(int)kind];
         return $"{skill.Name} : {skill.Effect} " + (cooldown > 0 ? $"Prête dans {Wait(cooldown)}." : "Prête.");
     }

@@ -22,7 +22,7 @@ public partial class FaqPanel : VBoxContainer
             ("Et les boss ?",
                 "Tous les 10 niveaux, un boss t'attend avec 30 secondes au compteur. S'il tient bon, tu recules d'un niveau et tu t'y entraînes aussi longtemps que tu veux. Quand tu te sens prêt, clique sur le bouton rouge « BOSS » dans le brouillard pour le défier de nouveau."),
             ("À quoi servent les trois boutons à droite ?",
-                "Ce sont les compétences : la Frappe céleste (un éclair énorme), la Furie (dégâts doublés 30 s) et la Pluie d'or (30 s de production d'un coup). Elles se rechargent en 10, 15 et 30 minutes."),
+                "Ce sont les compétences : la Frappe céleste (un éclair énorme), la Furie (dégâts doublés 30 s) et la Pluie d'or (30 s de production d'un coup). Elles se débloquent en atteignant les niveaux 15, 25 et 35, se rechargent en 10, 15 et 30 minutes (plus vite avec la chapelle), et se reverrouillent au repli."),
             ("Et cette poule dorée ?",
                 "Elle traverse la barre de temps en temps. Attrape-la d'un clic : ton or est multiplié par 7 pendant 20 secondes. La rater ne coûte rien."),
             ("Pourquoi le paysage change ?",

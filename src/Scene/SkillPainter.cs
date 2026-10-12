@@ -21,6 +21,12 @@ public static class SkillPainter
         {
             int index = (int)skill.Kind;
             int x = ButtonX(layout, index);
+            if (!Skills.Unlocked(state, skill.Kind))
+            {
+                Locked(r, x, y, size, skill.Unlock, hovered == index);
+                continue;
+            }
+
             double cooldown = state.Cooldowns[index];
             bool ready = cooldown <= 0;
             bool hover = hovered == index;
@@ -44,5 +50,15 @@ public static class SkillPainter
                 r.Fill(x, y + size, (int)Math.Round(size * state.FuryLeft / skill.Duration), 1, Palette.Red);
             }
         }
+    }
+
+    private static void Locked(ArtRaster r, int x, int y, int size, int unlock, bool hover)
+    {
+        r.Fill(x, y, size, size, Palette.Ink);
+        r.Fill(x + 1, y + 1, size - 2, size - 2, hover ? Palette.Slate : Palette.Navy.Mix(Palette.Slate, 0.35f));
+        ArtSprite icon = SceneSprites.Lock;
+        r.Blit(icon, x + (size - icon.Width) / 2, y + 3);
+        string label = $"{unlock}";
+        ArtFont.Draw(r, label, x + (size - ArtFont.Width(label)) / 2, y + size - ArtFont.Height - 3, Palette.Gray);
     }
 }

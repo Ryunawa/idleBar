@@ -10,6 +10,8 @@ public sealed record BossFailed : FrontierEvent;
 
 public sealed record BossCalled : FrontierEvent;
 
+public sealed record SkillUnlocked(SkillKind Kind) : FrontierEvent;
+
 public sealed record StageReached(int Stage, bool Boss) : FrontierEvent;
 
 public sealed record PlotConquered(int Plot) : FrontierEvent;

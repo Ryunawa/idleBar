@@ -70,9 +70,31 @@ public sealed class SideSystemsTests
     }
 
     [Fact]
+    public void SkillsStayLockedUntilTheirStage()
+    {
+        FrontierState state = new() { Stage = 24, MaxStage = 24 };
+        FrontierGame game = new(state, new Random(1));
+        Assert.False(game.UseSkill(SkillKind.Fury));
+        Assert.Equal(0, state.SkillsUsed);
+        state.MaxStage = 25;
+        Assert.True(game.UseSkill(SkillKind.Fury));
+        Assert.False(Skills.Unlocked(state, SkillKind.GoldRain));
+    }
+
+    [Fact]
+    public void ReachingAStageUnlocksItsSkill()
+    {
+        FrontierState state = new() { Stage = 14, MaxStage = 14, Kills = Balance.MonstersPerStage - 1 };
+        state.Fighters[(int)FighterKind.Hero] = 500;
+        FrontierGame game = new(state, new Random(1));
+        BattleTests.Run(game, 10);
+        Assert.Contains(game.Events.Drain(), frontierEvent => frontierEvent is SkillUnlocked { Kind: SkillKind.Smite });
+    }
+
+    [Fact]
     public void ASkillCannotBeUsedTwiceInARow()
     {
-        FrontierState state = new();
+        FrontierState state = new() { MaxStage = 50 };
         FrontierGame game = new(state, new Random(1));
         Assert.True(game.UseSkill(SkillKind.Fury));
         Assert.False(game.UseSkill(SkillKind.Fury));

@@ -138,6 +138,14 @@ public static class Battle
                     events.Add(new PlotConquered(plot.Index));
                 }
             }
+
+            foreach (SkillInfo skill in Skills.All)
+            {
+                if (skill.Unlock == state.MaxStage)
+                {
+                    events.Add(new SkillUnlocked(skill.Kind));
+                }
+            }
         }
 
         events.Add(new StageReached(state.Stage, Economy.IsBossStage(state.Stage)));

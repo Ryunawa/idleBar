@@ -48,6 +48,11 @@ public static class SceneReactions
                 motion.Reveal[conquered.Plot] = 0;
                 scene.Banners.Add(["TERRITOIRE CONQUIS", "Nouvel emplacement : choisis quoi bâtir"]);
                 break;
+            case SkillUnlocked unlocked:
+                scene.Banners.Add(["COMPÉTENCE DÉBLOQUÉE", Skills.Of(unlocked.Kind).Name]);
+                int middle = layout.SkillSize / 2;
+                fx.Burst(SkillPainter.ButtonX(layout, (int)unlocked.Kind) + middle, SkillPainter.ButtonY(layout) + middle, 14, Glitter, random);
+                break;
             case Built { Level: 1 } built:
                 motion.Build[built.Plot] = 0;
                 fx.Burst(layout.SlotCenter(built.Plot), 22, 12, Dust, random);
