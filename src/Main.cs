@@ -8,9 +8,9 @@ namespace IdleBar;
 public partial class Main : Control
 {
     private const double TrayRefreshIntervalSeconds = 2;
+    private const double InterfaceRefreshSeconds = 0.1;
     private const string PreferencesPath = "user://preferences.cfg";
     private const string InstancePath = "user://instance.pid";
-    private const float UpdateBannerSeconds = 10;
     private const int FlushTimeoutMilliseconds = 2000;
 
     private SingleInstance _instance = null!;
@@ -23,6 +23,7 @@ public partial class Main : Control
     private FaqWindow _faq = null!;
     private UpdateNotice _updates = null!;
     private double _sinceTrayRefresh = TrayRefreshIntervalSeconds;
+    private double _sinceInterfaceRefresh;
 
     public override void _Ready()
     {
@@ -49,7 +50,12 @@ public partial class Main : Control
     {
         _placement.Update();
         _game.Tick(delta);
-        RefreshInterface();
+        _sinceInterfaceRefresh += delta;
+        if (_sinceInterfaceRefresh >= InterfaceRefreshSeconds)
+        {
+            _sinceInterfaceRefresh = 0;
+            RefreshInterface();
+        }
 
         _sinceTrayRefresh += delta;
         if (_sinceTrayRefresh >= TrayRefreshIntervalSeconds)
@@ -109,7 +115,7 @@ public partial class Main : Control
         _updates.Found += release =>
         {
             _expanded.ShowUpdate(release.Name);
-            _game.Announce($"Nouvelle version {release.Name} disponible : clique sur « Mise à jour »", UpdateBannerSeconds);
+            _game.Announce($"Nouvelle version {release.Name} disponible : clique sur « Mise à jour »");
         };
 
         _settings = new SettingsWindow();

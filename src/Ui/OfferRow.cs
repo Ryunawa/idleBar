@@ -70,6 +70,7 @@ public partial class OfferRow : PanelContainer
         _plotDetail = plotDetail;
         if (!_options.SequenceEqual(options))
         {
+            BuildingKind? chosen = _choice.Selected >= 0 ? (BuildingKind)_choice.GetSelectedId() : null;
             _options.Clear();
             _options.AddRange(options);
             _choice.Clear();
@@ -80,7 +81,7 @@ public partial class OfferRow : PanelContainer
 
             if (_options.Count > 0)
             {
-                _choice.Select(0);
+                _choice.Select(chosen is BuildingKind kept && _options.Contains(kept) ? _options.IndexOf(kept) : 0);
             }
         }
 

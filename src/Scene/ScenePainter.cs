@@ -7,8 +7,6 @@ public sealed class ScenePainter
     private ArtRaster _frame = new(1, 1);
     private ArtRaster _layer = new(1, 1);
 
-    public ArtRaster Frame => _frame;
-
     public ArtRaster Paint(FrontierState state, FrontierLayout layout, FrontierScene scene, SceneLight light, int hoveredSkill)
     {
         int height = FrontierLayout.Rows + layout.Top;

@@ -62,7 +62,7 @@ public static class SaveCodec
         };
         state.Fighters[(int)FighterKind.Hero] = Math.Max(1, state.Fighters[(int)FighterKind.Hero]);
         PlaceBuildings(state, save);
-        state.Achievements.UnionWith(save.Achievements);
+        state.Achievements.UnionWith(save.Achievements.Where(Achievements.Known));
         return state;
     }
 

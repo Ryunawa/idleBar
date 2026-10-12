@@ -39,6 +39,8 @@ public static class Achievements
         new("competences-50", "Maître des arcanes", "Lancer 50 compétences.", state => state.SkillsUsed >= 50),
     ];
 
+    public static bool Known(string id) => All.Any(achievement => achievement.Id == id);
+
     public static void Check(FrontierState state, EventLog events)
     {
         foreach (Achievement achievement in All)

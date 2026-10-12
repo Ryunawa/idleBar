@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -8,6 +9,10 @@ namespace IdleBar.Scene;
 public static class ArtFont
 {
     public const int Height = 5;
+
+    private const int CacheLimit = 512;
+
+    private static readonly ConcurrentDictionary<string, string> Plain = new();
 
     private static readonly (int X, int Y)[] Outline = [(-1, -1), (0, -1), (1, -1), (-1, 0), (1, 0), (-1, 1), (0, 1), (1, 1)];
 
@@ -31,20 +36,22 @@ public static class ArtFont
         ['\''] = ["1", "1", "0", "0", "0"], ['-'] = ["000", "000", "111", "000", "000"], ['+'] = ["000", "010", "111", "010", "000"],
         ['/'] = ["001", "001", "010", "100", "100"], ['%'] = ["101", "001", "010", "100", "101"], ['×'] = ["000", "101", "010", "101", "000"],
         ['('] = ["01", "10", "10", "10", "01"], [')'] = ["10", "01", "01", "01", "10"], ['>'] = ["100", "010", "001", "010", "100"],
+        ['«'] = ["0000", "0101", "1010", "0101", "0000"], ['»'] = ["0000", "1010", "0101", "1010", "0000"],
     };
 
     public static string Normalize(string text)
     {
-        StringBuilder plain = new();
-        foreach (char symbol in text.Replace('’', '\'').Replace("œ", "oe").Replace("Œ", "OE").Normalize(NormalizationForm.FormD))
+        if (Plain.TryGetValue(text, out string? cached))
         {
-            if (CharUnicodeInfo.GetUnicodeCategory(symbol) != UnicodeCategory.NonSpacingMark)
-            {
-                plain.Append(char.ToUpperInvariant(symbol));
-            }
+            return cached;
         }
 
-        return plain.ToString();
+        if (Plain.Count >= CacheLimit)
+        {
+            Plain.Clear();
+        }
+
+        return Plain[text] = Strip(text);
     }
 
     public static int Width(string text)
@@ -88,6 +95,20 @@ public static class ArtFont
         }
 
         return cursor - x - 1;
+    }
+
+    private static string Strip(string text)
+    {
+        StringBuilder plain = new();
+        foreach (char symbol in text.Replace('’', '\'').Replace("œ", "oe").Replace("Œ", "OE").Normalize(NormalizationForm.FormD))
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(symbol) != UnicodeCategory.NonSpacingMark)
+            {
+                plain.Append(char.ToUpperInvariant(symbol));
+            }
+        }
+
+        return plain.ToString();
     }
 
     private static string[] Glyph(char symbol) => Glyphs.TryGetValue(symbol, out string[]? glyph) ? glyph : Glyphs['?'];

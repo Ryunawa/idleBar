@@ -63,13 +63,32 @@ public sealed class LoaderTests
         Assert.Equal([0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], arguments.PLevels);
     }
 
-    private static FrontierData Data(FrontierState state, int revision, double away)
+    [Fact]
+    public void ALostReplyDoesNotRollTheGameBack()
+    {
+        Guid mine = Guid.NewGuid();
+        LocalSave local = new("player", 4, true, Now.AddMinutes(-30), SaveCodec.Capture(new FrontierState { Stage = 26, MaxStage = 26 }), mine);
+        LoadPlan plan = FrontierLoader.Plan(Data(new FrontierState { Stage = 20, MaxStage = 20 }, 5, 7200, mine), local, Now);
+        Assert.Equal(26, plan.State.Stage);
+        Assert.True(plan.Unsent);
+    }
+
+    [Fact]
+    public void AnotherPcSaveStillWins()
+    {
+        LocalSave local = new("player", 4, true, Now.AddMinutes(-30), SaveCodec.Capture(new FrontierState { Stage = 26, MaxStage = 26 }), Guid.NewGuid());
+        LoadPlan plan = FrontierLoader.Plan(Data(new FrontierState { Stage = 40, MaxStage = 40 }, 5, 60, Guid.NewGuid()), local, Now);
+        Assert.Equal(40, plan.State.Stage);
+        Assert.False(plan.Unsent);
+    }
+
+    private static FrontierData Data(FrontierState state, int revision, double away, Guid? savedBy = null)
     {
         FrontierSave save = SaveCodec.Capture(state);
         return new FrontierData(
             revision, Now, away, save.Gold, save.LifetimeGold, save.Souls, save.Retreats, save.Stage, save.MaxStage,
             save.BestStage, save.Kills, save.BossHeld, save.IntendantUnlocked, save.IntendantOn, save.MonstersKilled,
             save.BossesKilled, save.Chickens, save.Clicks, save.SkillsUsed, save.Fighters, save.Plots, save.Levels,
-            save.Cooldowns, save.Achievements);
+            save.Cooldowns, save.Achievements, savedBy);
     }
 }

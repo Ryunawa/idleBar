@@ -13,6 +13,7 @@ public sealed class Monster
         Approach = approach;
         ApproachTotal = approach;
         BossLeft = boss ? bossSeconds : 0;
+        BossTotal = BossLeft;
     }
 
     public long Id { get; }
@@ -32,6 +33,8 @@ public sealed class Monster
     public double ApproachTotal { get; }
 
     public double BossLeft { get; set; }
+
+    public double BossTotal { get; }
 
     public string Name => Biomes.NameOf(this);
 }

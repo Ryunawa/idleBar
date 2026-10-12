@@ -16,6 +16,8 @@ public sealed class SessionAccess
         _requirements = requirements;
     }
 
+    public void Recheck() => _versionChecked = false;
+
     public async Task<string> TokenAsync()
     {
         string token = await _keeper.GetAccessTokenAsync();

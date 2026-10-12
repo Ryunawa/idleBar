@@ -25,7 +25,7 @@ public sealed class BarPlacement : IDisposable
             : new FloatingDock(window);
         _dock.Docked += () => _window.ContentScaleFactor = _dock.Scale;
         _dock.FullscreenAppChanged += _ => UpdateFrameRate();
-        _dock.Place(preferences.ScreenDevice, BarSizes.Scale);
+        _dock.Place(preferences.ScreenDevice);
     }
 
     public event Action<bool>? CollapsedChanged;
@@ -58,7 +58,7 @@ public sealed class BarPlacement : IDisposable
     {
         _preferences.ScreenDevice = screenDevice;
         _preferences.Save();
-        _dock.Place(screenDevice, BarSizes.Scale);
+        _dock.Place(screenDevice);
     }
 
     public void Dispose() => _dock.Dispose();

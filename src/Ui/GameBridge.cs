@@ -21,7 +21,6 @@ public sealed class GameBridge : IDisposable
 
     public GameBridge(Node host)
     {
-        Announced += (message, _) => Journal.Add(message);
         SupabaseSettings? settings = SupabaseSettings.FromProjectSettings();
         if (settings is null)
         {
@@ -34,7 +33,7 @@ public sealed class GameBridge : IDisposable
         _session.Loaded += Load;
         _session.Changed += () =>
         {
-            if (_session.Status == SessionStatus.SignedOut && Game is not null)
+            if (_session.Status is SessionStatus.SignedOut or SessionStatus.NeedsStart && Game is not null)
             {
                 SetGame(null);
             }
@@ -43,8 +42,6 @@ public sealed class GameBridge : IDisposable
         _account = new Account(keeper, _session);
         _dialogs = new GameDialogs(_session, _account, Journal, host);
     }
-
-    public event Action<string, float>? Announced;
 
     public event Action<IReadOnlyList<FrontierEvent>>? Happened;
 
@@ -62,10 +59,16 @@ public sealed class GameBridge : IDisposable
 
     public void Tick(double delta)
     {
-        if (Game is FrontierGame game && _session?.Status is not (SessionStatus.Elsewhere or SessionStatus.UpdateRequired))
+        bool paused = _session?.Status is SessionStatus.Elsewhere or SessionStatus.UpdateRequired;
+        if (Game is FrontierGame game)
         {
-            game.Advance(delta);
-            Report(game, game.Events.Drain());
+            game.Frozen = paused;
+        }
+
+        if (Game is FrontierGame running && !paused)
+        {
+            running.Advance(delta);
+            Report(running, running.Events.Drain());
         }
 
         _session?.Tick(delta);
@@ -73,7 +76,7 @@ public sealed class GameBridge : IDisposable
 
     public Task FlushAsync() => _session?.FlushAsync() ?? Task.CompletedTask;
 
-    public void Announce(string text, float seconds) => Announced?.Invoke(text, seconds);
+    public void Announce(string text) => Journal.Add(text);
 
     public void OpenMenu(float scale)
     {

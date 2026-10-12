@@ -8,8 +8,8 @@ namespace IdleBar.Online;
 
 public sealed partial class FrontierSession
 {
-    private const string Reloaded = "Ta partie a été reprise telle qu'elle est sur le serveur.";
-    private const string Away = "Ta partie est ouverte sur un autre PC. Clique sur l'or pour la reprendre ici.";
+    private const string Rejected = "Le serveur refuse les sauvegardes de cette version : mets le jeu à jour.";
+    private const string Lost = "Ta partie est introuvable sur le serveur : reprends la route.";
 
     public Task FlushAsync()
     {
@@ -28,7 +28,7 @@ public sealed partial class FrontierSession
         _busy = true;
         _saveSoon = false;
         _clock.Saved();
-        _local.Write(new LocalSave(player, _revision, true, DateTimeOffset.UtcNow, save));
+        _local.Write(Copy(player, true, save));
         try
         {
             string token = await _access.TokenAsync();
@@ -56,19 +56,36 @@ public sealed partial class FrontierSession
         switch (reply.Status)
         {
             case FrontierReply.Ok when reply.Frontier is FrontierData data:
+                _refusals = 0;
                 _revision = data.Revision;
-                _local.Write(new LocalSave(player, _revision, false, DateTimeOffset.UtcNow, save));
+                _local.Write(Copy(player, false, save));
                 SetStatus(SessionStatus.Ready);
                 break;
             case FrontierReply.Elsewhere:
                 SetStatus(SessionStatus.Elsewhere);
                 Noticed?.Invoke(Away);
                 break;
+            case FrontierReply.Missing:
+                Game = null;
+                _revision = -1;
+                SetStatus(SessionStatus.NeedsStart);
+                Noticed?.Invoke(Lost);
+                break;
+            case FrontierReply.Conflict when reply.Frontier is FrontierData mine && FrontierLoader.SavedBy(mine, _session, _revision):
+                _revision = mine.Revision;
+                _saveSoon = true;
+                break;
             default:
-                if (reply.Frontier is FrontierData server)
+                _access.Recheck();
+                if (reply.Status == FrontierReply.Refused && ++_refusals >= 2)
+                {
+                    SetStatus(SessionStatus.UpdateRequired);
+                    Noticed?.Invoke(Rejected);
+                }
+                else if (reply.Frontier is FrontierData server)
                 {
                     _revision = -1;
-                    _local.Forget();
+                    _local.Forget(player);
                     Game = null;
                     Adopt(server, null);
                     Noticed?.Invoke(Reloaded);
@@ -82,7 +99,7 @@ public sealed partial class FrontierSession
     {
         if (Status is (SessionStatus.Ready or SessionStatus.Offline) && _keeper.UserId is string player && Snapshot() is FrontierSave save)
         {
-            _local.Write(new LocalSave(player, _revision, true, DateTimeOffset.UtcNow, save));
+            _local.Write(Copy(player, true, save));
         }
     }
 
@@ -118,16 +135,11 @@ public sealed partial class FrontierSession
             case ActionRefusedException:
             case not null when TransportFailure.Matches(exception):
                 GD.PushWarning($"Serveur injoignable : {exception.Message}");
+                _access.Recheck();
                 SetStatus(SessionStatus.Offline);
                 return true;
             default:
                 return false;
         }
-    }
-
-    private void SetStatus(SessionStatus status)
-    {
-        Status = status;
-        Changed?.Invoke();
     }
 }

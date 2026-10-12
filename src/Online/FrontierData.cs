@@ -28,7 +28,8 @@ public sealed record FrontierData(
     IReadOnlyList<string?> Plots,
     IReadOnlyList<int> Levels,
     IReadOnlyList<double> Cooldowns,
-    IReadOnlyList<string> Achievements)
+    IReadOnlyList<string> Achievements,
+    Guid? SavedBy = null)
 {
     public FrontierSave ToSave() => new(
         SaveCodec.CurrentVersion, Gold, LifetimeGold, Souls, Retreats, Stage, MaxStage, BestStage, Kills, BossHeld,

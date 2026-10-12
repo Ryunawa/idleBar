@@ -14,7 +14,6 @@ public sealed class FloatingDock : IBarDock
     private readonly Window _window;
     private int _logicalHeight;
     private string? _screenDevice;
-    private float _sizeFactor = 1f;
     private Rect2I _bounds;
     private ulong _nextCheck;
 
@@ -33,7 +32,7 @@ public sealed class FloatingDock : IBarDock
 
     public float ScreenScale { get; private set; } = 1f;
 
-    public float Scale => ScreenScale * _sizeFactor;
+    public float Scale => ScreenScale;
 
     public bool FullscreenAppActive => false;
 
@@ -50,10 +49,9 @@ public sealed class FloatingDock : IBarDock
         Reposition();
     }
 
-    public void Place(string? screenDevice, float sizeFactor)
+    public void Place(string? screenDevice)
     {
         _screenDevice = screenDevice;
-        _sizeFactor = sizeFactor;
         Reposition();
     }
 

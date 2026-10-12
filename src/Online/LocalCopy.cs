@@ -8,23 +8,24 @@ namespace IdleBar.Online;
 
 public sealed class LocalCopy
 {
-    private readonly string _path;
+    private readonly string _folder;
 
-    public LocalCopy(string path)
+    public LocalCopy(string folder)
     {
-        _path = path;
+        _folder = folder;
     }
 
     public LocalSave? Read(string playerId)
     {
+        string path = PathOf(playerId);
         try
         {
-            if (!File.Exists(_path))
+            if (!File.Exists(path))
             {
                 return null;
             }
 
-            LocalSave? local = JsonSerializer.Deserialize<LocalSave>(File.ReadAllText(_path), SaveCodec.Options);
+            LocalSave? local = JsonSerializer.Deserialize<LocalSave>(File.ReadAllText(path), SaveCodec.Options);
             return local is not null && local.PlayerId == playerId && SaveCodec.Complete(local.Save) ? local : null;
         }
         catch (Exception exception) when (exception is IOException or JsonException or UnauthorizedAccessException)
@@ -36,11 +37,12 @@ public sealed class LocalCopy
 
     public void Write(LocalSave local)
     {
-        string temporary = _path + ".tmp";
+        string path = PathOf(local.PlayerId);
+        string temporary = path + ".tmp";
         try
         {
             File.WriteAllText(temporary, JsonSerializer.Serialize(local, SaveCodec.Options));
-            File.Move(temporary, _path, true);
+            File.Move(temporary, path, true);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
@@ -48,15 +50,21 @@ public sealed class LocalCopy
         }
     }
 
-    public void Forget()
+    public void Forget(string playerId)
     {
         try
         {
-            File.Delete(_path);
+            File.Delete(PathOf(playerId));
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             GD.PushWarning($"Copie locale non effacée : {exception.Message}");
         }
+    }
+
+    private string PathOf(string playerId)
+    {
+        string safe = string.Concat(playerId.Split(Path.GetInvalidFileNameChars()));
+        return Path.Combine(_folder, $"frontier-{safe}.json");
     }
 }

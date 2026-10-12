@@ -22,6 +22,11 @@ public sealed class EventLog
 
     public IReadOnlyList<FrontierEvent> Drain()
     {
+        if (_events.Count == 0)
+        {
+            return [];
+        }
+
         List<FrontierEvent> drained = [.. _events];
         _events.Clear();
         return drained;

@@ -10,13 +10,4 @@ public static class IconSprites
         ".hh.hh.",
         ".hhhhh.",
         "...h...");
-
-    public static PixelSprite Jar { get; } = PixelSprite.Parse(
-        ".BBBBB.",
-        "..www..",
-        ".wgLgw.",
-        "wgggLgw",
-        "wLgggLw",
-        "wgLgggw",
-        ".wwwww.");
 }

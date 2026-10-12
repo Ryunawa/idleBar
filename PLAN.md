@@ -31,7 +31,7 @@ La Frontière remplace la Taverne (0.2 à 0.3.2), elle-même successeur du jeu d
   - le front fait 92 pixels d'art, ou 74 en dessous de 320 de large ;
   - le village prend au moins 12 × 16, et jusqu'à 12 × 32 en laissant 60 à la route et 40 au brouillard ; puis il monte à 12 × 40, la route et le crieur à 120, et le brouillard à 80 ;
   - au-delà, du paysage (chênes, meules, champs, clôtures, puits, épouvantail, poteau) remplit la route ;
-  - en dessous de 248 pixels d'art (petit écran à grande échelle Windows), le village se cache, les bannières aussi, et il ne reste que le front et les compétences.
+  - en dessous de 358 pixels d'art (12 × 16 + 166, par exemple un écran 1366×768 à 150 %), le village se cache, les bannières aussi, et il ne reste que le front et les compétences.
 
 ## Les règles
 
@@ -130,7 +130,8 @@ Le joueur choisit le bâtiment de chaque emplacement libre (`Construction`), pui
   - `22_frontier_tables.sql` crée les tables de référence (`fighter_kinds`, `skill_kinds`, `building_kinds`, `plots`), la partie (`frontiers`, une colonne typée par valeur) et ses listes (`frontier_fighters`, `frontier_plots`, `frontier_cooldowns`, `frontier_achievements`), avec leurs contraintes : un exemplaire de chaque bâtiment, pas de niveau sans bâtiment, or fini et positif ;
   - `23_frontier_rules.sql` contient les fonctions privées : réponse, contrôle de forme et vraisemblance ;
   - `24_frontier_actions.sql` contient les actions du joueur ;
-  - `25_more_plots.sql` porte le village à 12 emplacements et 12 bâtiments.
+  - `25_more_plots.sql` porte le village à 12 emplacements et 12 bâtiments ;
+  - `26_review_fixes.sql` ajoute `saved_by` (la session de la dernière sauvegarde), la liste des succès connus, et exige la 0.4.2.
 - **`start_frontier(p_session)`** crée la partie : héros niveau 1, 12 emplacements vides, compétences prêtes.
 - **`claim_frontier(p_session)`** fait de ce PC celui qui sauvegarde, et renvoie la partie et `away_seconds`, mesuré par le serveur. Le client l'appelle au démarrage, à la connexion, et quand le joueur reprend la partie ici.
 - **`rejoin_frontier(p_session)`** sert aux reconnexions automatiques après une coupure. Elle ne reprend la main que si aucun autre PC n'a donné signe de vie depuis `frontier_idle_seconds` (120 s) ; sinon elle répond `elsewhere`.
@@ -145,16 +146,22 @@ Le joueur choisit le bâtiment de chaque emplacement libre (`Construction`), pui
   - L'or n'est pas contrôlé : sans classement ni marché, tricher ne profite qu'au tricheur.
 - **Client** (`FrontierSession`).
   - Il réclame la partie au démarrage et sauvegarde toutes les 30 s, après un repli, un succès, une conquête ou une construction, et à la fermeture.
-  - La copie locale `user://frontier.json` (format 2) est liée au joueur. Elle est écrite à chaque envoi, toutes les 30 s hors ligne, à la déconnexion et à la fermeture. Hors ligne, on joue dessus. Une copie non envoyée de la même révision l'emporte au retour, et son absence se compte depuis son écriture. Une copie de la 0.4.0 est ignorée.
-  - Une réponse du serveur qui arrive après une déconnexion est ignorée.
+  - Chaque PC a un identifiant de session stable (`user://device.id`) : un redémarrage n'est pas pris pour un autre PC.
+  - La copie locale `user://frontier-<joueur>.json` (format 2) est propre à chaque compte. Elle est écrite à chaque envoi, toutes les 30 s hors ligne, à la déconnexion et à la fermeture. Hors ligne, on joue dessus. Au retour, une copie non envoyée l'emporte si elle est de la même révision que le serveur, ou si la dernière sauvegarde du serveur vient de ce PC (`saved_by`, script 26) : une réponse perdue ne fait donc pas revenir la partie en arrière. Son absence se compte depuis son écriture.
+  - La version minimale est relue à chaque connexion. Deux refus de suite (`refused`) passent en « Mise à jour requise » ; `missing` renvoie au départ ; une réponse qui arrive après une déconnexion est ignorée.
+  - Pendant « Partie ouverte ailleurs » ou « Mise à jour requise », la partie est gelée : clics et achats sont ignorés (`FrontierGame.Frozen`).
+  - Le serveur ne garde que les succès connus (`achievement_kinds`, script 26), et le client écarte les inconnus au chargement.
   - « Partie ouverte ailleurs » met le jeu en pause, et un clic sur l'or la reprend.
 - **Fichiers de la taverne.** `tavern.cfg`, `rounds.cfg` et `journal.txt` restent dans `%APPDATA%\IdleBar`. Ils ne pèsent rien. Le journal de la Frontière est `frontier-journal.txt`.
 
-## Publier la 0.4.1
+## Publier la 0.4.3
 
-La purge efface toutes les parties : fais-la au moment de publier.
-1. Dans l'éditeur SQL de Supabase, exécuter dans l'ordre `21_purge.sql`, `22_frontier_tables.sql`, `23_frontier_rules.sql`, `24_frontier_actions.sql` et `25_more_plots.sql`. Dès cet instant, la 0.4.0 affiche « Mise à jour requise ».
-2. Pousser `main`, puis le tag `v0.4.1` : GitHub lance les tests, construit et publie.
+La 0.4.1 (scripts 21 à 24) et la 0.4.2 (12 emplacements, compétences à débloquer) sont publiées. Les scripts 21 à 24 sont passés en production le 12 octobre.
+1. Dans l'éditeur SQL de Supabase, exécuter `25_more_plots.sql` s'il n'est pas encore passé, puis `26_review_fixes.sql`. Le 26 exige la 0.4.2 : la 0.4.1, qui n'envoie que 7 emplacements, affiche alors « Mise à jour requise » au lieu de voir ses sauvegardes refusées.
+2. Pousser `main`, puis le tag `v0.4.3` : GitHub lance les tests, construit et publie.
+3. Une fois la release vérifiée, si tu veux imposer les correctifs : `update private.settings set min_client_version = '0.4.3';`.
+
+**Ne jamais rejouer `21_purge.sql`** : il supprime la table `frontiers` et toutes les parties. Les scripts déjà passés ne se rejouent pas ; on n'exécute que les nouveaux numéros.
 
 **Ensuite.** Le social v2 repartira de zéro : nouveau code ami et nouvelles tables, rattachés aux comptes.
 
@@ -169,7 +176,9 @@ La purge efface toutes les parties : fais-la au moment de publier.
 | 4. Sauvegarde | Scripts `18` et `19`, session, copie locale, cadeau | Fait |
 | 5. Finitions | FAQ, README, ce plan, grands nombres, revue et script `20` | Fait |
 | 6. Sortie 0.4.0 | Scripts `18` à `20`, tag `v0.4.0` | Fait le 12 octobre |
-| 7. 0.4.1 | Barre proportionnelle à l'écran, « Max ×N », boss au clic, moulin, bâtiments au choix, 12 emplacements, purge et vraies tables | Prêt ; voir « Publier la 0.4.1 » |
+| 7. 0.4.1 | Barre proportionnelle à l'écran, « Max ×N », boss au clic, moulin, bâtiments au choix, purge et vraies tables | Publiée |
+| 8. 0.4.2 | 12 emplacements et 5 nouveaux bâtiments, compétences à débloquer | Publiée |
+| 9. 0.4.3 | Correctifs de la revue : réponse perdue, succès inventés, version relue, pause, copie par compte, script `26` | Prête ; voir « Publier la 0.4.3 » |
 
 **Ensuite.**
 - 0.4.x : les fêtes (Halloween, Noël) dans le village.
@@ -222,7 +231,7 @@ La purge efface toutes les parties : fais-la au moment de publier.
    ```bash
    git config user.email "robin.douet@gmail.com"
    ```
-3. **Mettre Supabase à jour** : dans l'éditeur SQL, exécuter les scripts numérotés de `supabase/` dans l'ordre, jusqu'au dernier numéro.
+3. **Mettre Supabase à jour** : sur un projet Supabase neuf, exécuter tous les scripts numérotés de `supabase/` dans l'ordre. Sur la production, n'exécuter que les numéros pas encore passés, et ne jamais rejouer `21_purge.sql`.
 4. **Lancer les tests** :
    ```bash
    dotnet test tests/Frontier.Tests

@@ -23,8 +23,6 @@ public sealed class ArtRaster
 
     public void Clear() => Array.Clear(Data);
 
-    public void CopyFrom(ArtRaster source) => Buffer.BlockCopy(source.Data, 0, Data, 0, Math.Min(Data.Length, source.Data.Length));
-
     public void Set(int x, int y, Rgba color)
     {
         int row = y + OffsetY;

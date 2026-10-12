@@ -40,9 +40,7 @@ public sealed class AppBar : IBarDock
 
     public float ScreenScale { get; private set; } = 1f;
 
-    public float SizeFactor { get; private set; } = 1f;
-
-    public float Scale => ScreenScale * SizeFactor;
+    public float Scale => ScreenScale;
 
     public string? ScreenDevice { get; private set; }
 
@@ -57,10 +55,9 @@ public sealed class AppBar : IBarDock
         Update();
     }
 
-    public void Place(string? screenDevice, float sizeFactor)
+    public void Place(string? screenDevice)
     {
         ScreenDevice = screenDevice;
-        SizeFactor = sizeFactor;
         _positionInvalidated = true;
         Update();
     }

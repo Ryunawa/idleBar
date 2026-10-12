@@ -19,6 +19,8 @@ public sealed class FrontierGame
 
     public EventLog Events { get; } = new();
 
+    public bool Frozen { get; set; }
+
     public void Advance(double delta)
     {
         if (delta >= Balance.LongGap)
@@ -39,7 +41,7 @@ public sealed class FrontierGame
 
     public bool Strike()
     {
-        if (!Battle.Fighting(State))
+        if (Frozen || !Battle.Fighting(State))
         {
             return false;
         }
@@ -49,14 +51,14 @@ public sealed class FrontierGame
         return true;
     }
 
-    public bool CatchChicken() => GoldenChicken.Catch(State, _random, Events);
+    public bool CatchChicken() => !Frozen && GoldenChicken.Catch(State, _random, Events);
 
-    public bool Buy(Purchase purchase) => Shop.Buy(State, purchase, Events);
+    public bool Buy(Purchase purchase) => !Frozen && Shop.Buy(State, purchase, Events);
 
     public int BuyMany(Purchase purchase, int count)
     {
         int bought = 0;
-        while (bought < count && Shop.Buy(State, purchase, Events))
+        while (bought < count && Buy(purchase))
         {
             bought++;
         }
@@ -64,16 +66,16 @@ public sealed class FrontierGame
         return bought;
     }
 
-    public int Retreat() => RetreatRules.Apply(State, Events);
+    public int Retreat() => Frozen ? 0 : RetreatRules.Apply(State, Events);
 
-    public bool CallBoss() => Battle.CallBoss(State, Events);
+    public bool CallBoss() => !Frozen && Battle.CallBoss(State, Events);
 
-    public void SetIntendant(bool on) => State.IntendantOn = on && State.IntendantUnlocked;
+    public void SetIntendant(bool on) => State.IntendantOn = Frozen ? State.IntendantOn : on && State.IntendantUnlocked;
 
     public bool UseSkill(SkillKind kind)
     {
         int index = (int)kind;
-        if (!Skills.Unlocked(State, kind) || State.Cooldowns[index] > 0)
+        if (Frozen || !Skills.Unlocked(State, kind) || State.Cooldowns[index] > 0)
         {
             return false;
         }

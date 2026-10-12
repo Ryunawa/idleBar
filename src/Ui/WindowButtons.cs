@@ -18,7 +18,7 @@ public static class WindowButtons
 
     public static Button CreateSettings(Action onPressed)
     {
-        Button button = Create(string.Empty, "Réglages : taille et écran de la barre", onPressed);
+        Button button = Create(string.Empty, "Réglages : écran de la barre et questions fréquentes", onPressed);
         button.Icon = IconSprites.Gear.Texture;
         button.ExpandIcon = true;
         button.IconAlignment = HorizontalAlignment.Center;

@@ -69,6 +69,14 @@ public sealed class SaveTests
     }
 
     [Fact]
+    public void UnknownAchievementsAreDroppedOnLoad()
+    {
+        FrontierSave save = SaveCodec.Capture(new FrontierState()) with { Achievements = ["boss-1", "triche-1", "triche-2"] };
+        FrontierState restored = SaveCodec.Restore(save);
+        Assert.Equal(["boss-1"], restored.Achievements);
+    }
+
+    [Fact]
     public void ASaveFromTheJsonEraIsIgnored()
     {
         Assert.Null(SaveCodec.Deserialize("{\"version\":1,\"fighters\":[1,0,0],\"buildings\":[1,0,0,0,0,0,0],\"cooldowns\":[0,0,0],\"achievements\":[]}"));

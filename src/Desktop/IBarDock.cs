@@ -19,7 +19,7 @@ public interface IBarDock : IDisposable
 
     void Dock(int logicalHeight);
 
-    void Place(string? screenDevice, float sizeFactor);
+    void Place(string? screenDevice);
 
     void Update();
 }

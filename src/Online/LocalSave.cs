@@ -3,4 +3,4 @@ using IdleBar.Frontier;
 
 namespace IdleBar.Online;
 
-public sealed record LocalSave(string PlayerId, int Revision, bool Unsent, DateTimeOffset WrittenAt, FrontierSave Save);
+public sealed record LocalSave(string PlayerId, int Revision, bool Unsent, DateTimeOffset WrittenAt, FrontierSave Save, Guid Session = default);

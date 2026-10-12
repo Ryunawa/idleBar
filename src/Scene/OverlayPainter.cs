@@ -23,7 +23,7 @@ public static class OverlayPainter
         r.Fill(x, y, fill, 1, Palette.Rose);
         if (monster.Boss && monster.Approach <= 0)
         {
-            r.Fill(x, y + 3, (int)Math.Round(width * monster.BossLeft / Balance.BossSeconds), 1, Palette.Yellow);
+            r.Fill(x, y + 3, (int)Math.Round(width * Math.Clamp(monster.BossLeft / Math.Max(1, monster.BossTotal), 0, 1)), 1, Palette.Yellow);
         }
 
         if (state.Supply > 0)

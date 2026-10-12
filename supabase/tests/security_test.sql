@@ -38,6 +38,7 @@ select pg_temp.expect_denied('select * from public.fighter_kinds');
 select pg_temp.expect_denied('select * from public.skill_kinds');
 select pg_temp.expect_denied('select * from public.building_kinds');
 select pg_temp.expect_denied('select * from public.plots');
+select pg_temp.expect_denied('select * from public.achievement_kinds');
 select pg_temp.expect_denied('select private.frontier_reply(auth.uid(), ''ok'')');
 select public.get_requirements();
 reset role;

@@ -86,9 +86,15 @@ update public.frontiers set last_seen = now() - interval '10 minutes' where play
 set role authenticated;
 select pg_temp.check(public.rejoin_frontier('00000000-0000-0000-0000-000000000005') ->> 'status' = 'ok', 'reconnexion quand l''autre PC dort');
 select pg_temp.check(pg_temp.save(4, '00000000-0000-0000-0000-000000000005', p_stage => 2, p_max => 2, p_best => 60, p_souls => 36, p_retreats => 1, p_plots => '{bakery,forge,null,null,null,null,null,null,null,null,null,null}', p_levels => '{2,1,0,0,0,0,0,0,0,0,0,0}') = 'ok', 'la session reprise sauvegarde');
+select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000005') #>> '{frontier,saved_by}' = '00000000-0000-0000-0000-000000000005', 'le serveur dit qui a sauvegardé');
+select pg_temp.check(pg_temp.save(5, '00000000-0000-0000-0000-000000000005', p_stage => 2, p_max => 2, p_best => 60, p_souls => 36, p_retreats => 1, p_plots => '{bakery,forge,null,null,null,null,null}', p_levels => '{2,1,0,0,0,0,0}') = 'refused', 'un client à 7 emplacements est refusé');
+select pg_temp.check(pg_temp.save(5, '00000000-0000-0000-0000-000000000005', p_stage => 2, p_max => 2, p_best => 60, p_souls => 36, p_retreats => 1, p_plots => '{bakery,forge,null,null,null,null,null,null,null,null,null,null}', p_levels => '{2,1,0,0,0,0,0,0,0,0,0,0}', p_achievements => '{monstres-100,triche-1,triche-2}') = 'ok', 'succès inconnus ignorés');
+select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000005') #> '{frontier,achievements}' = '["monstres-100"]', 'seuls les vrais succès sont gardés');
 reset role;
 
 delete from auth.users where id = '77777777-7777-7777-7777-777777777777';
 select pg_temp.check(not exists (select 1 from public.frontier_plots where player_id = '77777777-7777-7777-7777-777777777777'), 'un compte supprimé emporte sa partie');
 select pg_temp.check((select count(*) from public.plots) = 12 and (select max(unlock_stage) from public.plots) = 101, 'douze emplacements, le dernier au boss 100');
 select pg_temp.check((select count(*) from public.building_kinds) = 12, 'douze bâtiments');
+select pg_temp.check((select count(*) from public.achievement_kinds) = 30, 'trente succès connus');
+select pg_temp.check((select min_client_version from private.settings) = '0.4.2', 'la 0.4.2 est exigée');
