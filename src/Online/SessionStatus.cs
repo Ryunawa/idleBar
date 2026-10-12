@@ -4,7 +4,7 @@ public enum SessionStatus
 {
     SignedOut,
     Connecting,
-    NeedsFounding,
+    NeedsStart,
     Ready,
     Offline,
     UpdateRequired,

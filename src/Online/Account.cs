@@ -6,9 +6,9 @@ namespace IdleBar.Online;
 public sealed class Account
 {
     private readonly SessionKeeper _keeper;
-    private readonly OnlineSession _session;
+    private readonly FrontierSession _session;
 
-    public Account(SessionKeeper keeper, OnlineSession session)
+    public Account(SessionKeeper keeper, FrontierSession session)
     {
         _keeper = keeper;
         _session = session;

@@ -7,36 +7,30 @@ namespace IdleBar.Online;
 public sealed class SessionAccess
 {
     private readonly SessionKeeper _keeper;
-    private readonly TavernApi _api;
-    private readonly Doorbell _doorbell;
+    private readonly Func<string, Task<RequirementsData>> _requirements;
     private bool _versionChecked;
 
-    public SessionAccess(SessionKeeper keeper, TavernApi api, Doorbell doorbell)
+    public SessionAccess(SessionKeeper keeper, Func<string, Task<RequirementsData>> requirements)
     {
         _keeper = keeper;
-        _api = api;
-        _doorbell = doorbell;
+        _requirements = requirements;
     }
 
     public async Task<string> TokenAsync()
     {
         string token = await _keeper.GetAccessTokenAsync();
-        if (!_versionChecked)
+        if (_versionChecked)
         {
-            RequirementsData requirements = await _api.GetRequirementsAsync(token);
-            if (Version.TryParse(requirements.MinClientVersion, out Version? minimum) && GameVersion.Current < minimum)
-            {
-                throw new OutdatedClientException(requirements.MinClientVersion);
-            }
-
-            _versionChecked = true;
+            return token;
         }
 
-        if (_keeper.UserId is string userId)
+        RequirementsData requirements = await _requirements(token);
+        if (Version.TryParse(requirements.MinClientVersion, out Version? minimum) && GameVersion.Current < minimum)
         {
-            _doorbell.Listen(userId, token);
+            throw new OutdatedClientException(requirements.MinClientVersion);
         }
 
+        _versionChecked = true;
         return token;
     }
 }

@@ -9,7 +9,7 @@ namespace IdleBar.Ui;
 
 public sealed class Journal
 {
-    private const string Path = "user://journal.txt";
+    private const string Path = "user://frontier-journal.txt";
     private const int MaxEntries = 200;
     private static readonly TimeSpan RepeatWindow = TimeSpan.FromSeconds(10);
 

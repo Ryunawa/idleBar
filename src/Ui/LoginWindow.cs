@@ -99,8 +99,8 @@ public partial class LoginWindow : Window
     {
         _creating = creating;
         _intro.Text = creating
-            ? "Crée ton compte pour ouvrir ta taverne."
-            : "Connecte-toi pour retrouver ta taverne.";
+            ? "Crée ton compte pour partir à la Frontière."
+            : "Connecte-toi pour retrouver ta partie.";
         _confirmation.Text = string.Empty;
         _confirmation.Visible = creating;
         _hint.Visible = creating;

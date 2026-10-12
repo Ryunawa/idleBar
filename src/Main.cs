@@ -31,36 +31,6 @@ public partial class Main : Control
         Theme = BarTheme.Create();
         _game = new GameBridge(this);
         BuildInterface();
-        _expanded.Attach(_game.Tavern);
-        _expanded.Lane.Describe = _game.Describe;
-        _expanded.Lane.LookOf = _game.LookOf;
-        _expanded.Lane.TagOf = _game.TagOf;
-        _expanded.Lane.PlayerOf = _game.PlayerOf;
-        _game.ViewChanged += () => _expanded.Attach(_game.Shown, !_game.Away);
-        SocialControls.Attach(this, _game, _expanded, () => _placement.DialogScale);
-        if (_game.Visits is VisitDesk visits)
-        {
-            _expanded.Lane.PatronClicked += patron =>
-            {
-                if (!_game.Away)
-                {
-                    visits.Cheer(patron);
-                }
-            };
-            visits.Popped += (text, x, color) => _expanded.Lane.Pop(text, x, color);
-        }
-
-        if (_game.Streets is StreetDesk streets)
-        {
-            StreetMenu menu = new();
-            AddChild(menu);
-            menu.GreetRequested += streets.Greet;
-            menu.InviteRequested += streets.Invite;
-            _expanded.Lane.Street = streets.Street;
-            _expanded.Lane.PasserbyClicked += menu.Open;
-            streets.Cheered += (text, x) => _expanded.Lane.Pop(text, x, BarPalette.Gold);
-        }
-        _game.Announced += (message, seconds) => _expanded.Lane.Announce(message, seconds);
 
         BarPreferences preferences = BarPreferences.Load(PreferencesPath);
         _placement = new BarPlacement(GetWindow(), preferences);
@@ -115,7 +85,6 @@ public partial class Main : Control
         _expanded.SettingsRequested += OpenSettings;
         _expanded.UpdateRequested += OpenDownloadPage;
         _expanded.MenuRequested += () => _game.OpenMenu(_placement.DialogScale);
-        _expanded.TipJarRequested += () => _game.CollectTipJar();
 
         _collapsedBar = new CollapsedBar();
         AddChild(_collapsedBar);
@@ -152,11 +121,6 @@ public partial class Main : Control
     private void RefreshInterface()
     {
         BarStatus status = _game.Status;
-        _expanded.Lane.Decor = _game.Decor;
-        _expanded.Lane.Souvenirs = _game.Souvenirs;
-        _expanded.Lane.HostLook = _game.Rooms?.HostLook;
-        _expanded.Lane.HostName = _game.Rooms?.Room?.Host;
-        _expanded.Lane.HostId = _game.Away ? _game.Rooms?.Room?.HostId : _game.Me;
         _expanded.Refresh(status);
         _collapsedBar.Refresh(status);
     }

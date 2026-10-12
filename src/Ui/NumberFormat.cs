@@ -18,7 +18,7 @@ public static class NumberFormat
 
     public static string Count(int count, string one, string many) => $"{Amount(count)} {(count > 1 ? many : one)}";
 
-    public static string Coins(double value) => $"{Amount(value)} {(value < 2 ? "écu" : "écus")}";
+    public static string Gold(double value) => $"{Amount(value)} or";
 
     private static string WithSuffix(double value)
     {

@@ -21,8 +21,8 @@ public static class Calendar
 
     public static string Describe(Festival festival) => festival switch
     {
-        Festival.Halloween => "C'est Halloween à la taverne : citrouilles, toiles d'araignée et clients déguisés. Le Fantôme et Brindille passent même le jour !",
-        Festival.Christmas => "C'est Noël à la taverne : guirlande, sapin et bonnets rouges au comptoir.",
+        Festival.Halloween => "C'est Halloween sur la Frontière !",
+        Festival.Christmas => "C'est Noël sur la Frontière !",
         _ => string.Empty,
     };
 }

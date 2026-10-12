@@ -1,3 +1,3 @@
 namespace IdleBar.Ui;
 
-public sealed record BarStatus(string Headline, double? Coins, string Situation, string Compact, TipJarView? TipJar, VisitView? Visit = null, bool CanChat = false);
+public sealed record BarStatus(string Headline, double? Gold, string Situation, string Compact);
