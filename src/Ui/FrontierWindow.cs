@@ -7,7 +7,7 @@ public partial class FrontierWindow : Window
 {
     private const double RefreshSeconds = 0.25;
 
-    private static readonly Vector2I BaseSize = new(620, 470);
+    private static readonly Vector2I BaseSize = new(720, 470);
 
     private TabContainer _tabs = null!;
     private Label _wealth = null!;

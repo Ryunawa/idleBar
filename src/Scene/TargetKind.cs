@@ -10,7 +10,6 @@ public enum TargetKind
     Building,
     Convoy,
     Crier,
-    Sign,
     Fog,
     BossCall,
 }

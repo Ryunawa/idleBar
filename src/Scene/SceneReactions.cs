@@ -44,20 +44,20 @@ public static class SceneReactions
             case StageReached { Boss: true }:
                 fx.Float("BOSS !", layout.MonsterX + 6, 3, Palette.Red, 1.4f, 0);
                 break;
-            case SlotConquered conquered:
-                motion.Reveal[(int)conquered.Kind] = 0;
-                scene.Banners.Add(["TERRITOIRE CONQUIS", Buildings.Of(conquered.Kind).Name + " : emplacement libre"]);
+            case PlotConquered conquered:
+                motion.Reveal[conquered.Plot] = 0;
+                scene.Banners.Add(["TERRITOIRE CONQUIS", "Nouvel emplacement : choisis quoi bâtir"]);
                 break;
             case Built { Level: 1 } built:
-                motion.Build[(int)built.Kind] = 0;
-                fx.Burst(layout.SlotCenter(built.Kind), 22, 12, Dust, random);
+                motion.Build[built.Plot] = 0;
+                fx.Burst(layout.SlotCenter(built.Plot), 22, 12, Dust, random);
                 break;
             case Built built:
-                fx.Float("+1", layout.SlotCenter(built.Kind), 8, Palette.Yellow, 0.7f);
+                fx.Float("+1", layout.SlotCenter(built.Plot), 8, Palette.Yellow, 0.7f);
                 break;
             case TierReached tier:
-                fx.Float($"PALIER {tier.Tier}", layout.SlotCenter(tier.Kind), 4, Palette.Gold, 1.6f, -4);
-                fx.Burst(layout.SlotCenter(tier.Kind), 10, 14, Glitter, random);
+                fx.Float($"PALIER {tier.Tier}", layout.SlotCenter(tier.Plot), 4, Palette.Gold, 1.6f, -4);
+                fx.Burst(layout.SlotCenter(tier.Plot), 10, 14, Glitter, random);
                 break;
             case Trained { Level: 1, Kind: not FighterKind.Hero } trained:
                 motion.Recruit[(int)trained.Kind] = 0;

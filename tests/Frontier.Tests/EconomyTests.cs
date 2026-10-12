@@ -37,9 +37,9 @@ public sealed class EconomyTests
     {
         FrontierState state = new();
         Assert.Equal(8 * 3600, Economy.AbsenceCap(state));
-        state.Buildings[(int)BuildingKind.Mill] = 30;
+        Village.Build(state, BuildingKind.Mill, 30);
         Assert.Equal(13 * 3600, Economy.AbsenceCap(state));
-        state.Buildings[(int)BuildingKind.Mill] = 500;
+        Village.Build(state, BuildingKind.Mill, 500);
         Assert.Equal(24 * 3600, Economy.AbsenceCap(state));
     }
 
@@ -47,7 +47,7 @@ public sealed class EconomyTests
     public void SoulsMultiplyDamageAndGold()
     {
         FrontierState state = new();
-        state.Buildings[(int)BuildingKind.Farm] = 1;
+        Village.Build(state, BuildingKind.Farm, 1);
         double dps = Economy.Dps(state, FighterKind.Hero);
         double gold = Economy.BaseGoldPerSecond(state);
         state.Souls = 40;

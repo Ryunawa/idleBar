@@ -22,7 +22,7 @@ public sealed class VillageLife
     public void Update(float dt, FrontierState state, FrontierLayout layout, SceneFx fx, Random random, bool night)
     {
         Crier.Update(dt, random);
-        int wanted = layout.Narrow ? 0 : Math.Min(MaxVillagers, 2 + state.Buildings.Count(level => level > 0));
+        int wanted = layout.Narrow ? 0 : Math.Min(MaxVillagers, 2 + state.Built.Count(kind => kind is not null));
         while (Villagers.Count < wanted)
         {
             Villagers.Add(new Villager(
@@ -85,21 +85,21 @@ public sealed class VillageLife
         {
             _smoke = SmokeSeconds;
             Rgba color = night ? Palette.Steel : Palette.Silver;
-            if (state.Level(BuildingKind.Bakery) > 0)
+            if (layout.Center(state, BuildingKind.Bakery) is int bakery)
             {
-                fx.Add(new Particle(ParticleKind.Smoke, layout.SlotCenter(BuildingKind.Bakery) + 6, 3, 2 + (float)random.NextDouble() * 2, -2.5f, 0, 2.2f, color));
+                fx.Add(new Particle(ParticleKind.Smoke, bakery + 6, 3, 2 + (float)random.NextDouble() * 2, -2.5f, 0, 2.2f, color));
             }
 
-            if (state.Level(BuildingKind.Forge) > 0)
+            if (layout.Center(state, BuildingKind.Forge) is int chimney)
             {
-                fx.Add(new Particle(ParticleKind.Smoke, layout.SlotCenter(BuildingKind.Forge) + 5, 1, 2 + (float)random.NextDouble() * 2, -3f, 0, 2.2f, color));
+                fx.Add(new Particle(ParticleKind.Smoke, chimney + 5, 1, 2 + (float)random.NextDouble() * 2, -3f, 0, 2.2f, color));
             }
         }
 
-        if (state.Level(BuildingKind.Forge) > 0 && random.NextDouble() < dt * 2.5)
+        if (layout.Center(state, BuildingKind.Forge) is int forge && random.NextDouble() < dt * 2.5)
         {
             Rgba spark = random.Next(2) == 0 ? Palette.Yellow : Palette.Orange;
-            fx.Add(new Particle(ParticleKind.Dot, layout.SlotCenter(BuildingKind.Forge) + 14, 19, ((float)random.NextDouble() - 0.5f) * 24, -18 - (float)random.NextDouble() * 12, 70, 0.35f, spark));
+            fx.Add(new Particle(ParticleKind.Dot, forge + 14, 19, ((float)random.NextDouble() - 0.5f) * 24, -18 - (float)random.NextDouble() * 12, 70, 0.35f, spark));
         }
     }
 }

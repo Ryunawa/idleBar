@@ -14,9 +14,9 @@ public static class LightPainter
         {
             for (int index = 0; index < FrontierLayout.Slots; index++)
             {
-                if (state.Buildings[index] > 0 && scene.Motion.Build[index] is null)
+                if (state.Built[index] is BuildingKind kind && scene.Motion.Build[index] is null)
                 {
-                    Building(r, (BuildingKind)index, layout.SlotCenter(index), Economy.Tier(state.Buildings[index]), lit, time);
+                    Building(r, kind, layout.SlotCenter(index), Economy.Tier(state.Levels[index]), lit, time);
                 }
             }
         }

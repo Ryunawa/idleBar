@@ -35,8 +35,8 @@ public sealed class BattleTests
         Run(game, 10);
         IReadOnlyList<FrontierEvent> events = game.Events.Drain();
         Assert.True(state.MaxStage >= 11);
-        Assert.Contains(events, frontierEvent => frontierEvent is SlotConquered { Kind: BuildingKind.Bakery });
-        Assert.True(Economy.Unlocked(state, BuildingKind.Bakery));
+        Assert.Contains(events, frontierEvent => frontierEvent is PlotConquered { Plot: 2 });
+        Assert.True(Economy.Unlocked(state, 2));
     }
 
     [Fact]

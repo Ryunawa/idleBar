@@ -3,7 +3,7 @@
 La Frontière : un petit jeu idle en pixel art qui vit dans une barre en bas de ton écran. Pendant que tu fais autre chose :
 - ton héros, ton archère et ta mage repoussent les monstres, et un boss t'attend tous les 10 niveaux ;
 - chaque boss vaincu fait reculer le brouillard et libère un terrain pour ton village ;
-- la ferme, le moulin, la boulangerie et les autres bâtiments produisent de l'or, même quand le jeu est fermé ;
+- tu choisis quoi bâtir sur chaque terrain : la ferme, le moulin, la boulangerie, la forge… Chaque terrain produit de l'or, même quand le jeu est fermé, et chaque bâtiment y apporte son effet ;
 - tu te replies quand tu veux repartir plus fort, et la frontière avance de contrée en contrée.
 
 ## Télécharger
@@ -33,11 +33,9 @@ xattr -dr com.apple.quarantine /Applications/IdleBar.app
 ### Premiers pas
 
 1. Clique sur « Bienvenue ! » à gauche de la barre pour créer ton compte, puis sur « Prendre la route ».
-2. Le héros se bat tout seul. Clique sur le monstre si tu veux l'aider, et sur la poule dorée quand elle passe.
+2. Le héros se bat tout seul. Clique sur le monstre si tu veux l'aider, et sur la poule dorée quand elle passe. Si un boss te résiste, entraîne-toi un peu, puis clique sur « BOSS » dans le brouillard pour le défier de nouveau.
 3. Clique sur ton or, sur un combattant ou sur un bâtiment pour ouvrir la gestion : combattants, village, repli, succès, journal et FAQ.
 4. Survole n'importe quoi dans la barre pour savoir ce que c'est.
-
-Les anciens taverniers partent avec un cadeau en âmes, selon la renommée de leur taverne.
 
 Toutes les questions fréquentes sont dans le jeu : onglet FAQ de la gestion, ou bouton « Questions fréquentes » des réglages (l'engrenage).
 
@@ -59,17 +57,17 @@ Dans cet ordre :
 2. **Le jeu ensuite.** Pousse un tag de version : GitHub lance les tests, construit les versions Windows et macOS, inscrit le numéro dans le jeu, puis crée la page de téléchargement.
 
 ```bash
-git tag v0.4.0
+git tag v0.4.1
 ```
 
 ```bash
-git push origin v0.4.0
+git push origin v0.4.1
 ```
 
 3. **Seulement si les anciennes versions ne peuvent plus jouer** : une fois la nouvelle version publiée, impose-la dans l'éditeur SQL. Les jeux plus anciens affichent alors « Mise à jour requise » au lieu de planter.
 
 ```sql
-update private.settings set min_client_version = '0.4.0';
+update private.settings set min_client_version = '0.4.1';
 ```
 
 Pendant le développement, `config/version` dans `project.godot` doit valoir au moins cette version minimale, sinon le jeu lancé depuis Godot se bloque lui-même.

@@ -20,7 +20,6 @@ public partial class StartWindow : Window
             Text = "Ton héros t'attend aux portes du village. Au-delà, le brouillard cache le reste du monde : chaque boss vaincu le fait reculer et libère de la place pour bâtir.",
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
         });
-        content.AddChild(WindowRows.Muted("Les anciens taverniers partent avec un cadeau, selon la renommée de leur taverne."));
         _start = new Button { Text = "Prendre la route" };
         _start.Pressed += () => Submitted?.Invoke();
         content.AddChild(_start);

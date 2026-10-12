@@ -45,8 +45,6 @@ public partial class FrontierLane : Control
 
     public void Receive(IReadOnlyList<FrontierEvent> events) => _pending.AddRange(events);
 
-    public void Announce(IReadOnlyList<string> lines, float seconds) => _scene.Banners.Add(lines, seconds);
-
     public override void _Process(double delta)
     {
         _sinceLight += delta;

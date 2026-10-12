@@ -34,8 +34,6 @@ public sealed partial class FrontierSession
 
     public event Action<string>? Noticed;
 
-    public event Action<int, string?>? Gifted;
-
     public SessionStatus Status { get; private set; } = SessionStatus.SignedOut;
 
     public FrontierGame? Game { get; set; }
@@ -103,10 +101,6 @@ public sealed partial class FrontierSession
         if (!Stale(generation) && reply.Frontier is FrontierData data)
         {
             Adopt(data, null);
-            if (data.VeteranSouls > 0)
-            {
-                Gifted?.Invoke(data.VeteranSouls, data.VeteranName);
-            }
         }
     }
 

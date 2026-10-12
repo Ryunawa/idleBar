@@ -12,11 +12,11 @@ public sealed record BossCalled : FrontierEvent;
 
 public sealed record StageReached(int Stage, bool Boss) : FrontierEvent;
 
-public sealed record SlotConquered(BuildingKind Kind) : FrontierEvent;
+public sealed record PlotConquered(int Plot) : FrontierEvent;
 
-public sealed record Built(BuildingKind Kind, int Level) : FrontierEvent;
+public sealed record Built(int Plot, BuildingKind Kind, int Level) : FrontierEvent;
 
-public sealed record TierReached(BuildingKind Kind, int Tier) : FrontierEvent;
+public sealed record TierReached(int Plot, BuildingKind Kind, int Tier) : FrontierEvent;
 
 public sealed record Trained(FighterKind Kind, int Level) : FrontierEvent;
 

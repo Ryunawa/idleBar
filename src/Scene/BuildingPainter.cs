@@ -17,21 +17,19 @@ public static class BuildingPainter
 
         for (int index = 0; index < FrontierLayout.Slots; index++)
         {
-            BuildingKind kind = (BuildingKind)index;
-            if (!Economy.Unlocked(state, kind))
+            if (!Economy.Unlocked(state, index))
             {
                 continue;
             }
 
             int cx = layout.SlotCenter(index);
-            int level = state.Level(kind);
-            if (level == 0)
+            if (state.Built[index] is not BuildingKind kind)
             {
                 ArcanePainters.Plot(raster, cx);
                 continue;
             }
 
-            int tier = Economy.Tier(level);
+            int tier = Economy.Tier(state.Levels[index]);
             if (motion.Build[index] is float building)
             {
                 int top = (int)Math.Round(FrontierLayout.Ground - FrontierLayout.Ground * Ease(building / SceneMotion.BuildSeconds));
@@ -43,7 +41,7 @@ public static class BuildingPainter
             }
 
             Draw(raster, kind, cx, tier, time);
-            Decorate(raster, index, cx, tier, time);
+            Decorate(raster, (int)kind, cx, tier, time);
         }
     }
 

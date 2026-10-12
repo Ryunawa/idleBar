@@ -16,11 +16,13 @@ public partial class VillagePanel : VBoxContainer
         Name = "Village";
         VBoxContainer rows = new();
         rows.AddThemeConstantOverride("separation", 6);
-        rows.AddChild(WindowRows.Muted("Les bâtiments produisent de l'or, même quand le jeu est fermé (8 h au plus). Aux niveaux 10, 25, 50, 100 et 250, un palier double leur production et les transforme."));
-        foreach (BuildingInfo building in Buildings.All)
+        rows.AddChild(WindowRows.Muted("Chaque emplacement produit de l'or, même quand le jeu est fermé. Choisis le bâtiment à y construire : il y apporte son effet jusqu'au prochain repli. Aux niveaux 10, 25, 50, 100 et 250, un palier double la production."));
+        foreach (PlotInfo plot in Plots.All)
         {
             OfferRow row = new();
-            row.Bought += count => Game?.BuyMany(new BuildingPurchase(building.Kind), count);
+            int index = plot.Index;
+            row.Bought += count => Game?.BuyMany(new PlotPurchase(index), count);
+            row.Chosen += kind => Game?.Buy(new Construction(index, kind));
             rows.AddChild(row);
             _rows.Add(row);
         }
@@ -36,21 +38,30 @@ public partial class VillagePanel : VBoxContainer
         }
 
         FrontierState state = game.State;
-        foreach (BuildingInfo building in Buildings.All)
+        List<BuildingKind> free = [.. Buildings.All.Select(building => building.Kind).Where(kind => state.PlotOf(kind) is null)];
+        foreach (PlotInfo plot in Plots.All)
         {
-            OfferRow row = _rows[(int)building.Kind];
-            if (!Economy.Unlocked(state, building.Kind))
+            OfferRow row = _rows[plot.Index];
+            string name = $"Emplacement {plot.Index + 1}";
+            if (!Economy.Unlocked(state, plot.Index))
             {
-                row.ShowLocked($"{building.Name} · inexploré", $"Bats le boss du niveau {building.Unlock - 1} pour conquérir ce terrain. {building.Effect}", $"Boss {building.Unlock - 1}");
+                row.ShowLocked($"{name} · inexploré", $"Bats le boss du niveau {plot.Unlock - 1} pour conquérir ce terrain.", $"Boss {plot.Unlock - 1}");
                 continue;
             }
 
-            int level = state.Level(building.Kind);
-            double cost = Economy.BuildingCost(state, building.Kind);
-            string title = level > 0 ? $"{building.Name} · niv {level} · {Tier(level)}" : $"{building.Name} · à bâtir";
-            string detail = level > 0 ? $"+{NumberFormat.Rate(Economy.BuildingGold(state, building.Kind))} or/s. {building.Effect}" : building.Effect;
-            string action = $"{(level > 0 ? "Agrandir" : "Construire")} · {NumberFormat.Gold(cost)}";
-            row.Show(title, detail, action, state, new BuildingPurchase(building.Kind));
+            double cost = Economy.PlotCost(state, plot.Index);
+            if (state.Built[plot.Index] is not BuildingKind kind)
+            {
+                string yield = NumberFormat.Rate(Economy.PlotGoldAt(state, plot.Index, 1));
+                row.ShowChoice($"{name} · libre", $"Produit {yield} or/s au niveau 1.", $"Construire · {NumberFormat.Gold(cost)}", free, state.Gold >= cost);
+                continue;
+            }
+
+            int level = state.Levels[plot.Index];
+            BuildingInfo building = Buildings.Of(kind);
+            string title = $"{building.Name} · {name.ToLowerInvariant()} · niv {level} · {Tier(level)}";
+            string detail = $"+{NumberFormat.Rate(Economy.PlotGold(state, plot.Index))} or/s. {building.Effect}";
+            row.Show(title, detail, $"Agrandir · {NumberFormat.Gold(cost)}", state, new PlotPurchase(plot.Index));
         }
     }
 

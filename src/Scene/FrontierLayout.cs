@@ -9,7 +9,7 @@ public sealed record FrontierLayout(int Width, int Top, int VillageX, int SlotWi
     public const int Ground = 24;
     public const int RoomyFront = 92;
     public const int CompactFront = 74;
-    public const int Slots = FrontierState.BuildingCount;
+    public const int Slots = FrontierState.PlotCount;
 
     private const int Margin = 2;
     private const int NarrowSlot = 16;
@@ -36,10 +36,6 @@ public sealed record FrontierLayout(int Width, int Top, int VillageX, int SlotWi
 
     public int CrierX => PalisadeX + 14;
 
-    public bool Sign => Crier && RoadWidth >= 48;
-
-    public int SignX => CrierX + 13;
-
     public int MageX => FrontX + (Compact ? 1 : 4);
 
     public int ArcherX => FrontX + (Compact ? 16 : 22);
@@ -58,7 +54,7 @@ public sealed record FrontierLayout(int Width, int Top, int VillageX, int SlotWi
 
     public int SkillsWidth => Width - SkillsX;
 
-    public int CartFrom => Narrow ? Margin : SlotCenter(BuildingKind.Bakery) - 9;
+    public int CartFrom(FrontierState state) => Narrow || Center(state, BuildingKind.Bakery) is not int center ? Margin : center - 9;
 
     public int CartTo => FrontX - 20;
 
@@ -66,7 +62,7 @@ public sealed record FrontierLayout(int Width, int Top, int VillageX, int SlotWi
 
     public int SlotCenter(int index) => SlotX(index) + SlotWidth / 2;
 
-    public int SlotCenter(BuildingKind kind) => SlotCenter((int)kind);
+    public int? Center(FrontierState state, BuildingKind kind) => !Narrow && state.PlotOf(kind) is int plot ? SlotCenter(plot) : null;
 
     public int FighterX(FighterKind kind) => kind switch
     {

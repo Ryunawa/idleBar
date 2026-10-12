@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Godot;
 using IdleBar.Frontier;
 
@@ -8,14 +10,19 @@ public partial class OfferRow : PanelContainer
 {
     private const int Many = 10;
 
+    private readonly List<BuildingKind> _options = [];
     private Label _title = null!;
     private Label _detail = null!;
+    private OptionButton _choice = null!;
     private Button _buy = null!;
     private Button _many = null!;
     private Button _max = null!;
     private int _affordable;
+    private string _plotDetail = string.Empty;
 
     public event Action<int>? Bought;
+
+    public event Action<BuildingKind>? Chosen;
 
     public override void _Ready()
     {
@@ -29,12 +36,15 @@ public partial class OfferRow : PanelContainer
         text.AddChild(_title);
         text.AddChild(_detail);
         row.AddChild(text);
+        _choice = new OptionButton { CustomMinimumSize = new Vector2(150, 0), SizeFlagsVertical = SizeFlags.ShrinkCenter, Visible = false };
+        _choice.ItemSelected += _ => _detail.Text = ChoiceDetail();
         _buy = new Button { CustomMinimumSize = new Vector2(150, 0), SizeFlagsVertical = SizeFlags.ShrinkCenter };
-        _buy.Pressed += () => Bought?.Invoke(1);
+        _buy.Pressed += Press;
         _many = new Button { Text = $"×{Many}", SizeFlagsVertical = SizeFlags.ShrinkCenter };
         _many.Pressed += () => Bought?.Invoke(Many);
         _max = new Button { CustomMinimumSize = new Vector2(84, 0), SizeFlagsVertical = SizeFlags.ShrinkCenter };
         _max.Pressed += () => Bought?.Invoke(_affordable);
+        row.AddChild(_choice);
         row.AddChild(_buy);
         row.AddChild(_many);
         row.AddChild(_max);
@@ -55,6 +65,30 @@ public partial class OfferRow : PanelContainer
             : "Pas assez d'or pour un niveau";
     }
 
+    public void ShowChoice(string title, string plotDetail, string action, IReadOnlyList<BuildingKind> options, bool affordable)
+    {
+        _plotDetail = plotDetail;
+        if (!_options.SequenceEqual(options))
+        {
+            _options.Clear();
+            _options.AddRange(options);
+            _choice.Clear();
+            foreach (BuildingKind kind in options)
+            {
+                _choice.AddItem(Buildings.Of(kind).Name, (int)kind);
+            }
+
+            if (_options.Count > 0)
+            {
+                _choice.Select(0);
+            }
+        }
+
+        Fill(title, ChoiceDetail(), action, false);
+        _choice.Visible = true;
+        _buy.Disabled = !affordable || _options.Count == 0;
+    }
+
     public void ShowLocked(string title, string detail, string action)
     {
         Fill(title, detail, action, false);
@@ -66,7 +100,22 @@ public partial class OfferRow : PanelContainer
         _title.Text = title;
         _detail.Text = detail;
         _buy.Text = action;
+        _choice.Visible = false;
         _many.Visible = open;
         _max.Visible = open;
+    }
+
+    private string ChoiceDetail() =>
+        _choice.Selected >= 0 ? $"{_plotDetail} {Buildings.Of((BuildingKind)_choice.GetSelectedId()).Effect}" : _plotDetail;
+
+    private void Press()
+    {
+        if (_choice.Visible && _choice.Selected >= 0)
+        {
+            Chosen?.Invoke((BuildingKind)_choice.GetSelectedId());
+            return;
+        }
+
+        Bought?.Invoke(1);
     }
 }

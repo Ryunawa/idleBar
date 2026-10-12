@@ -7,6 +7,12 @@ public static class Intendant
     private const double FighterWeight = 2;
     private const int CompanionHeroLevel = 5;
 
+    private static readonly BuildingKind[] Preference =
+    [
+        BuildingKind.Forge, BuildingKind.Bakery, BuildingKind.Market, BuildingKind.Tower,
+        BuildingKind.Portal, BuildingKind.Mill, BuildingKind.Farm,
+    ];
+
     public static bool Run(FrontierState state, EventLog events) =>
         Choose(state) is Purchase purchase && Shop.Buy(state, purchase, events);
 
@@ -52,20 +58,37 @@ public static class Intendant
             }
         }
 
-        foreach (BuildingInfo building in Buildings.All)
+        for (int plot = 0; plot < FrontierState.PlotCount; plot++)
         {
-            if (Economy.Unlocked(state, building.Kind))
+            if (state.Built[plot] is not null)
             {
-                yield return new BuildingPurchase(building.Kind);
+                yield return new PlotPurchase(plot);
+            }
+            else if (Economy.Unlocked(state, plot) && Next(state) is BuildingKind kind)
+            {
+                yield return new Construction(plot, kind);
             }
         }
+    }
+
+    private static BuildingKind? Next(FrontierState state)
+    {
+        foreach (BuildingKind kind in Preference)
+        {
+            if (state.PlotOf(kind) is null)
+            {
+                return kind;
+            }
+        }
+
+        return null;
     }
 
     private static double Value(FrontierState state, Purchase purchase, double cost) => purchase switch
     {
         FighterPurchase fighter => FighterWeight * CombatRate(state) * DpsGain(state, fighter.Kind) / cost,
-        BuildingPurchase building when state.Level(building.Kind) == 0 => double.PositiveInfinity,
-        BuildingPurchase building => BuildingGain(state, building.Kind) / cost,
+        Construction => double.PositiveInfinity,
+        PlotPurchase raise => PlotGain(state, raise.Plot) / cost,
         _ => 0,
     };
 
@@ -80,6 +103,6 @@ public static class Intendant
         return Economy.BaseDps(state, kind, level + 1) - Economy.BaseDps(state, kind, level);
     }
 
-    private static double BuildingGain(FrontierState state, BuildingKind kind) =>
-        Buildings.Of(kind).Gold * Economy.Wealth(state);
+    private static double PlotGain(FrontierState state, int plot) =>
+        Plots.Of(plot).Gold * Economy.Wealth(state);
 }

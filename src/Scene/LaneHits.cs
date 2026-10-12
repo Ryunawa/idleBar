@@ -45,16 +45,11 @@ public static class LaneHits
 
         foreach (Convoy convoy in state.Convoys)
         {
-            int left = VillagePainter.CartLeft(layout, convoy);
-            if (layout.CartTo - layout.CartFrom >= 30 && x >= left && x <= left + CartWidth && y >= 14)
+            int left = VillagePainter.CartLeft(layout, state, convoy);
+            if (layout.CartTo - layout.CartFrom(state) >= 30 && x >= left && x <= left + CartWidth && y >= 14)
             {
                 return new LaneTarget(TargetKind.Convoy);
             }
-        }
-
-        if (state.VeteranName is not null && layout.Sign && x >= layout.SignX && x <= layout.SignX + 9 && y >= 10)
-        {
-            return new LaneTarget(TargetKind.Sign);
         }
 
         if (layout.Crier && x >= layout.CrierX && x <= layout.CrierX + 7 && y >= 12)

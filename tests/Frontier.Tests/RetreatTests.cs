@@ -28,7 +28,7 @@ public sealed class RetreatTests
     public void ARetreatResetsTheRunAndKeepsTheLegacy()
     {
         FrontierState state = new() { Stage = 62, MaxStage = 62, BestStage = 62, Gold = 1e6, LifetimeGold = 5e6 };
-        state.Buildings[(int)BuildingKind.Farm] = 40;
+        Village.Build(state, BuildingKind.Farm, 40);
         state.Fighters[(int)FighterKind.Archer] = 12;
         state.Achievements.Add("boss-1");
         FrontierGame game = new(state, new Random(1));

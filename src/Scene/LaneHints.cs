@@ -12,10 +12,9 @@ public static class LaneHints
         TargetKind.Skill => Skill((SkillKind)target.Index, state),
         TargetKind.Monster => Monster(state),
         TargetKind.Fighter => Fighter((FighterKind)target.Index, state),
-        TargetKind.Building => Building((BuildingKind)target.Index, state),
+        TargetKind.Building => Plot(target.Index, state),
         TargetKind.Convoy => "Convoi de pain : +5 % de dégâts par livraison, 5 au plus",
         TargetKind.Crier => "Le crieur public et ses nouvelles du royaume",
-        TargetKind.Sign => $"Enseigne de « {state.VeteranName} », ta vieille taverne",
         TargetKind.Fog => "Brouillard : chaque boss vaincu le fait reculer",
         TargetKind.BossCall => $"Défier le boss du niveau {state.Stage + 1} : 30 s pour le vaincre",
         _ => null,
@@ -49,20 +48,19 @@ public static class LaneHints
         return $"{fighter.Name} niv {state.Level(kind)} · {NumberFormat.Rate(Economy.Dps(state, kind))} dégâts/s · clique pour l'améliorer";
     }
 
-    private static string Building(BuildingKind kind, FrontierState state)
+    private static string Plot(int plot, FrontierState state)
     {
+        if (!Economy.Unlocked(state, plot))
+        {
+            return $"Terrain inexploré : bats le boss du niveau {Plots.Of(plot).Unlock - 1}";
+        }
+
+        if (state.Built[plot] is not BuildingKind kind)
+        {
+            return $"Terrain libre : choisis quoi y bâtir pour {NumberFormat.Gold(Economy.PlotCost(state, plot))} · clique pour gérer";
+        }
+
         BuildingInfo building = Buildings.Of(kind);
-        if (!Economy.Unlocked(state, kind))
-        {
-            return $"Terrain inexploré : bats le boss du niveau {building.Unlock - 1}";
-        }
-
-        int level = state.Level(kind);
-        if (level == 0)
-        {
-            return $"{building.Name} à bâtir : {NumberFormat.Gold(Economy.BuildingCost(state, kind))} · clique pour gérer";
-        }
-
-        return $"{building.Name} niv {level} · +{NumberFormat.Rate(Economy.BuildingGold(state, kind))} or/s · {building.Effect}";
+        return $"{building.Name} niv {state.Levels[plot]} · +{NumberFormat.Rate(Economy.PlotGold(state, plot))} or/s · {building.Effect}";
     }
 }

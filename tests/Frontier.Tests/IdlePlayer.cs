@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using IdleBar.Frontier;
 
 namespace IdleBar.Tests;
@@ -109,7 +110,7 @@ public sealed class IdlePlayer
             _lastProgress = Clock;
         }
 
-        if (Array.Exists(state.Buildings, level => level > 0))
+        if (Array.Exists(state.Built, kind => kind is not null))
         {
             Mark("premier-batiment");
         }
@@ -127,7 +128,7 @@ public sealed class IdlePlayer
             Mark($"repli-possible-{state.Retreats + 1}");
         }
 
-        if (Array.Exists(state.Buildings, level => level >= 100))
+        if (Array.Exists(state.Levels, level => level >= 100))
         {
             Mark("palier-100");
         }
@@ -138,7 +139,7 @@ public sealed class IdlePlayer
         if (_milestones.TryAdd(milestone, Clock))
         {
             FrontierState state = Game.State;
-            _notes.Add($"{milestone}: fighters {string.Join('/', state.Fighters)} buildings {string.Join('/', state.Buildings)} gps {Economy.BaseGoldPerSecond(state):0} dps {Economy.TotalDps(state):0} souls {state.Souls}");
+            _notes.Add($"{milestone}: fighters {string.Join('/', state.Fighters)} buildings {string.Join('/', state.Built.Select(kind => kind?.ToString() ?? "-"))} levels {string.Join('/', state.Levels)} gps {Economy.BaseGoldPerSecond(state):0} dps {Economy.TotalDps(state):0} souls {state.Souls}");
         }
     }
 }

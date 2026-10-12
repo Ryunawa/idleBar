@@ -118,14 +118,23 @@ public sealed class SceneTests
 
     private static FrontierState SampleState(int stage)
     {
-        FrontierState state = new() { Stage = stage, MaxStage = stage, BestStage = stage, Gold = 1e6, ConvoyTimer = 0.1, ChickenTimer = 1, VeteranName = "Le Pot d'Étain" };
+        FrontierState state = new() { Stage = stage, MaxStage = stage, BestStage = stage, Gold = 1e6, ConvoyTimer = 0.1, ChickenTimer = 1 };
         if (stage <= 1)
         {
             return state;
         }
 
         state.Fighters = [Math.Max(1, stage), stage * 2 / 3, stage / 3];
-        state.Buildings = [30, 22, 14, 8, 3, 1, stage >= 60 ? 100 : 0];
+        BuildingKind[] kinds = [BuildingKind.Forge, BuildingKind.Bakery, BuildingKind.Farm, BuildingKind.Mill, BuildingKind.Market, BuildingKind.Tower, BuildingKind.Portal];
+        int[] levels = [30, 22, 14, 8, 3, 1, stage >= 60 ? 100 : 0];
+        for (int plot = 0; plot < kinds.Length; plot++)
+        {
+            if (levels[plot] > 0 && Economy.Unlocked(state, plot))
+            {
+                Village.Build(state, kinds[plot], levels[plot], plot);
+            }
+        }
+
         state.Cooldowns = [0, 300, 1200];
         return state;
     }

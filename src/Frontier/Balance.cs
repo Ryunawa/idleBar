@@ -60,8 +60,11 @@ public static class Balance
     public const double ForgeBonus = 0.01;
     public const double MarketBonus = 0.02;
     public const double TowerBonus = 0.03;
+    public const double PortalBonus = 0.01;
+    public const double FarmChickenBonus = 0.01;
+    public const double FarmChickenMax = 1;
 
     public static readonly int[] Tiers = [10, 25, 50, 100, 250];
 
-    public static readonly GrowthSegment[] HpCurve = [new(10, 1.33), new(50, 1.34), new(100, 1.19), new(int.MaxValue, 1.13)];
+    public static readonly GrowthSegment[] HpCurve = [new(10, 1.35), new(50, 1.35), new(100, 1.19), new(int.MaxValue, 1.13)];
 }

@@ -32,7 +32,6 @@ public partial class Main : Control
         _game = new GameBridge(this);
         BuildInterface();
         _game.GameChanged += game => _expanded.Lane.Game = game;
-        _game.Bannered += (lines, seconds) => _expanded.Lane.Announce(lines, seconds);
         _expanded.Lane.GoldArrived += _expanded.Glow;
         _game.Happened += _expanded.Lane.Receive;
         _expanded.Lane.ManageRequested += tab => _game.OpenTab(_placement.DialogScale, tab);

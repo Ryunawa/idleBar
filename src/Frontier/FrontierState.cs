@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace IdleBar.Frontier;
@@ -6,6 +7,7 @@ public sealed class FrontierState
 {
     public const int FighterCount = 3;
     public const int BuildingCount = 7;
+    public const int PlotCount = 7;
     public const int SkillCount = 3;
 
     public double Time { get; set; }
@@ -30,7 +32,9 @@ public sealed class FrontierState
 
     public int[] Fighters { get; set; } = [1, 0, 0];
 
-    public int[] Buildings { get; set; } = new int[BuildingCount];
+    public BuildingKind?[] Built { get; set; } = new BuildingKind?[PlotCount];
+
+    public int[] Levels { get; set; } = new int[PlotCount];
 
     public double[] Cooldowns { get; set; } = new double[SkillCount];
 
@@ -76,11 +80,15 @@ public sealed class FrontierState
 
     public long SkillsUsed { get; set; }
 
-    public string? VeteranName { get; set; }
-
     public int Level(FighterKind kind) => Fighters[(int)kind];
 
-    public int Level(BuildingKind kind) => Buildings[(int)kind];
+    public int Level(BuildingKind kind) => PlotOf(kind) is int plot ? Levels[plot] : 0;
+
+    public int? PlotOf(BuildingKind kind)
+    {
+        int plot = Array.IndexOf(Built, kind);
+        return plot >= 0 ? plot : null;
+    }
 
     public void Earn(double gold)
     {

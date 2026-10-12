@@ -53,10 +53,10 @@ public static class OverlayPainter
         }
 
         Rgba ink = sky.FogDark.Mix(Palette.Ink, 0.75f);
-        foreach (BuildingInfo building in Buildings.All.Where(building => !Economy.Unlocked(state, building.Kind)))
+        foreach (PlotInfo plot in Plots.All.Where(plot => !Economy.Unlocked(state, plot.Index)))
         {
-            int cx = layout.SlotCenter(building.Kind);
-            string label = $"BOSS {building.Unlock - 1}";
+            int cx = layout.SlotCenter(plot.Index);
+            string label = $"BOSS {plot.Unlock - 1}";
             r.Blit(SceneSprites.Lock, cx - 2, 6);
             ArtFont.Draw(r, label, cx - ArtFont.Width(label) / 2, 15, ink);
         }

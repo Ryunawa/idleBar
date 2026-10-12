@@ -24,7 +24,8 @@ public static class RetreatRules
         state.Kills = 0;
         state.BossHeld = false;
         state.Fighters = [1, 0, 0];
-        state.Buildings = new int[FrontierState.BuildingCount];
+        state.Built = new BuildingKind?[FrontierState.PlotCount];
+        state.Levels = new int[FrontierState.PlotCount];
         state.Monster = null;
         state.RespawnIn = Balance.BossRetrySeconds;
         Array.Clear(state.Timers);

@@ -13,7 +13,6 @@ public sealed class GameBridge : IDisposable
 {
     private const int HttpTimeoutSeconds = 10;
     private const string SessionPath = "user://session.dat";
-    private const float GiftSeconds = 6;
 
     private readonly HttpClient? _http;
     private readonly FrontierSession? _session;
@@ -41,7 +40,6 @@ public sealed class GameBridge : IDisposable
             }
         };
         _session.Noticed += text => Journal.Add(text);
-        _session.Gifted += Welcome;
         _account = new Account(keeper, _session);
         _dialogs = new GameDialogs(_session, _account, Journal, host);
     }
@@ -51,8 +49,6 @@ public sealed class GameBridge : IDisposable
     public event Action<IReadOnlyList<FrontierEvent>>? Happened;
 
     public event Action<FrontierGame?>? GameChanged;
-
-    public event Action<IReadOnlyList<string>, float>? Bannered;
 
     public Journal Journal { get; } = new();
 
@@ -114,7 +110,7 @@ public sealed class GameBridge : IDisposable
                 Journal.Add(line);
             }
 
-            if (frontierEvent is Retreated or AchievementUnlocked or SlotConquered)
+            if (frontierEvent is Retreated or AchievementUnlocked or PlotConquered or Built { Level: 1 })
             {
                 _session?.RequestSave();
             }
@@ -148,12 +144,5 @@ public sealed class GameBridge : IDisposable
         }
 
         GameChanged?.Invoke(game);
-    }
-
-    private void Welcome(int souls, string? tavern)
-    {
-        string origin = tavern is null ? "Ancien tavernier" : $"Ancien tavernier de « {tavern} »";
-        Journal.Add($"{origin} : tu pars avec {souls} âmes, dégâts et or ×{Economy.SoulMultiplier(souls):0.##}.");
-        Bannered?.Invoke(["CADEAU D'ANCIEN TAVERNIER", $"+{souls} ÂMES"], GiftSeconds);
     }
 }

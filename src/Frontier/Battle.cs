@@ -131,11 +131,11 @@ public static class Battle
         {
             state.MaxStage = state.Stage;
             state.BestStage = Math.Max(state.BestStage, state.Stage);
-            foreach (BuildingInfo building in Buildings.All)
+            foreach (PlotInfo plot in Plots.All)
             {
-                if (building.Unlock == state.MaxStage)
+                if (plot.Unlock == state.MaxStage)
                 {
-                    events.Add(new SlotConquered(building.Kind));
+                    events.Add(new PlotConquered(plot.Index));
                 }
             }
         }

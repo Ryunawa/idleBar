@@ -8,10 +8,10 @@ public static class FrontierJournal
     public static string? Describe(FrontierEvent frontierEvent, FrontierState state) => frontierEvent switch
     {
         Killed { Boss: true } => $"Boss du niveau {state.Stage - 1} vaincu.",
-        BossFailed => $"Le boss du niveau {state.Stage + 1} a tenu bon : le héros s'entraîne au niveau {state.Stage}.",
+        BossFailed => $"Le boss du niveau {state.Stage + 1} a tenu bon : le héros s'entraîne au niveau {state.Stage}. Clique sur « BOSS » dans le brouillard pour le défier de nouveau.",
         StageReached { Stage: var stage } when stage > 1 && (stage - 1) % Biomes.Length == 0 => $"Nouvelle contrée : {Biomes.All[Biomes.IndexOf(stage)].Name}.",
-        SlotConquered conquered => $"Territoire conquis : la place de {Buildings.Of(conquered.Kind).Name} est libre.",
-        Built { Level: 1 } built => $"{Buildings.Of(built.Kind).Name} construite.",
+        PlotConquered => "Territoire conquis : un nouvel emplacement attend ton bâtiment.",
+        Built { Level: 1 } built => $"{Buildings.Of(built.Kind).Name} : construction terminée.",
         TierReached tier => $"{Buildings.Of(tier.Kind).Name} atteint le palier {tier.Tier}.",
         Trained { Level: 1, Kind: not FighterKind.Hero } trained => $"{Fighters.Of(trained.Kind).Name} recrutée.",
         FrenzyStarted => "Poule dorée attrapée : or ×7 pendant 20 s.",

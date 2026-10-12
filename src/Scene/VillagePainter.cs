@@ -25,12 +25,7 @@ public static class VillagePainter
             Crier(r, layout.CrierX, scene.Village.Crier.Showing > 0, time);
         }
 
-        if (state.VeteranName is not null && layout.Sign)
-        {
-            TavernSign(r, layout.SignX, time);
-        }
-
-        if (layout.CartTo - layout.CartFrom < 30)
+        if (layout.CartTo - layout.CartFrom(state) < 30)
         {
             return;
         }
@@ -38,15 +33,16 @@ public static class VillagePainter
         foreach (Convoy convoy in state.Convoys)
         {
             bool outward = convoy.Progress < 1;
-            Cart(r, CartLeft(layout, convoy), outward, (int)(time * 7 + convoy.Id) % 2 == 0);
+            Cart(r, CartLeft(layout, state, convoy), outward, (int)(time * 7 + convoy.Id) % 2 == 0);
         }
     }
 
-    public static int CartLeft(FrontierLayout layout, Convoy convoy)
+    public static int CartLeft(FrontierLayout layout, FrontierState state, Convoy convoy)
     {
         bool outward = convoy.Progress < 1;
         double leg = BuildingPainter.Ease((float)(outward ? convoy.Progress : convoy.Progress - 1));
-        double x = outward ? layout.CartFrom + (layout.CartTo - layout.CartFrom) * leg : layout.CartTo - (layout.CartTo - layout.CartFrom) * leg;
+        int from = layout.CartFrom(state);
+        double x = outward ? from + (layout.CartTo - from) * leg : layout.CartTo - (layout.CartTo - from) * leg;
         return (int)Math.Round(x);
     }
 
@@ -70,21 +66,6 @@ public static class VillagePainter
         r.Set(pole + 6, wave ? 5 : 6, Palette.Red);
         r.Set(pole + 6, 7, wave ? Palette.Red : Palette.Wine);
         r.Set(pole + 3, 6, Palette.Yellow);
-    }
-
-    private static void TavernSign(ArtRaster r, int x, float time)
-    {
-        int swing = MathF.Sin(time * 1.7f) > 0.6f ? 1 : 0;
-        r.Fill(x, 10, 1, 14, Palette.Bark);
-        r.Fill(x, 10, 7, 1, Palette.Bark);
-        r.Set(x + 2, 11, Palette.Soil);
-        r.Set(x + 6, 11, Palette.Soil);
-        r.Fill(x + 1 + swing, 12, 7, 6, Palette.Bark);
-        r.Fill(x + 2 + swing, 13, 5, 4, Palette.Wood);
-        r.Fill(x + 3 + swing, 14, 2, 2, Palette.Gold);
-        r.Set(x + 3 + swing, 13, Palette.White);
-        r.Set(x + 4 + swing, 13, Palette.White);
-        r.Set(x + 5 + swing, 14, Palette.Gold);
     }
 
     private static void Walker(ArtRaster r, Villager villager, float time)

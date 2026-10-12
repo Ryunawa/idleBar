@@ -8,14 +8,16 @@ public static class Shop
 
     public static bool Available(FrontierState state, Purchase purchase) => purchase switch
     {
-        BuildingPurchase building => Economy.Unlocked(state, building.Kind),
+        Construction build => Economy.Unlocked(state, build.Plot) && state.Built[build.Plot] is null && state.PlotOf(build.Kind) is null,
+        PlotPurchase raise => state.Built[raise.Plot] is not null,
         _ => true,
     };
 
     public static double Cost(FrontierState state, Purchase purchase) => purchase switch
     {
         FighterPurchase fighter => Economy.FighterCost(state, fighter.Kind),
-        BuildingPurchase building => Economy.BuildingCost(state, building.Kind),
+        Construction build => Economy.PlotCost(state, build.Plot),
+        PlotPurchase raise => Economy.PlotCost(state, raise.Plot),
         _ => double.PositiveInfinity,
     };
 
@@ -30,9 +32,9 @@ public static class Shop
 
     public static int MaxCount(FrontierState state, Purchase purchase)
     {
-        if (!Affordable(state, purchase))
+        if (!Affordable(state, purchase) || purchase is Construction)
         {
-            return 0;
+            return Affordable(state, purchase) ? 1 : 0;
         }
 
         double growth = Growth(purchase);
@@ -65,8 +67,12 @@ public static class Shop
                 state.Fighters[(int)fighter.Kind]++;
                 events.Add(new Trained(fighter.Kind, state.Level(fighter.Kind)));
                 break;
-            case BuildingPurchase building:
-                Raise(state, building.Kind, events);
+            case Construction build:
+                state.Built[build.Plot] = build.Kind;
+                Raise(state, build.Plot, events);
+                break;
+            case PlotPurchase raise:
+                Raise(state, raise.Plot, events);
                 break;
         }
 
@@ -74,17 +80,22 @@ public static class Shop
     }
 
     private static double Growth(Purchase purchase) =>
-        purchase is BuildingPurchase ? Balance.BuildingCostGrowth : Balance.FighterCostGrowth;
+        purchase is FighterPurchase ? Balance.FighterCostGrowth : Balance.BuildingCostGrowth;
 
-    private static void Raise(FrontierState state, BuildingKind kind, EventLog events)
+    private static void Raise(FrontierState state, int plot, EventLog events)
     {
-        int tier = Economy.Tier(state.Level(kind));
-        state.Buildings[(int)kind]++;
-        int level = state.Level(kind);
-        events.Add(new Built(kind, level));
+        if (state.Built[plot] is not BuildingKind kind)
+        {
+            return;
+        }
+
+        int tier = Economy.Tier(state.Levels[plot]);
+        state.Levels[plot]++;
+        int level = state.Levels[plot];
+        events.Add(new Built(plot, kind, level));
         if (Economy.Tier(level) > tier)
         {
-            events.Add(new TierReached(kind, Economy.Tier(level)));
+            events.Add(new TierReached(plot, kind, Economy.Tier(level)));
         }
     }
 }

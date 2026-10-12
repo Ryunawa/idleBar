@@ -25,7 +25,7 @@ public sealed class LocalCopy
             }
 
             LocalSave? local = JsonSerializer.Deserialize<LocalSave>(File.ReadAllText(_path), SaveCodec.Options);
-            return local is not null && local.PlayerId == playerId && local.Save?.Fighters is not null ? local : null;
+            return local is not null && local.PlayerId == playerId && SaveCodec.Complete(local.Save) ? local : null;
         }
         catch (Exception exception) when (exception is IOException or JsonException or UnauthorizedAccessException)
         {

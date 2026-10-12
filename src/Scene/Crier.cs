@@ -29,7 +29,7 @@ public sealed class Crier
         "Le dragon prétend qu'il était là avant.",
         "L'archère a raté une cible. Volontairement.",
         "Le marché vend du brouillard en bocal.",
-        "On a retrouvé l'enseigne d'une vieille taverne.",
+        "Le meunier jure que sa farine tient une journée entière.",
     ];
 
     private float _next = FirstGap;

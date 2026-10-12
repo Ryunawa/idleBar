@@ -10,7 +10,7 @@ public sealed class AbsenceTests
     public void AbsencePaysTheBuildingsOnly()
     {
         FrontierState state = new();
-        state.Buildings[(int)BuildingKind.Farm] = 10;
+        Village.Build(state, BuildingKind.Farm, 10);
         FrontierGame game = new(state, new Random(1));
         double rate = Economy.BaseGoldPerSecond(state);
         game.Absent(600);
@@ -23,7 +23,7 @@ public sealed class AbsenceTests
     public void AbsenceIsCappedAtEightHours()
     {
         FrontierState state = new();
-        state.Buildings[(int)BuildingKind.Farm] = 10;
+        Village.Build(state, BuildingKind.Farm, 10);
         FrontierGame game = new(state, new Random(1));
         game.Absent(48 * 3600);
         Assert.Equal(Economy.BaseGoldPerSecond(state) * Balance.AbsenceCapSeconds, state.Gold, 3);
@@ -34,7 +34,7 @@ public sealed class AbsenceTests
     public void ALongGapBetweenFramesCountsAsAbsence()
     {
         FrontierState state = new();
-        state.Buildings[(int)BuildingKind.Farm] = 10;
+        Village.Build(state, BuildingKind.Farm, 10);
         FrontierGame game = new(state, new Random(1));
         game.Advance(3_600);
         Assert.Contains(game.Events.Drain(), frontierEvent => frontierEvent is Returned { Seconds: 3_600 });

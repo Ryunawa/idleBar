@@ -12,8 +12,10 @@ public sealed record FrontierSave(
     int MaxStage,
     int BestStage,
     int Kills,
+    bool BossHeld,
     IReadOnlyList<int> Fighters,
-    IReadOnlyList<int> Buildings,
+    IReadOnlyList<string?> Plots,
+    IReadOnlyList<int> Levels,
     IReadOnlyList<double> Cooldowns,
     bool IntendantUnlocked,
     bool IntendantOn,
@@ -22,5 +24,4 @@ public sealed record FrontierSave(
     long BossesKilled,
     long Chickens,
     long Clicks,
-    long SkillsUsed,
-    bool BossHeld = false);
+    long SkillsUsed);

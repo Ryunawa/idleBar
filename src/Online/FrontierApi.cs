@@ -27,5 +27,5 @@ public sealed class FrontierApi
         _rpc.CallAsync<SessionArguments, FrontierReply>(token, "rejoin_frontier", new SessionArguments(session));
 
     public Task<FrontierReply> SaveAsync(string token, FrontierSave save, int revision, Guid session) =>
-        _rpc.CallAsync<SaveArguments, FrontierReply>(token, "save_frontier", new SaveArguments(save, revision, session));
+        _rpc.CallAsync<SaveArguments, FrontierReply>(token, "save_frontier", SaveArguments.From(save, revision, session));
 }

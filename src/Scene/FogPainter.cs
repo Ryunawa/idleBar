@@ -38,7 +38,7 @@ public static class FogPainter
 
     public static float Strength(FrontierState state, SceneMotion motion, int index)
     {
-        if (!Economy.Unlocked(state, (BuildingKind)index))
+        if (!Economy.Unlocked(state, index))
         {
             return 1;
         }

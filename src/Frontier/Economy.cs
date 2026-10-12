@@ -46,21 +46,26 @@ public static class Economy
 
     public static double ClickDamage(FrontierState state) => Math.Max(1, Dps(state, FighterKind.Hero) * Balance.ClickShare);
 
-    public static double BuildingGold(FrontierState state, BuildingKind kind)
+    public static double PlotGold(FrontierState state, int plot) => PlotGoldAt(state, plot, state.Levels[plot]);
+
+    public static double PlotGoldAt(FrontierState state, int plot, int level)
     {
-        int level = state.Level(kind);
-        return Buildings.Of(kind).Gold * level * Math.Pow(Balance.TierFactor, Tier(level)) * Wealth(state);
+        double portal = 1 + Balance.PortalBonus * state.Level(BuildingKind.Portal);
+        return Plots.Of(plot).Gold * level * Math.Pow(Balance.TierFactor, Tier(level)) * Wealth(state) * portal;
     }
 
     public static double AbsenceCap(FrontierState state) =>
         Math.Min(Balance.AbsenceMaxSeconds, Balance.AbsenceCapSeconds + state.Level(BuildingKind.Mill) * Balance.MillAbsenceSeconds);
 
+    public static double ChickenPace(FrontierState state) =>
+        1 + Math.Min(Balance.FarmChickenMax, Balance.FarmChickenBonus * state.Level(BuildingKind.Farm));
+
     public static double BaseGoldPerSecond(FrontierState state)
     {
         double total = 0;
-        foreach (BuildingInfo building in Buildings.All)
+        for (int plot = 0; plot < FrontierState.PlotCount; plot++)
         {
-            total += BuildingGold(state, building.Kind);
+            total += PlotGold(state, plot);
         }
 
         return total;
@@ -101,10 +106,10 @@ public static class Economy
     public static double FighterCost(FrontierState state, FighterKind kind) =>
         Fighters.Of(kind).Cost * Math.Pow(Balance.FighterCostGrowth, state.Level(kind));
 
-    public static double BuildingCost(FrontierState state, BuildingKind kind) =>
-        Buildings.Of(kind).Cost * Math.Pow(Balance.BuildingCostGrowth, state.Level(kind));
+    public static double PlotCost(FrontierState state, int plot) =>
+        Plots.Of(plot).Cost * Math.Pow(Balance.BuildingCostGrowth, state.Levels[plot]);
 
-    public static bool Unlocked(FrontierState state, BuildingKind kind) => state.MaxStage >= Buildings.Of(kind).Unlock;
+    public static bool Unlocked(FrontierState state, int plot) => state.MaxStage >= Plots.Of(plot).Unlock;
 
     public static int Tier(int level)
     {

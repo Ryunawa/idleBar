@@ -46,6 +46,6 @@ public static class GoldenChicken
     private static void Leave(FrontierState state, Random random)
     {
         state.Chicken = null;
-        state.ChickenTimer = Balance.ChickenMin + random.NextDouble() * (Balance.ChickenMax - Balance.ChickenMin);
+        state.ChickenTimer = (Balance.ChickenMin + random.NextDouble() * (Balance.ChickenMax - Balance.ChickenMin)) / Economy.ChickenPace(state);
     }
 }

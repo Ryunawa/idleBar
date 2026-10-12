@@ -1,15 +1,6 @@
 \set ON_ERROR_STOP on
 
-insert into auth.users (id) values
-  ('77777777-7777-7777-7777-777777777777'),
-  ('88888888-8888-8888-8888-888888888888'),
-  ('99999999-9999-9999-9999-999999999999');
-
-insert into public.taverns (player_id, name, friend_code, renown)
-values ('99999999-9999-9999-9999-999999999999', 'Le Pot d''Étain', 'ZZZ999', 15000);
-
-insert into private.veterans (player_id, tier, tavern_name)
-values ('88888888-8888-8888-8888-888888888888', 4, 'La Grande Chope');
+insert into auth.users (id) values ('77777777-7777-7777-7777-777777777777');
 
 create function pg_temp.check(p_condition boolean, p_message text) returns void
 language plpgsql
@@ -21,53 +12,71 @@ begin
 end;
 $$;
 
+create function pg_temp.save(
+  p_revision integer, p_session uuid,
+  p_stage integer default 12, p_max integer default null, p_best integer default null,
+  p_souls bigint default 0, p_retreats integer default 0,
+  p_plots text[] default '{forge,bakery,null,null,null,null,null}', p_levels integer[] default '{3,1,0,0,0,0,0}',
+  p_gold double precision default 100, p_achievements text[] default '{monstres-100}', p_killed bigint default 1000)
+returns text
+language sql
+as $$
+  select public.save_frontier(p_revision, p_session, p_gold, 1000, p_souls, p_retreats,
+    p_stage, coalesce(p_max, p_stage), coalesce(p_best, p_max, p_stage), 0, false,
+    '{5,1,0}', p_plots, p_levels, '{0,30.5,0}', false, false, p_achievements,
+    p_killed, 0, 0, 0, 0) ->> 'status';
+$$;
+
 grant execute on function pg_temp.check(boolean, text) to authenticated;
+grant execute on function pg_temp.save(integer, uuid, integer, integer, integer, bigint, integer, text[], integer[], double precision, text[], bigint) to authenticated;
 
 select set_config('request.jwt.claim.sub', '77777777-7777-7777-7777-777777777777', false);
 set role authenticated;
 select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000001') -> 'frontier' = 'null'::jsonb, 'pas de partie avant le départ');
 select pg_temp.check(public.start_frontier('00000000-0000-0000-0000-000000000001') #>> '{frontier,revision}' = '0', 'partie créée');
-select pg_temp.check(public.start_frontier('00000000-0000-0000-0000-000000000001') #>> '{frontier,veteran_souls}' = '0', 'pas de cadeau sans taverne');
-select pg_temp.check(public.save_frontier('{"stage": 12, "max_stage": 12, "best_stage": 12, "souls": 0, "retreats": 0}', 0, '00000000-0000-0000-0000-000000000001') ->> 'status' = 'ok', 'sauvegarde acceptée');
+select pg_temp.check(public.start_frontier('00000000-0000-0000-0000-000000000001') #> '{frontier,fighters}' = '[1, 0, 0]', 'le héros part au niveau 1');
+select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000001') #> '{frontier,plots}' = '[null, null, null, null, null, null, null]', 'sept emplacements vides');
+select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000001') #> '{frontier,cooldowns}' = '[0, 0, 0]', 'compétences prêtes');
+select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000001') #> '{frontier,achievements}' = '[]', 'aucun succès');
+
+select pg_temp.check(pg_temp.save(0, '00000000-0000-0000-0000-000000000001') = 'ok', 'sauvegarde acceptée');
 select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000001') #>> '{frontier,revision}' = '1', 'révision suivante');
-select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000001') #>> '{frontier,save,stage}' = '12', 'sauvegarde relue');
-select pg_temp.check(public.save_frontier('{"stage": 13}', 0, '00000000-0000-0000-0000-000000000001') ->> 'status' = 'conflict', 'ancienne révision refusée');
-select pg_temp.check(public.save_frontier('{"stage": 13}', 1, '00000000-0000-0000-0000-000000000002') ->> 'status' = 'elsewhere', 'autre session refusée');
-select pg_temp.check(public.save_frontier('{"stage": 900, "best_stage": 900}', 1, '00000000-0000-0000-0000-000000000001') ->> 'status' = 'refused', 'niveau impossible refusé');
-select pg_temp.check(public.save_frontier('{"best_stage": 20, "souls": 500, "retreats": 1}', 1, '00000000-0000-0000-0000-000000000001') ->> 'status' = 'refused', 'âmes impossibles refusées');
-select pg_temp.check(public.save_frontier('"pas un objet"', 1, '00000000-0000-0000-0000-000000000001') ->> 'status' = 'refused', 'sauvegarde invalide refusée');
+select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000001') #>> '{frontier,stage}' = '12', 'niveau relu');
+select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000001') #>> '{frontier,plots,0}' = 'forge', 'bâtiment relu');
+select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000001') #>> '{frontier,levels,0}' = '3', 'niveau du bâtiment relu');
+select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000001') #>> '{frontier,cooldowns,1}' = '30.5', 'recharge relue');
+select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000001') #>> '{frontier,achievements,0}' = 'monstres-100', 'succès relu');
+
+select pg_temp.check(pg_temp.save(0, '00000000-0000-0000-0000-000000000001') = 'conflict', 'ancienne révision refusée');
+select pg_temp.check(pg_temp.save(1, '00000000-0000-0000-0000-000000000002') = 'elsewhere', 'autre session refusée');
+select pg_temp.check(pg_temp.save(1, '00000000-0000-0000-0000-000000000001', p_stage => 900) = 'refused', 'niveau impossible refusé');
+select pg_temp.check(pg_temp.save(1, '00000000-0000-0000-0000-000000000001', p_souls => 500, p_retreats => 1) = 'refused', 'âmes impossibles refusées');
+select pg_temp.check(pg_temp.save(1, '00000000-0000-0000-0000-000000000001', p_plots => '{forge,forge,null,null,null,null,null}', p_levels => '{1,1,0,0,0,0,0}') = 'refused', 'un seul exemplaire par bâtiment');
+select pg_temp.check(pg_temp.save(1, '00000000-0000-0000-0000-000000000001', p_plots => '{null,null,null,null,null,null,portal}', p_levels => '{0,0,0,0,0,0,1}') = 'refused', 'emplacement encore inexploré');
+select pg_temp.check(pg_temp.save(1, '00000000-0000-0000-0000-000000000001', p_levels => '{0,1,0,0,0,0,0}') = 'refused', 'bâtiment sans niveau refusé');
+select pg_temp.check(pg_temp.save(1, '00000000-0000-0000-0000-000000000001', p_plots => '{null,null,null,null,null,null,null}', p_levels => '{2,0,0,0,0,0,0}') = 'refused', 'niveau sans bâtiment refusé');
+select pg_temp.check(pg_temp.save(1, '00000000-0000-0000-0000-000000000001', p_plots => '{castle,null,null,null,null,null,null}', p_levels => '{1,0,0,0,0,0,0}') = 'refused', 'bâtiment inconnu refusé');
+select pg_temp.check(pg_temp.save(1, '00000000-0000-0000-0000-000000000001', p_plots => '{forge,bakery}', p_levels => '{3,1}') = 'refused', 'emplacements manquants refusés');
+select pg_temp.check(pg_temp.save(1, '00000000-0000-0000-0000-000000000001', p_gold => 'NaN') = 'refused', 'or invalide refusé');
+select pg_temp.check(pg_temp.save(1, '00000000-0000-0000-0000-000000000001', p_killed => 10) = 'refused', 'compteur en baisse refusé');
+select pg_temp.check(pg_temp.save(1, '00000000-0000-0000-0000-000000000001', p_achievements => '{"Pas Bon"}') = 'refused', 'succès invalide refusé');
+
 select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000002') ->> 'status' = 'ok', 'reprise sur un autre PC');
-select pg_temp.check(public.save_frontier('{"stage": 14, "best_stage": 14}', 1, '00000000-0000-0000-0000-000000000001') ->> 'status' = 'elsewhere', 'ancien PC écarté');
-select pg_temp.check(public.save_frontier('{"stage": 14, "best_stage": 14}', 1, '00000000-0000-0000-0000-000000000002') ->> 'status' = 'ok', 'nouveau PC accepté');
+select pg_temp.check(pg_temp.save(1, '00000000-0000-0000-0000-000000000001', p_stage => 14) = 'elsewhere', 'ancien PC écarté');
+select pg_temp.check(pg_temp.save(1, '00000000-0000-0000-0000-000000000002', p_stage => 14) = 'ok', 'nouveau PC accepté');
 reset role;
 
 update public.frontiers set saved_at = now() - interval '3 hours' where player_id = '77777777-7777-7777-7777-777777777777';
 
 set role authenticated;
 select pg_temp.check((public.claim_frontier('00000000-0000-0000-0000-000000000002') #>> '{frontier,away_seconds}')::numeric between 10790 and 10900, 'absence de 3 heures');
-select pg_temp.check(public.save_frontier('{"stage": 60, "max_stage": 60, "best_stage": 60}', 2, '00000000-0000-0000-0000-000000000002') ->> 'status' = 'ok', 'progression plausible après une absence');
-select pg_temp.check(public.save_frontier('{"stage": 1, "max_stage": 1, "best_stage": 60, "souls": 36, "retreats": 1}', 3, '00000000-0000-0000-0000-000000000002') ->> 'status' = 'ok', 'repli plausible');
-select pg_temp.check(public.save_frontier('{"stage": 1, "best_stage": 60, "souls": 10, "retreats": 1}', 4, '00000000-0000-0000-0000-000000000002') ->> 'status' = 'refused', 'âmes perdues refusées');
-
-select set_config('request.jwt.claim.sub', '99999999-9999-9999-9999-999999999999', false);
-select pg_temp.check(public.start_frontier('00000000-0000-0000-0000-000000000003') #>> '{frontier,veteran_souls}' = '10', 'cadeau de l''Auberge');
-select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000003') #>> '{frontier,veteran_name}' = 'Le Pot d''Étain', 'enseigne de la taverne');
-
-select set_config('request.jwt.claim.sub', '88888888-8888-8888-8888-888888888888', false);
-select pg_temp.check(public.start_frontier('00000000-0000-0000-0000-000000000004') #>> '{frontier,veteran_souls}' = '20', 'cadeau gardé après l''effacement des tavernes');
-select pg_temp.check(public.save_frontier('{"best_stage": 1, "souls": 20, "retreats": 0}', 0, '00000000-0000-0000-0000-000000000004') ->> 'status' = 'ok', 'les âmes du cadeau sont plausibles');
-reset role;
-
-insert into auth.users (id) values ('66666666-6666-6666-6666-666666666666');
-insert into public.taverns (player_id, name, friend_code, renown)
-values ('66666666-6666-6666-6666-666666666666', 'La Nouvelle Enseigne', 'YYY666', 50000);
-insert into private.veterans (player_id, tier, tavern_name)
-values ('66666666-6666-6666-6666-666666666666', 1, 'L''Ancienne Enseigne');
-
-select set_config('request.jwt.claim.sub', '77777777-7777-7777-7777-777777777777', false);
-set role authenticated;
-select pg_temp.check(public.save_frontier('{"best_stage": 60, "souls": 2000000000, "retreats": 60000000}', 4, '00000000-0000-0000-0000-000000000002') ->> 'status' = 'refused', 'replis gonflés refusés');
-select pg_temp.check(public.save_frontier('{"stage": 5000, "best_stage": 60, "souls": 36, "retreats": 1}', 4, '00000000-0000-0000-0000-000000000002') ->> 'status' = 'refused', 'niveau courant impossible refusé');
+select pg_temp.check(pg_temp.save(2, '00000000-0000-0000-0000-000000000002', p_stage => 60) = 'ok', 'progression plausible après une absence');
+select pg_temp.check(pg_temp.save(3, '00000000-0000-0000-0000-000000000002', p_stage => 1, p_max => 1, p_best => 60, p_souls => 36, p_retreats => 1, p_plots => '{bakery,forge,null,null,null,null,null}', p_levels => '{1,1,0,0,0,0,0}') = 'ok', 'repli puis village rebâti autrement');
+select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000002') #>> '{frontier,plots,0}' = 'bakery', 'bâtiments échangés');
+select pg_temp.check(pg_temp.save(4, '00000000-0000-0000-0000-000000000002', p_stage => 1, p_max => 1, p_best => 60, p_souls => 10, p_retreats => 1) = 'refused', 'âmes perdues refusées');
+select pg_temp.check(pg_temp.save(4, '00000000-0000-0000-0000-000000000002', p_stage => 1, p_max => 1, p_best => 60, p_souls => 2000000000, p_retreats => 60000000) = 'refused', 'replis gonflés refusés');
+select pg_temp.check(pg_temp.save(4, '00000000-0000-0000-0000-000000000002', p_stage => 5000, p_souls => 36, p_retreats => 1) = 'refused', 'niveau courant impossible refusé');
+select pg_temp.check(pg_temp.save(4, '00000000-0000-0000-0000-000000000002', p_stage => 1, p_max => 1, p_best => 59, p_souls => 36, p_retreats => 1) = 'refused', 'record en baisse refusé');
 select pg_temp.check(public.rejoin_frontier('00000000-0000-0000-0000-000000000005') ->> 'status' = 'elsewhere', 'reconnexion sans voler une partie active');
 select pg_temp.check(public.rejoin_frontier('00000000-0000-0000-0000-000000000002') ->> 'status' = 'ok', 'reconnexion de la session active');
 reset role;
@@ -76,9 +85,8 @@ update public.frontiers set last_seen = now() - interval '10 minutes' where play
 
 set role authenticated;
 select pg_temp.check(public.rejoin_frontier('00000000-0000-0000-0000-000000000005') ->> 'status' = 'ok', 'reconnexion quand l''autre PC dort');
-select pg_temp.check(public.save_frontier('{"stage": 2, "best_stage": 60, "souls": 36, "retreats": 1}', 4, '00000000-0000-0000-0000-000000000005') ->> 'status' = 'ok', 'la session reprise sauvegarde');
-
-select set_config('request.jwt.claim.sub', '66666666-6666-6666-6666-666666666666', false);
-select pg_temp.check(public.start_frontier('00000000-0000-0000-0000-000000000006') #>> '{frontier,veteran_souls}' = '20', 'le palier actuel l''emporte sur l''instantané');
-select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000006') #>> '{frontier,veteran_name}' = 'La Nouvelle Enseigne', 'nom actuel de la taverne');
+select pg_temp.check(pg_temp.save(4, '00000000-0000-0000-0000-000000000005', p_stage => 2, p_max => 2, p_best => 60, p_souls => 36, p_retreats => 1, p_plots => '{bakery,forge,null,null,null,null,null}', p_levels => '{2,1,0,0,0,0,0}') = 'ok', 'la session reprise sauvegarde');
 reset role;
+
+delete from auth.users where id = '77777777-7777-7777-7777-777777777777';
+select pg_temp.check(not exists (select 1 from public.frontier_plots where player_id = '77777777-7777-7777-7777-777777777777'), 'un compte supprimé emporte sa partie');

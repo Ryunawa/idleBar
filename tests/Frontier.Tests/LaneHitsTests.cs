@@ -57,10 +57,10 @@ public sealed class LaneHitsTests
     public void HintsDescribeLockedAndBuiltSlots()
     {
         FrontierState state = new();
-        state.Buildings[(int)BuildingKind.Farm] = 3;
-        Assert.StartsWith("Terrain inexploré", LaneHints.Describe(new LaneTarget(TargetKind.Building, (int)BuildingKind.Bakery), state));
-        Assert.StartsWith("Ferme niv 3", LaneHints.Describe(new LaneTarget(TargetKind.Building, (int)BuildingKind.Farm), state));
-        Assert.StartsWith("Moulin à bâtir", LaneHints.Describe(new LaneTarget(TargetKind.Building, (int)BuildingKind.Mill), state));
+        Village.Build(state, BuildingKind.Farm, 3);
+        Assert.StartsWith("Terrain inexploré", LaneHints.Describe(new LaneTarget(TargetKind.Building, 2), state));
+        Assert.StartsWith("Ferme niv 3", LaneHints.Describe(new LaneTarget(TargetKind.Building, 0), state));
+        Assert.StartsWith("Terrain libre", LaneHints.Describe(new LaneTarget(TargetKind.Building, 1), state));
         Assert.Null(LaneHints.Describe(LaneTarget.None, state));
     }
 }

@@ -7,7 +7,7 @@ namespace IdleBar.Frontier;
 
 public static class SaveCodec
 {
-    public const int CurrentVersion = 1;
+    public const int CurrentVersion = 2;
 
     public static JsonSerializerOptions Options { get; } = new() { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
 
@@ -21,8 +21,10 @@ public static class SaveCodec
         state.MaxStage,
         state.BestStage,
         state.Kills,
+        state.BossHeld,
         [.. state.Fighters],
-        [.. state.Buildings],
+        [.. state.Built.Select(kind => kind is BuildingKind built ? Buildings.Of(built).Id : null)],
+        [.. state.Levels],
         [.. state.Cooldowns],
         state.IntendantUnlocked,
         state.IntendantOn,
@@ -31,8 +33,7 @@ public static class SaveCodec
         state.BossesKilled,
         state.Chickens,
         state.Clicks,
-        state.SkillsUsed,
-        state.BossHeld);
+        state.SkillsUsed);
 
     public static FrontierState Restore(FrontierSave save)
     {
@@ -50,7 +51,6 @@ public static class SaveCodec
             Kills = Math.Clamp(save.Kills, 0, Balance.MonstersPerStage - 1),
             BossHeld = save.BossHeld && Economy.IsBossStage(stage + 1),
             Fighters = Fit(save.Fighters, FrontierState.FighterCount),
-            Buildings = Fit(save.Buildings, FrontierState.BuildingCount),
             Cooldowns = Fit(save.Cooldowns, FrontierState.SkillCount),
             IntendantUnlocked = save.IntendantUnlocked,
             IntendantOn = save.IntendantOn && save.IntendantUnlocked,
@@ -61,6 +61,7 @@ public static class SaveCodec
             SkillsUsed = save.SkillsUsed,
         };
         state.Fighters[(int)FighterKind.Hero] = Math.Max(1, state.Fighters[(int)FighterKind.Hero]);
+        PlaceBuildings(state, save);
         state.Achievements.UnionWith(save.Achievements);
         return state;
     }
@@ -73,8 +74,24 @@ public static class SaveCodec
     public static FrontierSave? Deserialize(string json)
     {
         FrontierSave? save = JsonSerializer.Deserialize<FrontierSave>(json, Options);
-        bool complete = save is { Version: > 0, Fighters: not null, Buildings: not null, Cooldowns: not null, Achievements: not null };
-        return complete ? save : null;
+        return Complete(save) ? save : null;
+    }
+
+    public static bool Complete(FrontierSave? save) =>
+        save is { Version: CurrentVersion, Fighters: not null, Plots: not null, Levels: not null, Cooldowns: not null, Achievements: not null };
+
+    private static void PlaceBuildings(FrontierState state, FrontierSave save)
+    {
+        int[] levels = Fit(save.Levels, FrontierState.PlotCount);
+        for (int plot = 0; plot < FrontierState.PlotCount; plot++)
+        {
+            BuildingKind? kind = plot < save.Plots.Count ? Buildings.Parse(save.Plots[plot]) : null;
+            if (kind is BuildingKind built && state.PlotOf(built) is null)
+            {
+                state.Built[plot] = built;
+                state.Levels[plot] = Math.Max(1, levels[plot]);
+            }
+        }
     }
 
     private static int[] Fit(IReadOnlyList<int> values, int length) =>

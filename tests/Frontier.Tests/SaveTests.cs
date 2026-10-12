@@ -9,7 +9,7 @@ public sealed class SaveTests
     public void ASaveRoundTripKeepsTheProgress()
     {
         FrontierState state = new() { Gold = 1234.5, LifetimeGold = 99_999, Souls = 31, Retreats = 1, Stage = 47, MaxStage = 52, BestStage = 61, Kills = 3 };
-        state.Buildings[(int)BuildingKind.Market] = 8;
+        Village.Build(state, BuildingKind.Market, 8);
         state.Fighters[(int)FighterKind.Mage] = 18;
         state.Cooldowns[(int)SkillKind.Fury] = 120;
         state.Achievements.Add("boss-1");
@@ -28,6 +28,7 @@ public sealed class SaveTests
         Assert.Equal(61, restored.BestStage);
         Assert.Equal(3, restored.Kills);
         Assert.Equal(8, restored.Level(BuildingKind.Market));
+        Assert.Equal(BuildingKind.Market, restored.Built[0]);
         Assert.Equal(18, restored.Level(FighterKind.Mage));
         Assert.Equal(120, restored.Cooldowns[(int)SkillKind.Fury]);
         Assert.Contains("boss-1", restored.Achievements);
@@ -52,14 +53,24 @@ public sealed class SaveTests
     }
 
     [Fact]
-    public void AnOlderSaveWithFewerBuildingsStillLoads()
+    public void AnOddSaveIsRepairedWhenLoaded()
     {
-        FrontierSave save = SaveCodec.Capture(new FrontierState()) with { Buildings = [3, 2], Fighters = [0], Stage = 0 };
+        FrontierSave save = SaveCodec.Capture(new FrontierState()) with { Plots = ["farm", "farm", "castle"], Levels = [3, 2], Fighters = [0], Stage = 0 };
         FrontierState restored = SaveCodec.Restore(save);
-        Assert.Equal(FrontierState.BuildingCount, restored.Buildings.Length);
+        Assert.Equal(FrontierState.PlotCount, restored.Built.Length);
+        Assert.Equal(FrontierState.PlotCount, restored.Levels.Length);
+        Assert.Equal(BuildingKind.Farm, restored.Built[0]);
         Assert.Equal(3, restored.Level(BuildingKind.Farm));
-        Assert.Equal(0, restored.Level(BuildingKind.Portal));
+        Assert.Null(restored.Built[1]);
+        Assert.Null(restored.Built[2]);
+        Assert.Equal(0, restored.Levels[1]);
         Assert.Equal(1, restored.Level(FighterKind.Hero));
         Assert.Equal(1, restored.Stage);
+    }
+
+    [Fact]
+    public void ASaveFromTheJsonEraIsIgnored()
+    {
+        Assert.Null(SaveCodec.Deserialize("{\"version\":1,\"fighters\":[1,0,0],\"buildings\":[1,0,0,0,0,0,0],\"cooldowns\":[0,0,0],\"achievements\":[]}"));
     }
 }
