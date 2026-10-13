@@ -33,8 +33,9 @@ public partial class TrayMenu : Node
         AddChild(_menu);
 
         _indicator = new StatusIndicator { Icon = TrayIcon.Create(), Tooltip = "IdleBar" };
-        _indicator.Pressed += (mouseButton, position) => OnIndicatorPressed((MouseButton)mouseButton, position);
+        _indicator.Pressed += (mouseButton, _) => OnIndicatorPressed((MouseButton)mouseButton);
         AddChild(_indicator);
+        _indicator.Menu = _indicator.GetPathTo(_menu);
     }
 
     public void SetCollapsed(bool collapsed) =>
@@ -48,15 +49,12 @@ public partial class TrayMenu : Node
 
     public void Dismiss() => _indicator.Visible = false;
 
-    private void OnIndicatorPressed(MouseButton button, Vector2I position)
+    private void OnIndicatorPressed(MouseButton button)
     {
         if (button == MouseButton.Left)
         {
             ToggleRequested?.Invoke();
-            return;
         }
-
-        _menu.Popup(new Rect2I(position, Vector2I.Zero));
     }
 
     private void OnItemPressed(long id)

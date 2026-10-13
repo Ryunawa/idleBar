@@ -125,6 +125,11 @@ public partial class Main : Control
         _faq = new FaqWindow();
         AddChild(_faq);
         _settings.FaqRequested += () => _faq.Open(_placement.DialogScale);
+        _settings.SignOutRequested += () =>
+        {
+            _game.SignOut();
+            _settings.Hide();
+        };
     }
 
     private void RefreshInterface()
@@ -150,7 +155,7 @@ public partial class Main : Control
     }
 
     private void OpenSettings() =>
-        _settings.Open(_placement.DialogScale, _placement.ScreenDevice, _placement.DetectScreens());
+        _settings.Open(_placement.DialogScale, _placement.ScreenDevice, _placement.DetectScreens(), _game.SignedIn);
 
     private async void Quit()
     {

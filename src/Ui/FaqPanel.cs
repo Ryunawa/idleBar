@@ -63,6 +63,8 @@ public partial class FaqPanel : VBoxContainer
         [
             ("Comment changer l'écran de la barre ?",
                 "L'engrenage ouvre les réglages : choisis l'écran en bas duquel la barre se place."),
+            ("Comment me déconnecter ?",
+                "Dans les réglages (l'engrenage), bouton « Se déconnecter ». Le clic droit sur l'icône d'IdleBar, près de l'horloge de Windows, propose aussi « Se déconnecter ». Ta partie est enregistrée avant."),
             ("Comment mettre le jeu à jour ?",
                 "Quand une version sort, une case « Mise à jour » apparaît dans la barre et ouvre la page de téléchargement. Remplace le dossier du jeu : ta partie est sur le serveur et tes réglages restent sur ton PC. « Mise à jour requise » veut dire que ta version est trop ancienne pour jouer."),
         ]),

@@ -8,14 +8,17 @@ namespace IdleBar.Ui;
 
 public partial class SettingsWindow : Window
 {
-    private static readonly Vector2I BaseSize = new(380, 200);
+    private static readonly Vector2I BaseSize = new(380, 268);
 
     private readonly List<DisplayScreen> _screens = [];
     private OptionButton _screen = null!;
+    private Button _signOut = null!;
 
     public event Action<string>? ScreenChosen;
 
     public event Action? FaqRequested;
+
+    public event Action? SignOutRequested;
 
     public override void _Ready()
     {
@@ -35,6 +38,11 @@ public partial class SettingsWindow : Window
         hint.AddThemeFontSizeOverride("font_size", PixelFont.Size(12));
         content.AddChild(hint);
 
+        content.AddChild(CreateHeading("Compte"));
+        _signOut = new Button { Text = "Se déconnecter" };
+        _signOut.Pressed += () => SignOutRequested?.Invoke();
+        content.AddChild(_signOut);
+
         HBoxContainer buttons = new();
         buttons.AddThemeConstantOverride("separation", 8);
         Button faq = new() { Text = "Questions fréquentes", SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
@@ -46,8 +54,9 @@ public partial class SettingsWindow : Window
         content.AddChild(buttons);
     }
 
-    public void Open(float scale, string? screenDevice, IReadOnlyList<DisplayScreen> screens)
+    public void Open(float scale, string? screenDevice, IReadOnlyList<DisplayScreen> screens, bool signedIn)
     {
+        _signOut.Disabled = !signedIn;
         _screens.Clear();
         _screens.AddRange(screens);
         _screen.Clear();
