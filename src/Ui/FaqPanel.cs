@@ -44,7 +44,7 @@ public partial class FaqPanel : VBoxContainer
         ("Progresser",
         [
             ("C'est quoi, le repli ?",
-                "À partir du niveau 50, tu peux te replier : tu repars du niveau 1 sans or ni bâtiments, mais tu gagnes des âmes. Chaque âme donne +2,5 % de dégâts et d'or pour toujours. Plus tu vas loin, plus le repli rapporte."),
+                "À partir du niveau 50, tu peux te replier : tu repars du niveau 1 sans or ni bâtiments, mais tu gagnes des âmes. Chaque âme donne +2,5 % de dégâts et d'or pour toujours. Les âmes viennent de tout l'or gagné depuis le début, et chacune coûte plus d'or que la précédente : un repli ajoute celles gagnées depuis le dernier. La barre affiche « repli : +X âmes » dès qu'un repli en rapporterait."),
             ("Qui est l'Intendant ?",
                 "Il se débloque au premier repli. Une fois activé dans la fenêtre de gestion, il achète tout seul ce qui rapporte le plus."),
             ("Et les succès ?",

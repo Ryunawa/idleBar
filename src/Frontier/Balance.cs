@@ -29,8 +29,9 @@ public static class Balance
     public const double SoulBonus = 0.025;
     public const double AchievementBonus = 0.02;
     public const int RetreatStage = 50;
-    public const double SoulDivisor = 10;
-    public const double SoulExponent = 2;
+    public const double SoulScale = 5;
+    public const double SoulGoldBase = 1_000_000;
+    public const double SoulPower = 0.23;
 
     public const double ConvoyEvery = 9;
     public const double ConvoyTravel = 10;

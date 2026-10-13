@@ -90,7 +90,7 @@ public sealed class IdlePlayer
             Game.SetIntendant(true);
         }
 
-        int souls = RetreatRules.SoulsFor(state.MaxStage);
+        int souls = RetreatRules.Pending(state);
         bool stalled = Clock - _lastProgress >= StallSeconds;
         if (stalled && souls >= Math.Max(1, state.Souls * RetreatShare))
         {
@@ -139,7 +139,7 @@ public sealed class IdlePlayer
         if (_milestones.TryAdd(milestone, Clock))
         {
             FrontierState state = Game.State;
-            _notes.Add($"{milestone}: fighters {string.Join('/', state.Fighters)} buildings {string.Join('/', state.Built.Select(kind => kind?.ToString() ?? "-"))} levels {string.Join('/', state.Levels)} gps {Economy.BaseGoldPerSecond(state):0} dps {Economy.TotalDps(state):0} souls {state.Souls}");
+            _notes.Add($"{milestone}: fighters {string.Join('/', state.Fighters)} buildings {string.Join('/', state.Built.Select(kind => kind?.ToString() ?? "-"))} levels {string.Join('/', state.Levels)} gps {Economy.BaseGoldPerSecond(state):0} dps {Economy.TotalDps(state):0} souls {state.Souls} lifetime {state.LifetimeGold:0.00e0} stage {state.MaxStage}");
         }
     }
 }

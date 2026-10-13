@@ -99,7 +99,8 @@ Le joueur choisit le bâtiment de chaque emplacement libre (`Construction`), pui
 - Comme les emplacements, elles dépendent du niveau max de la partie : le repli les reverrouille. Verrouillées, elles montrent un cadenas et leur niveau ; une bannière annonce chaque déblocage (`SkillUnlocked`).
 
 **Repli.**
-- Disponible à partir du niveau 50. Âmes = ⌊(niveau max / 10)²⌋, +2,5 % de dégâts et d'or chacune.
+- Disponible à partir du niveau 50. Les âmes viennent de tout l'or gagné depuis le début : âmes totales = ⌊5 × (or total ÷ 1 million)^0,23⌋ (`RetreatRules.TotalSouls`). Un repli ajoute la différence avec les âmes déjà possédées (`Pending`), si bien que se replier en boucle ne rapporte rien. Chaque âme donne +2,5 % de dégâts et d'or.
+- La barre affiche « repli : +X âmes » dès qu'un repli rapporterait quelque chose ; l'onglet Repli dit aussi combien d'or manque pour la prochaine âme.
 - Il remet à zéro le niveau, l'or, les bâtiments et les compagnons, et garde les succès et les compteurs.
 - Le premier repli débloque l'Intendant, qui achète la meilleure valeur atteignable en 20 s. Il bâtit d'abord chaque emplacement libre, dans l'ordre forge, boulangerie, atelier, marché, caserne, tour, beffroi, portail, chapelle, moulin, ferme, taverne.
 
@@ -119,9 +120,9 @@ Le joueur choisit le bâtiment de chaque emplacement libre (`Construction`), pui
 | Premier bâtiment | < 1 min | quelques secondes |
 | Boss du niveau 10 | 3 à 5 min | 3,6 min |
 | Repli possible | 2 à 4 h | 2,0 h |
-| Deuxième partie jusqu'au niveau 50 | 1,5 à 5 fois plus rapide | environ 2 fois |
-| Niveau 150 | 1 à 2 semaines | 62 h, soit 8 jours |
-| Premier bâtiment au niveau 100 | 2 jours à 2 semaines | 32 h, soit 4 jours |
+| Deuxième partie jusqu'au niveau 50 | 1,5 à 5 fois plus rapide | 2,9 fois |
+| Niveau 150 | 1 à 2 semaines | 79 h, soit 10 jours (488 âmes au niveau 100, ×13) |
+| Premier bâtiment au niveau 100 | 2 jours à 2 semaines | 59 h, soit 7 jours |
 
 ## La sauvegarde
 
@@ -131,7 +132,8 @@ Le joueur choisit le bâtiment de chaque emplacement libre (`Construction`), pui
   - `23_frontier_rules.sql` contient les fonctions privées : réponse, contrôle de forme et vraisemblance ;
   - `24_frontier_actions.sql` contient les actions du joueur ;
   - `25_more_plots.sql` porte le village à 12 emplacements et 12 bâtiments ;
-  - `26_review_fixes.sql` ajoute `saved_by` (la session de la dernière sauvegarde), la liste des succès connus, et exige la 0.4.2.
+  - `26_review_fixes.sql` ajoute `saved_by` (la session de la dernière sauvegarde), la liste des succès connus, et exige la 0.4.2 ;
+  - `27_gold_souls.sql` contrôle les âmes d'après l'or total et la croissance de l'or total, et exige la 0.4.6.
 - **`start_frontier(p_session)`** crée la partie : héros niveau 1, 12 emplacements vides, compétences prêtes.
 - **`claim_frontier(p_session)`** fait de ce PC celui qui sauvegarde, et renvoie la partie et `away_seconds`, mesuré par le serveur. Le client l'appelle au démarrage, à la connexion, et quand le joueur reprend la partie ici.
 - **`rejoin_frontier(p_session)`** sert aux reconnexions automatiques après une coupure. Elle ne reprend la main que si aucun autre PC n'a donné signe de vie depuis `frontier_idle_seconds` (120 s) ; sinon elle répond `elsewhere`.
@@ -142,8 +144,9 @@ Le joueur choisit le bâtiment de chaque emplacement libre (`Construction`), pui
     - niveau courant, niveau max et record ≤ ancien record + 30 + 6 par minute écoulée ;
     - record, âmes, replis et compteurs jamais en baisse ;
     - au plus 1 nouveau repli, plus 1 toutes les `frontier_retreat_minutes` (3 min) écoulées ;
-    - âmes gagnées ≤ nouveaux replis × âmes du record.
-  - L'or n'est pas contrôlé : sans classement ni marché, tricher ne profite qu'au tricheur.
+    - âmes ≤ âmes que permet l'or total (même formule que le jeu, `frontier_souls_for_gold`) ;
+    - or total gagné depuis la dernière sauvegarde ≤ (minutes + 1) × `frontier_gold_rate` (100 000) × PV d'un monstre au niveau atteignable × bonus des âmes : un plafond large qui bloque les valeurs absurdes.
+  - L'or n'est contrôlé que largement : sans classement ni marché, tricher ne profite qu'au tricheur. Le calcul de la partie reste dans le jeu (voir « Qui décide de la partie »).
 - **Client** (`FrontierSession`).
   - Il réclame la partie au démarrage et sauvegarde toutes les 30 s, après un repli, un succès, une conquête ou une construction, et à la fermeture.
   - Chaque PC a un identifiant de session stable (`user://device.id`) : un redémarrage n'est pas pris pour un autre PC.
@@ -154,12 +157,17 @@ Le joueur choisit le bâtiment de chaque emplacement libre (`Construction`), pui
   - « Partie ouverte ailleurs » met le jeu en pause, et un clic sur l'or la reprend.
 - **Fichiers de la taverne.** `tavern.cfg`, `rounds.cfg` et `journal.txt` restent dans `%APPDATA%\IdleBar`. Ils ne pèsent rien. Le journal de la Frontière est `frontier-journal.txt`.
 
-## Publier la 0.4.3
+## Qui décide de la partie
 
-La 0.4.1 (scripts 21 à 24) et la 0.4.2 (12 emplacements, compétences à débloquer) sont publiées. Les scripts 21 à 24 sont passés en production le 12 octobre.
-1. Dans l'éditeur SQL de Supabase, exécuter `25_more_plots.sql` s'il n'est pas encore passé, puis `26_review_fixes.sql`. Le 26 exige la 0.4.2 : la 0.4.1, qui n'envoie que 7 emplacements, affiche alors « Mise à jour requise » au lieu de voir ses sauvegardes refusées.
-2. Pousser `main`, puis le tag `v0.4.3` : GitHub lance les tests, construit et publie.
-3. Une fois la release vérifiée, si tu veux imposer les correctifs : `update private.settings set min_client_version = '0.4.3';`.
+Le jeu calcule la partie, et le serveur vérifie qu'elle reste vraisemblable avant de l'enregistrer. C'est la pratique courante des jeux idle en solo (Cookie Clicker, la ferme d'Egg, Inc.) : la partie avance hors ligne et sans latence, et une seule version des règles existe, en C#.
+- Faire calculer la partie par le serveur obligerait à y faire tourner tout le moteur : combat, absence, achats. Il faudrait le porter dans une Edge Function ou un service .NET, garder deux moteurs identiques, rejouer chaque action reçue, et renoncer au jeu hors ligne.
+- Cela ne devient nécessaire que si une partie peut nuire aux autres : classement, échanges, marché. Ce qui passera d'un joueur à l'autre dans le social v2 (renforts, convois, titan commun) devra donc être calculé et plafonné par le serveur, à partir de valeurs qu'il contrôle.
+
+## Publier la 0.4.6
+
+Publiées : 0.4.1 (scripts 21 à 24), 0.4.2 (12 emplacements), 0.4.3 à 0.4.5 (correctifs, effets des bâtiments).
+1. Dans l'éditeur SQL de Supabase, exécuter `25_more_plots.sql` et `26_review_fixes.sql` s'ils ne sont pas encore passés, puis `27_gold_souls.sql`. Le 27 exige la 0.4.6 : les versions plus anciennes, qui comptent les âmes au niveau, affichent « Mise à jour requise ».
+2. Pousser `main`, puis le tag `v0.4.6` : GitHub lance les tests, construit et publie.
 
 **Ne jamais rejouer `21_purge.sql`** : il supprime la table `frontiers` et toutes les parties. Les scripts déjà passés ne se rejouent pas ; on n'exécute que les nouveaux numéros.
 
@@ -178,7 +186,8 @@ La 0.4.1 (scripts 21 à 24) et la 0.4.2 (12 emplacements, compétences à déblo
 | 6. Sortie 0.4.0 | Scripts `18` à `20`, tag `v0.4.0` | Fait le 12 octobre |
 | 7. 0.4.1 | Barre proportionnelle à l'écran, « Max ×N », boss au clic, moulin, bâtiments au choix, purge et vraies tables | Publiée |
 | 8. 0.4.2 | 12 emplacements et 5 nouveaux bâtiments, compétences à débloquer | Publiée |
-| 9. 0.4.3 | Correctifs de la revue : réponse perdue, succès inventés, version relue, pause, copie par compte, script `26` | Prête ; voir « Publier la 0.4.3 » |
+| 9. 0.4.3 à 0.4.5 | Correctifs de la revue, script `26`, texte sur deux lignes, effets des bâtiments | Publiées |
+| 10. 0.4.6 | Âmes tirées de l'or total, compteur d'âmes en attente, équilibrage, script `27` | Prête ; voir « Publier la 0.4.6 » |
 
 **Ensuite.**
 - 0.4.x : les fêtes (Halloween, Noël) dans le village.

@@ -4,12 +4,21 @@ namespace IdleBar.Frontier;
 
 public static class RetreatRules
 {
-    public static int SoulsFor(int maxStage) =>
-        maxStage < Balance.RetreatStage ? 0 : (int)Math.Floor(Math.Pow(maxStage / Balance.SoulDivisor, Balance.SoulExponent));
+    public static int TotalSouls(double lifetimeGold) =>
+        lifetimeGold <= 0 ? 0 : (int)Math.Min(int.MaxValue, Math.Floor(Balance.SoulScale * Math.Pow(lifetimeGold / Balance.SoulGoldBase, Balance.SoulPower)));
+
+    public static double GoldForSouls(int souls) =>
+        Balance.SoulGoldBase * Math.Pow(souls / Balance.SoulScale, 1 / Balance.SoulPower);
+
+    public static double GoldToNextSoul(FrontierState state) =>
+        Math.Max(0, GoldForSouls(Math.Max(TotalSouls(state.LifetimeGold), state.Souls) + 1) - state.LifetimeGold);
+
+    public static int Pending(FrontierState state) =>
+        state.MaxStage < Balance.RetreatStage ? 0 : Math.Max(0, TotalSouls(state.LifetimeGold) - state.Souls);
 
     public static int Apply(FrontierState state, EventLog events)
     {
-        int souls = SoulsFor(state.MaxStage);
+        int souls = Pending(state);
         if (souls < 1)
         {
             return 0;

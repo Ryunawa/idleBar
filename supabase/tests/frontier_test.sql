@@ -17,18 +17,19 @@ create function pg_temp.save(
   p_stage integer default 12, p_max integer default null, p_best integer default null,
   p_souls bigint default 0, p_retreats integer default 0,
   p_plots text[] default '{forge,bakery,null,null,null,null,null,null,null,null,null,null}', p_levels integer[] default '{3,1,0,0,0,0,0,0,0,0,0,0}',
-  p_gold double precision default 100, p_achievements text[] default '{monstres-100}', p_killed bigint default 1000)
+  p_gold double precision default 100, p_achievements text[] default '{monstres-100}', p_killed bigint default 1000,
+  p_lifetime double precision default 1e10)
 returns text
 language sql
 as $$
-  select public.save_frontier(p_revision, p_session, p_gold, 1000, p_souls, p_retreats,
+  select public.save_frontier(p_revision, p_session, p_gold, p_lifetime, p_souls, p_retreats,
     p_stage, coalesce(p_max, p_stage), coalesce(p_best, p_max, p_stage), 0, false,
     '{5,1,0}', p_plots, p_levels, '{0,30.5,0}', false, false, p_achievements,
     p_killed, 0, 0, 0, 0) ->> 'status';
 $$;
 
 grant execute on function pg_temp.check(boolean, text) to authenticated;
-grant execute on function pg_temp.save(integer, uuid, integer, integer, integer, bigint, integer, text[], integer[], double precision, text[], bigint) to authenticated;
+grant execute on function pg_temp.save(integer, uuid, integer, integer, integer, bigint, integer, text[], integer[], double precision, text[], bigint, double precision) to authenticated;
 
 select set_config('request.jwt.claim.sub', '77777777-7777-7777-7777-777777777777', false);
 set role authenticated;
@@ -90,6 +91,9 @@ select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000005
 select pg_temp.check(pg_temp.save(5, '00000000-0000-0000-0000-000000000005', p_stage => 2, p_max => 2, p_best => 60, p_souls => 36, p_retreats => 1, p_plots => '{bakery,forge,null,null,null,null,null}', p_levels => '{2,1,0,0,0,0,0}') = 'refused', 'un client à 7 emplacements est refusé');
 select pg_temp.check(pg_temp.save(5, '00000000-0000-0000-0000-000000000005', p_stage => 2, p_max => 2, p_best => 60, p_souls => 36, p_retreats => 1, p_plots => '{bakery,forge,null,null,null,null,null,null,null,null,null,null}', p_levels => '{2,1,0,0,0,0,0,0,0,0,0,0}', p_achievements => '{monstres-100,triche-1,triche-2}') = 'ok', 'succès inconnus ignorés');
 select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000005') #> '{frontier,achievements}' = '["monstres-100"]', 'seuls les vrais succès sont gardés');
+select pg_temp.check(pg_temp.save(6, '00000000-0000-0000-0000-000000000005', p_stage => 2, p_max => 2, p_best => 60, p_souls => 100, p_retreats => 1, p_plots => '{bakery,forge,null,null,null,null,null,null,null,null,null,null}', p_levels => '{2,1,0,0,0,0,0,0,0,0,0,0}') = 'refused', 'plus d''âmes que l''or n''en donne');
+select pg_temp.check(pg_temp.save(6, '00000000-0000-0000-0000-000000000005', p_stage => 2, p_max => 2, p_best => 60, p_souls => 36, p_retreats => 1, p_plots => '{bakery,forge,null,null,null,null,null,null,null,null,null,null}', p_levels => '{2,1,0,0,0,0,0,0,0,0,0,0}', p_lifetime => 1e300) = 'refused', 'or total absurde refusé');
+select pg_temp.check(pg_temp.save(6, '00000000-0000-0000-0000-000000000005', p_stage => 2, p_max => 2, p_best => 60, p_souls => 41, p_retreats => 1, p_plots => '{bakery,forge,null,null,null,null,null,null,null,null,null,null}', p_levels => '{2,1,0,0,0,0,0,0,0,0,0,0}') = 'ok', 'les âmes que l''or permet');
 reset role;
 
 delete from auth.users where id = '77777777-7777-7777-7777-777777777777';
@@ -97,4 +101,4 @@ select pg_temp.check(not exists (select 1 from public.frontier_plots where playe
 select pg_temp.check((select count(*) from public.plots) = 12 and (select max(unlock_stage) from public.plots) = 101, 'douze emplacements, le dernier au boss 100');
 select pg_temp.check((select count(*) from public.building_kinds) = 12, 'douze bâtiments');
 select pg_temp.check((select count(*) from public.achievement_kinds) = 30, 'trente succès connus');
-select pg_temp.check((select min_client_version from private.settings) = '0.4.2', 'la 0.4.2 est exigée');
+select pg_temp.check((select min_client_version from private.settings) = '0.4.6', 'la 0.4.6 est exigée');

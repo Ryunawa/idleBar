@@ -37,7 +37,9 @@ public static class StatusBuilder
 
         string rate = $"+{NumberFormat.Rate(Economy.GoldPerSecond(state))}/s";
         string wave = state.BossHeld ? "boss en attente" : $"{state.Kills}/{Balance.MonstersPerStage}";
-        return $"{rate} · niv {state.Stage} · {wave}";
+        int pending = RetreatRules.Pending(state);
+        string souls = pending > 0 ? $" · repli : +{NumberFormat.Count(pending, "âme", "âmes")}" : string.Empty;
+        return $"{rate} · niv {state.Stage} · {wave}{souls}";
     }
 
     private static BarStatus Playing(FrontierState state, string situation, bool alert) =>
