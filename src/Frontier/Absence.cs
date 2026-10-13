@@ -17,6 +17,7 @@ public static class Absence
 
         state.FuryLeft = 0;
         state.FrenzyLeft = 0;
+        Skirmish.Restore(state);
         state.Chicken = null;
         state.ChickenTimer = Math.Max(Balance.ChickenFirst, state.ChickenTimer - away);
         Convoys.Clear(state);

@@ -30,7 +30,15 @@ public sealed class FrontierState
 
     public bool BossHeld { get; set; }
 
+    public HeroRole Role { get; set; }
+
+    public int RoleRetreats { get; set; }
+
+    public HeroLook? Hero { get; set; }
+
     public int[] Fighters { get; set; } = [1, 0, 0];
+
+    public int Armor { get; set; }
 
     public BuildingKind?[] Built { get; set; } = new BuildingKind?[PlotCount];
 
@@ -39,6 +47,14 @@ public sealed class FrontierState
     public double[] Cooldowns { get; set; } = new double[SkillCount];
 
     public double[] Timers { get; } = new double[FighterCount];
+
+    public double[] Health { get; } = [1, 1, 1];
+
+    public double[] Downed { get; } = new double[FighterCount];
+
+    public double HealTimer { get; set; }
+
+    public long HeroShots { get; set; }
 
     public double FuryLeft { get; set; }
 
@@ -89,6 +105,8 @@ public sealed class FrontierState
         int plot = Array.IndexOf(Built, kind);
         return plot >= 0 ? plot : null;
     }
+
+    public bool CanChangeRole => Hero is null || Retreats > RoleRetreats;
 
     public void Earn(double gold)
     {

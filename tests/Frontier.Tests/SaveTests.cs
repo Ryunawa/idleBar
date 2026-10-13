@@ -77,6 +77,35 @@ public sealed class SaveTests
     }
 
     [Fact]
+    public void TheHeroSurvivesASave()
+    {
+        FrontierState state = new() { Role = HeroRole.Support, Retreats = 3, RoleRetreats = 2, Armor = 14, Hero = new HeroLook("Aldric", 1, 2, 3, 4) };
+        FrontierSave? save = SaveCodec.Deserialize(SaveCodec.Serialize(SaveCodec.Capture(state)));
+        Assert.NotNull(save);
+        FrontierState restored = SaveCodec.Restore(save);
+
+        Assert.Equal(HeroRole.Support, restored.Role);
+        Assert.Equal(2, restored.RoleRetreats);
+        Assert.Equal(14, restored.Armor);
+        Assert.Equal(state.Hero, restored.Hero);
+        Assert.True(restored.CanChangeRole);
+    }
+
+    [Fact]
+    public void ASaveFromBeforeTheHeroAsksForOne()
+    {
+        FrontierSave old = SaveCodec.Capture(new FrontierState { Stage = 12, MaxStage = 12 }) with { Version = 2, Role = null, Hero = null };
+        FrontierSave? save = SaveCodec.Deserialize(SaveCodec.Serialize(old));
+        Assert.NotNull(save);
+        FrontierState restored = SaveCodec.Restore(save);
+
+        Assert.Equal(12, restored.Stage);
+        Assert.Equal(HeroRole.Warrior, restored.Role);
+        Assert.Null(restored.Hero);
+        Assert.True(restored.CanChangeRole);
+    }
+
+    [Fact]
     public void ASaveFromTheJsonEraIsIgnored()
     {
         Assert.Null(SaveCodec.Deserialize("{\"version\":1,\"fighters\":[1,0,0],\"buildings\":[1,0,0,0,0,0,0],\"cooldowns\":[0,0,0],\"achievements\":[]}"));

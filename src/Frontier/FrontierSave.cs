@@ -24,4 +24,8 @@ public sealed record FrontierSave(
     long BossesKilled,
     long Chickens,
     long Clicks,
-    long SkillsUsed);
+    long SkillsUsed,
+    string? Role = null,
+    int RoleRetreats = 0,
+    int Armor = 0,
+    HeroLook? Hero = null);

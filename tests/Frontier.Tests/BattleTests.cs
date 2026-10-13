@@ -20,7 +20,7 @@ public sealed class BattleTests
     [Fact]
     public void AFailedBossSendsBackOneStage()
     {
-        FrontierState state = new() { Stage = 10, MaxStage = 10 };
+        FrontierState state = new() { Stage = 10, MaxStage = 10, Armor = 1_000 };
         FrontierGame game = new(state, new Random(1));
         Run(game, Balance.BossSeconds + 5);
         Assert.Equal(9, state.Stage);
@@ -30,7 +30,7 @@ public sealed class BattleTests
     [Fact]
     public void TheBelfryGivesTheBossMoreTime()
     {
-        FrontierState state = new() { Stage = 10, MaxStage = 10 };
+        FrontierState state = new() { Stage = 10, MaxStage = 10, Armor = 1_000 };
         Village.Build(state, BuildingKind.Belfry, 12);
         FrontierGame game = new(state, new Random(1));
         Run(game, Balance.BossSeconds + 5);

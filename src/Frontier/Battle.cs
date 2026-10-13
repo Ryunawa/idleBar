@@ -8,6 +8,7 @@ public static class Battle
 
     public static void Update(FrontierState state, double dt, EventLog events)
     {
+        Skirmish.Recover(state, dt, events);
         Monster? monster = state.Monster;
         if (monster is null)
         {
@@ -33,7 +34,7 @@ public static class Battle
             monster.BossLeft -= dt;
             if (monster.BossLeft <= 0)
             {
-                Fail(state, events);
+                Front.Fail(state, events);
                 return;
             }
         }
@@ -42,9 +43,14 @@ public static class Battle
         {
             Attack(state, fighter.Kind, monster, dt, events);
         }
+
+        if (state.Monster == monster)
+        {
+            Skirmish.Update(state, monster, dt, events);
+        }
     }
 
-    public static void Damage(FrontierState state, double amount, HitSource source, EventLog events)
+    public static void Damage(FrontierState state, double amount, HitSource source, EventLog events, bool critical = false)
     {
         if (!Fighting(state) || state.Monster is not Monster monster)
         {
@@ -52,7 +58,7 @@ public static class Battle
         }
 
         monster.Hp -= amount;
-        events.Add(new Hit(source, amount));
+        events.Add(new Hit(source, amount, critical));
         if (monster.Hp <= 0)
         {
             Kill(state, monster, events);
@@ -61,25 +67,38 @@ public static class Battle
 
     private static void Attack(FrontierState state, FighterKind kind, Monster monster, double dt, EventLog events)
     {
-        if (state.Level(kind) <= 0)
+        if (!Vitality.Up(state, kind))
         {
             return;
         }
 
         int index = (int)kind;
         double interval = Economy.Interval(state, kind);
-        HitSource source = kind switch
-        {
-            FighterKind.Archer => HitSource.Archer,
-            FighterKind.Mage => HitSource.Mage,
-            _ => HitSource.Hero,
-        };
         state.Timers[index] += dt;
         while (state.Timers[index] >= interval && state.Monster == monster)
         {
             state.Timers[index] -= interval;
-            Damage(state, Economy.Dps(state, kind) * interval, source, events);
+            Swing(state, kind, monster, Economy.Dps(state, kind) * interval, events);
         }
+    }
+
+    private static void Swing(FrontierState state, FighterKind kind, Monster monster, double amount, EventLog events)
+    {
+        if (kind != FighterKind.Hero)
+        {
+            Damage(state, amount, kind == FighterKind.Archer ? HitSource.Archer : HitSource.Mage, events);
+            return;
+        }
+
+        state.HeroShots++;
+        bool critical = state.Role == HeroRole.Archer && state.HeroShots % Balance.CriticalEvery == 0;
+        double factor = (critical ? Balance.CriticalFactor : 1) * (state.Role == HeroRole.Mage && monster.Boss ? Balance.MageBossFactor : 1);
+        if (state.Role == HeroRole.Warrior)
+        {
+            Skirmish.Stun(monster);
+        }
+
+        Damage(state, amount * factor, HitSource.Hero, events, critical);
     }
 
     private static void Kill(FrontierState state, Monster monster, EventLog events)
@@ -90,75 +109,23 @@ public static class Battle
         events.Add(new Killed(gold, monster.Boss));
         state.Monster = null;
         state.RespawnIn = Balance.RespawnSeconds;
+        Skirmish.Rest(state);
         if (monster.Boss)
         {
             state.BossesKilled++;
-            Advance(state, events);
+            Front.Advance(state, events);
             return;
         }
 
         state.Kills++;
-        if (state.Kills >= Balance.MonstersPerStage && state.BossHeld)
+        if (state.Kills >= Balance.MonstersPerStage && state.BossHeld && Economy.IsBossStage(state.Stage + 1))
         {
             state.Kills = 0;
         }
         else if (state.Kills >= Balance.MonstersPerStage)
         {
-            Advance(state, events);
+            Front.Advance(state, events);
         }
-    }
-
-    public static bool CallBoss(FrontierState state, EventLog events)
-    {
-        if (!state.BossHeld)
-        {
-            return false;
-        }
-
-        state.BossHeld = false;
-        events.Add(new BossCalled());
-        state.Monster = null;
-        state.RespawnIn = Balance.RespawnSeconds;
-        Advance(state, events);
-        return true;
-    }
-
-    private static void Advance(FrontierState state, EventLog events)
-    {
-        state.Stage++;
-        state.Kills = 0;
-        if (state.Stage > state.MaxStage)
-        {
-            state.MaxStage = state.Stage;
-            state.BestStage = Math.Max(state.BestStage, state.Stage);
-            foreach (PlotInfo plot in Plots.All)
-            {
-                if (plot.Unlock == state.MaxStage)
-                {
-                    events.Add(new PlotConquered(plot.Index));
-                }
-            }
-
-            foreach (SkillInfo skill in Skills.All)
-            {
-                if (skill.Unlock == state.MaxStage)
-                {
-                    events.Add(new SkillUnlocked(skill.Kind));
-                }
-            }
-        }
-
-        events.Add(new StageReached(state.Stage, Economy.IsBossStage(state.Stage)));
-    }
-
-    private static void Fail(FrontierState state, EventLog events)
-    {
-        events.Add(new BossFailed());
-        state.Monster = null;
-        state.RespawnIn = Balance.BossRetrySeconds;
-        state.Stage = Math.Max(1, state.Stage - 1);
-        state.Kills = 0;
-        state.BossHeld = true;
     }
 
     private static void Spawn(FrontierState state)

@@ -14,6 +14,7 @@ public sealed class Monster
         ApproachTotal = approach;
         BossLeft = boss ? bossSeconds : 0;
         BossTotal = BossLeft;
+        StrikeIn = Vitality.StrikeSeconds(boss) * Balance.FirstStrikeShare;
     }
 
     public long Id { get; }
@@ -35,6 +36,10 @@ public sealed class Monster
     public double BossLeft { get; set; }
 
     public double BossTotal { get; }
+
+    public double StrikeIn { get; set; }
+
+    public long Strikes { get; set; }
 
     public string Name => Biomes.NameOf(this);
 }

@@ -16,6 +16,7 @@ public static class Shop
     public static double Cost(FrontierState state, Purchase purchase) => purchase switch
     {
         FighterPurchase fighter => Economy.FighterCost(state, fighter.Kind),
+        ArmorPurchase => Economy.ArmorCost(state),
         Construction build => Economy.PlotCost(state, build.Plot),
         PlotPurchase raise => Economy.PlotCost(state, raise.Plot),
         _ => double.PositiveInfinity,
@@ -67,6 +68,10 @@ public static class Shop
                 state.Fighters[(int)fighter.Kind]++;
                 events.Add(new Trained(fighter.Kind, state.Level(fighter.Kind)));
                 break;
+            case ArmorPurchase:
+                state.Armor++;
+                events.Add(new Armored(state.Armor));
+                break;
             case Construction build:
                 state.Built[build.Plot] = build.Kind;
                 Raise(state, build.Plot, events);
@@ -80,7 +85,7 @@ public static class Shop
     }
 
     private static double Growth(Purchase purchase) =>
-        purchase is FighterPurchase ? Balance.FighterCostGrowth : Balance.BuildingCostGrowth;
+        purchase is FighterPurchase or ArmorPurchase ? Balance.FighterCostGrowth : Balance.BuildingCostGrowth;
 
     private static void Raise(FrontierState state, int plot, EventLog events)
     {

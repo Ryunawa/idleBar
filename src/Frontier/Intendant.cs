@@ -6,6 +6,7 @@ public static class Intendant
 {
     private const double FighterWeight = 2;
     private const int CompanionHeroLevel = 5;
+    private const double ArmorWeight = 0.5;
 
     private static readonly BuildingKind[] Preference =
     [
@@ -59,6 +60,11 @@ public static class Intendant
             }
         }
 
+        if (state.Level(FighterKind.Hero) >= CompanionHeroLevel)
+        {
+            yield return new ArmorPurchase();
+        }
+
         for (int plot = 0; plot < FrontierState.PlotCount; plot++)
         {
             if (state.Built[plot] is not null)
@@ -88,6 +94,7 @@ public static class Intendant
     private static double Value(FrontierState state, Purchase purchase, double cost) => purchase switch
     {
         FighterPurchase fighter => FighterWeight * CombatRate(state) * DpsGain(state, fighter.Kind) / cost,
+        ArmorPurchase => FighterWeight * ArmorWeight * CombatRate(state) * Economy.TotalDps(state) * ArmorGain(state) / cost,
         Construction => double.PositiveInfinity,
         PlotPurchase raise => PlotGain(state, raise.Plot) / cost,
         _ => 0,
@@ -103,6 +110,9 @@ public static class Intendant
         int level = state.Level(kind);
         return Economy.BaseDps(state, kind, level + 1) - Economy.BaseDps(state, kind, level);
     }
+
+    private static double ArmorGain(FrontierState state) =>
+        Vitality.ArmorFactor(state.Armor + 1) / Vitality.ArmorFactor(state.Armor) - 1;
 
     private static double PlotGain(FrontierState state, int plot) =>
         Plots.Of(plot).Gold * Economy.Wealth(state);

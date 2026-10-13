@@ -68,7 +68,24 @@ public sealed class FrontierGame
 
     public int Retreat() => Frozen ? 0 : RetreatRules.Apply(State, Events);
 
-    public bool CallBoss() => !Frozen && Battle.CallBoss(State, Events);
+    public bool CallBoss() => !Frozen && Front.CallBoss(State, Events);
+
+    public bool Embody(HeroLook look, HeroRole role)
+    {
+        if (Frozen || !look.IsValid() || (role != State.Role && !State.CanChangeRole))
+        {
+            return false;
+        }
+
+        if (State.Hero is null || role != State.Role)
+        {
+            State.RoleRetreats = State.Retreats;
+        }
+
+        State.Role = role;
+        State.Hero = look;
+        return true;
+    }
 
     public void SetIntendant(bool on) => State.IntendantOn = Frozen ? State.IntendantOn : on && State.IntendantUnlocked;
 
@@ -86,7 +103,7 @@ public sealed class FrontierGame
                 return false;
             case SkillKind.Smite:
                 Events.Add(new Smote());
-                double hit = Economy.Dps(State, FighterKind.Hero) * Fighters.Of(FighterKind.Hero).Interval * Balance.SmiteHits;
+                double hit = Economy.HeroPower(State) * Fighters.Of(FighterKind.Hero).Interval * Balance.SmiteHits;
                 Battle.Damage(State, hit, HitSource.Smite, Events);
                 break;
             case SkillKind.Fury:

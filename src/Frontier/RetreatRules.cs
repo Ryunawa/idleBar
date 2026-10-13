@@ -33,11 +33,13 @@ public static class RetreatRules
         state.Kills = 0;
         state.BossHeld = false;
         state.Fighters = [1, 0, 0];
+        state.Armor = 0;
         state.Built = new BuildingKind?[FrontierState.PlotCount];
         state.Levels = new int[FrontierState.PlotCount];
         state.Monster = null;
         state.RespawnIn = Balance.BossRetrySeconds;
         Array.Clear(state.Timers);
+        Skirmish.Restore(state);
         state.FuryLeft = 0;
         state.FrenzyLeft = 0;
         Convoys.Clear(state);

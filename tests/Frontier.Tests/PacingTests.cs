@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using IdleBar.Frontier;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -29,6 +30,35 @@ public sealed class PacingTests
         Assert.InRange(At(player, "premier-batiment"), 0, 1 * Minute);
         Assert.InRange(At(player, "niveau-11"), 3 * Minute, 5 * Minute);
         Assert.InRange(At(player, "repli-possible-1"), 2 * Hour, 4 * Hour);
+    }
+
+    [Theory]
+    [InlineData(HeroRole.Tank)]
+    [InlineData(HeroRole.Archer)]
+    [InlineData(HeroRole.Mage)]
+    [InlineData(HeroRole.Support)]
+    public void EveryRoleReachesTheFirstRetreatInTime(HeroRole role)
+    {
+        IdlePlayer player = new(7, role);
+        player.Play(5 * Hour);
+        Report(player);
+
+        Assert.InRange(At(player, "niveau-11"), 3 * Minute, 6 * Minute);
+        Assert.InRange(At(player, "repli-possible-1"), 2 * Hour, 4 * Hour);
+    }
+
+    [Theory]
+    [InlineData(HeroRole.Warrior)]
+    [InlineData(HeroRole.Archer)]
+    public void AnIdleFrontNeverLosesMoreThanTenStages(HeroRole role)
+    {
+        IdlePlayer player = new(5, role);
+        player.Play(2 * Hour);
+        int reached = player.Game.State.MaxStage;
+        int lowest = player.Idle(8 * Hour);
+        Report(player);
+
+        Assert.InRange(reached - lowest, 0, 10);
     }
 
     [Fact]
@@ -64,6 +94,7 @@ public sealed class PacingTests
             _output.WriteLine(note);
         }
 
+        _output.WriteLine(string.Join(" ", player.Counts.OrderBy(pair => pair.Key).Select(pair => $"{pair.Key}={pair.Value}")));
         _output.WriteLine($"stage {player.Game.State.Stage} best {player.Game.State.BestStage} souls {player.Game.State.Souls} retreats {player.Game.State.Retreats}");
     }
 }

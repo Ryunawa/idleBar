@@ -7,7 +7,8 @@ namespace IdleBar.Frontier;
 
 public static class SaveCodec
 {
-    public const int CurrentVersion = 2;
+    public const int CurrentVersion = 3;
+    public const int OldestVersion = 2;
 
     public static JsonSerializerOptions Options { get; } = new() { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
 
@@ -33,7 +34,11 @@ public static class SaveCodec
         state.BossesKilled,
         state.Chickens,
         state.Clicks,
-        state.SkillsUsed);
+        state.SkillsUsed,
+        Roles.Of(state.Role).Id,
+        state.RoleRetreats,
+        state.Armor,
+        state.Hero);
 
     public static FrontierState Restore(FrontierSave save)
     {
@@ -59,6 +64,10 @@ public static class SaveCodec
             Chickens = save.Chickens,
             Clicks = save.Clicks,
             SkillsUsed = save.SkillsUsed,
+            Role = Roles.Parse(save.Role) ?? HeroRole.Warrior,
+            RoleRetreats = Math.Clamp(save.RoleRetreats, 0, Math.Max(0, save.Retreats)),
+            Armor = Math.Max(0, save.Armor),
+            Hero = save.Hero is HeroLook hero && hero.IsValid() ? hero : null,
         };
         state.Fighters[(int)FighterKind.Hero] = Math.Max(1, state.Fighters[(int)FighterKind.Hero]);
         PlaceBuildings(state, save);
@@ -78,7 +87,7 @@ public static class SaveCodec
     }
 
     public static bool Complete(FrontierSave? save) =>
-        save is { Version: CurrentVersion, Fighters: not null, Plots: not null, Levels: not null, Cooldowns: not null, Achievements: not null };
+        save is { Version: >= OldestVersion and <= CurrentVersion, Fighters: not null, Plots: not null, Levels: not null, Cooldowns: not null, Achievements: not null };
 
     private static void PlaceBuildings(FrontierState state, FrontierSave save)
     {

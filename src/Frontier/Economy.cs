@@ -26,10 +26,15 @@ public static class Economy
         };
     }
 
-    public static double Buff(FrontierState state) =>
-        (state.FuryLeft > 0 ? Balance.FuryFactor : 1) * (1 + Balance.SupplyBonus * state.Supply);
+    public static double Synergy(FrontierState state) => 1 + Balance.SynergyBonus * Roles.OnFront(state).Count;
 
-    public static double Dps(FrontierState state, FighterKind kind) => BaseDps(state, kind, state.Level(kind)) * Buff(state);
+    public static double Buff(FrontierState state) =>
+        (state.FuryLeft > 0 ? Balance.FuryFactor : 1) * (1 + Balance.SupplyBonus * state.Supply) * Synergy(state);
+
+    public static double HeroPower(FrontierState state) => BaseDps(state, FighterKind.Hero, state.Level(FighterKind.Hero)) * Buff(state);
+
+    public static double Dps(FrontierState state, FighterKind kind) =>
+        BaseDps(state, kind, state.Level(kind)) * Buff(state) * (kind == FighterKind.Hero ? Roles.Of(state.Role).Dps : 1);
 
     public static double TotalDps(FrontierState state)
     {
@@ -43,10 +48,12 @@ public static class Economy
     }
 
     public static double Interval(FrontierState state, FighterKind kind) =>
-        Fighters.Of(kind).Interval / (kind == FighterKind.Hero && state.FuryLeft > 0 ? Balance.FuryFactor : 1);
+        kind == FighterKind.Hero
+            ? Roles.Of(state.Role).Interval / (state.FuryLeft > 0 ? Balance.FuryFactor : 1)
+            : Fighters.Of(kind).Interval;
 
     public static double ClickDamage(FrontierState state) =>
-        Math.Max(1, Dps(state, FighterKind.Hero) * Balance.ClickShare * (1 + Balance.TavernBonus * state.Level(BuildingKind.Tavern)));
+        Math.Max(1, HeroPower(state) * Balance.ClickShare * (1 + Balance.TavernBonus * state.Level(BuildingKind.Tavern)));
 
     public static double SkillCooldown(FrontierState state, SkillKind kind) =>
         Skills.Of(kind).Cooldown / (1 + Math.Min(Balance.ChapelMax, Balance.ChapelBonus * state.Level(BuildingKind.Chapel)));
@@ -112,8 +119,13 @@ public static class Economy
     }
 
     public static double FighterCost(FrontierState state, FighterKind kind) =>
-        Fighters.Of(kind).Cost * Math.Pow(Balance.FighterCostGrowth, state.Level(kind))
-        * (1 - Math.Min(Balance.WorkshopMax, Balance.WorkshopDiscount * state.Level(BuildingKind.Workshop)));
+        Fighters.Of(kind).Cost * Math.Pow(Balance.FighterCostGrowth, state.Level(kind)) * Discount(state);
+
+    public static double ArmorCost(FrontierState state) =>
+        Balance.ArmorCost * Math.Pow(Balance.FighterCostGrowth, state.Armor) * Discount(state);
+
+    public static double Discount(FrontierState state) =>
+        1 - Math.Min(Balance.WorkshopMax, Balance.WorkshopDiscount * state.Level(BuildingKind.Workshop));
 
     public static double PlotCost(FrontierState state, int plot) =>
         Plots.Of(plot).Cost * Math.Pow(Balance.BuildingCostGrowth, state.Levels[plot]);

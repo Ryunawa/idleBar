@@ -17,14 +17,15 @@ public sealed class IdlePlayer
     private readonly Random _random;
     private readonly Dictionary<string, double> _milestones = [];
     private readonly List<string> _notes = [];
+    private readonly Dictionary<string, int> _counts = [];
     private double _sinceCheck;
     private double _lastProgress;
     private int _lastMaxStage;
 
-    public IdlePlayer(int seed)
+    public IdlePlayer(int seed, HeroRole role = HeroRole.Warrior)
     {
         _random = new Random(seed);
-        Game = new FrontierGame(new FrontierState(), new Random(seed));
+        Game = new FrontierGame(new FrontierState { Role = role }, new Random(seed));
     }
 
     public FrontierGame Game { get; }
@@ -34,6 +35,8 @@ public sealed class IdlePlayer
     public IReadOnlyDictionary<string, double> Milestones => _milestones;
 
     public IReadOnlyList<string> Notes => _notes;
+
+    public IReadOnlyDictionary<string, int> Counts => _counts;
 
     public void Play(double seconds)
     {
@@ -52,6 +55,20 @@ public sealed class IdlePlayer
         }
     }
 
+    public int Idle(double seconds)
+    {
+        int lowest = Game.State.Stage;
+        for (double elapsed = 0; elapsed < seconds; elapsed += 1)
+        {
+            Game.Advance(1);
+            Clock += 1;
+            React();
+            lowest = Math.Min(lowest, Game.State.Stage);
+        }
+
+        return lowest;
+    }
+
     public void Away(double seconds)
     {
         Game.Absent(seconds);
@@ -64,6 +81,12 @@ public sealed class IdlePlayer
     {
         foreach (FrontierEvent frontierEvent in Game.Events.Drain())
         {
+            if (frontierEvent is Fell or Routed or BossFailed)
+            {
+                string name = frontierEvent is Fell fell ? $"tombe-{fell.Kind}" : frontierEvent.GetType().Name;
+                _counts[name] = _counts.GetValueOrDefault(name) + 1;
+            }
+
             if (frontierEvent is ChickenAppeared && _random.NextDouble() < ChickenChance)
             {
                 Game.CatchChicken();
@@ -139,7 +162,7 @@ public sealed class IdlePlayer
         if (_milestones.TryAdd(milestone, Clock))
         {
             FrontierState state = Game.State;
-            _notes.Add($"{milestone}: fighters {string.Join('/', state.Fighters)} buildings {string.Join('/', state.Built.Select(kind => kind?.ToString() ?? "-"))} levels {string.Join('/', state.Levels)} gps {Economy.BaseGoldPerSecond(state):0} dps {Economy.TotalDps(state):0} souls {state.Souls} lifetime {state.LifetimeGold:0.00e0} stage {state.MaxStage}");
+            _notes.Add($"{milestone}: fighters {string.Join('/', state.Fighters)} armor {state.Armor} routs {_counts.GetValueOrDefault(nameof(Routed))} falls {_counts.Where(pair => pair.Key.StartsWith("tombe")).Sum(pair => pair.Value)} buildings {string.Join('/', state.Built.Select(kind => kind?.ToString() ?? "-"))} levels {string.Join('/', state.Levels)} gps {Economy.BaseGoldPerSecond(state):0} dps {Economy.TotalDps(state):0} souls {state.Souls} lifetime {state.LifetimeGold:0.00e0} stage {state.MaxStage}");
         }
     }
 }

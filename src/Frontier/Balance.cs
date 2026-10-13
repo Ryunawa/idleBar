@@ -73,6 +73,28 @@ public static class Balance
     public const double BelfrySeconds = 1;
     public const double BelfryMax = 30;
 
+    public const double MonsterHit = 0.1;
+    public const double MonsterStrikeSeconds = 1.5;
+    public const double BossHit = 1.0;
+    public const double BossStrikeSeconds = 2;
+    public const double HitRampStages = 40;
+    public const double HitRampFloor = 0.15;
+    public const double FirstStrikeShare = 0.6;
+    public const double MeleeWeight = 4;
+    public const double RangedWeight = 1;
+    public const double KillHeal = 0.15;
+    public const double StunSeconds = 0.12;
+    public const int CriticalEvery = 5;
+    public const double CriticalFactor = 2.5;
+    public const double MageBossFactor = 1.5;
+    public const double HealSeconds = 3;
+    public const double HealShare = 0.06;
+    public const double SupportRevive = 0.5;
+    public const double SynergyBonus = 0.05;
+    public const double ArmorBonus = 0.1;
+    public const double ArmorCost = 400;
+    public const double BarracksHpBonus = 0.02;
+
     public static readonly int[] Tiers = [10, 25, 50, 100, 250];
 
     public static readonly GrowthSegment[] HpCurve = [new(10, 1.35), new(50, 1.35), new(100, 1.19), new(int.MaxValue, 1.13)];
