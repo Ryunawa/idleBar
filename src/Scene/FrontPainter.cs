@@ -38,9 +38,11 @@ public static class FrontPainter
         }
     }
 
-    public static int Walk(FrontierLayout layout, FighterKind kind, SceneMotion motion)
+    public static int Walk(FrontierState state, FrontierLayout layout, FighterKind kind, SceneMotion motion) =>
+        Walk(Formation.X(state, layout, kind), layout, kind, motion);
+
+    public static int Walk(int post, FrontierLayout layout, FighterKind kind, SceneMotion motion)
     {
-        int post = layout.FighterX(kind);
         if (motion.Recruit[(int)kind] is not float time)
         {
             return post;

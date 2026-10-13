@@ -23,7 +23,7 @@ public static class LightPainter
 
         if (state.Level(FighterKind.Mage) > 0)
         {
-            int orb = FrontPainter.Walk(layout, FighterKind.Mage, scene.Motion) + 7;
+            int orb = FrontPainter.Walk(state, layout, FighterKind.Mage, scene.Motion) + 7;
             bool glowing = scene.Motion.MageGlow > 0;
             r.Set(orb, 16, glowing ? Palette.White : Palette.Cyan);
             if (glowing)
@@ -40,7 +40,7 @@ public static class LightPainter
             float end = FrontPainter.SwordAngle(scene.Motion, time);
             for (float angle = -2.0f; angle < end; angle += 0.12f)
             {
-                r.Set((int)MathF.Round(layout.HeroX + 9 + MathF.Cos(angle) * 10), (int)MathF.Round(18 + MathF.Sin(angle) * 10), Palette.White.WithAlpha(0.6f));
+                r.Set((int)MathF.Round(Formation.X(state, layout, FighterKind.Hero) + 9 + MathF.Cos(angle) * 10), (int)MathF.Round(18 + MathF.Sin(angle) * 10), Palette.White.WithAlpha(0.6f));
             }
         }
     }

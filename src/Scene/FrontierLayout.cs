@@ -22,9 +22,6 @@ public sealed record FrontierLayout(int Width, int Top, int VillageX, int SlotWi
     private const int PalisadeRoad = 14;
     private const int CrierRoad = 28;
 
-    private static readonly int[] RoomyAllies = [31, 13, -16];
-    private static readonly int[] CompactAllies = [23, 8, -14];
-
     public int FrontWidth => Compact ? CompactFront : RoomyFront;
 
     public bool Narrow => SlotWidth == 0;
@@ -44,8 +41,6 @@ public sealed record FrontierLayout(int Width, int Top, int VillageX, int SlotWi
     public int ArcherX => FrontX + (Compact ? 16 : 22);
 
     public int HeroX => FrontX + (Compact ? 31 : 40);
-
-    public int AllyX(int slot) => FrontX + (Compact ? CompactAllies : RoomyAllies)[slot % RoomyAllies.Length];
 
     public int MonsterX => FrontX + (Compact ? 53 : 67);
 

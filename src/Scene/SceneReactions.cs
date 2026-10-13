@@ -66,10 +66,10 @@ public static class SceneReactions
                 break;
             case Trained { Level: 1, Kind: not FighterKind.Hero } trained:
                 motion.Recruit[(int)trained.Kind] = 0;
-                fx.Float(Fighters.Of(trained.Kind).Name + " !", layout.FighterX(trained.Kind) + 4, 3, Palette.Green, 1.5f, 0);
+                fx.Float(Fighters.Of(trained.Kind).Name + " !", Formation.X(state, layout, trained.Kind) + 4, 3, Palette.Green, 1.5f, 0);
                 break;
             case Trained trained:
-                fx.Float("+1", layout.FighterX(trained.Kind) + 4, 7, Palette.Yellow, 0.7f);
+                fx.Float("+1", Formation.X(state, layout, trained.Kind) + 4, 7, Palette.Yellow, 0.7f);
                 break;
             case Supplied:
                 fx.Float("+5 %", layout.HeroX + 5, 8, Palette.Green, 0.9f);

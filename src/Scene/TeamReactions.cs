@@ -71,5 +71,5 @@ public static class TeamReactions
     }
 
     private static int Center(FrontierState state, FrontierLayout layout, FighterKind kind, long ally, SceneMotion motion) =>
-        ((ally != 0 ? TeamPainter.AllyX(state, layout, ally) : null) ?? FrontPainter.Walk(layout, kind, motion)) + 5;
+        ((ally != 0 ? Formation.AllyX(state, layout, ally) : null) ?? FrontPainter.Walk(state, layout, kind, motion)) + 5;
 }

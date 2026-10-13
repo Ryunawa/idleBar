@@ -24,10 +24,10 @@ public static class CombatReactions
                 Assist(scene, hit, target, layout, state, random);
                 break;
             case HitSource.Hero when state.Role == HeroRole.Archer:
-                fx.Projectiles.Add(new Projectile(false, layout.HeroX + 10, 17, target.X + 2, target.MiddleY, 0.12f, hit.Amount));
+                fx.Projectiles.Add(new Projectile(false, Formation.X(state, layout, FighterKind.Hero) + 10, 17, target.X + 2, target.MiddleY, 0.12f, hit.Amount));
                 break;
             case HitSource.Hero when state.Role == HeroRole.Mage:
-                fx.Projectiles.Add(new Projectile(true, layout.HeroX + 10, 12, target.CenterX, target.MiddleY, 0.3f, hit.Amount));
+                fx.Projectiles.Add(new Projectile(true, Formation.X(state, layout, FighterKind.Hero) + 10, 12, target.CenterX, target.MiddleY, 0.3f, hit.Amount));
                 break;
             case HitSource.Hero:
                 motion.HeroSwing = 1;
@@ -36,11 +36,11 @@ public static class CombatReactions
                 fx.Float(amount, target.CenterX + random.Next(-5, 6), target.Y - 2, Palette.White);
                 break;
             case HitSource.Archer:
-                fx.Projectiles.Add(new Projectile(false, layout.ArcherX + 8, 17, target.X + 2, target.MiddleY, 0.16f, hit.Amount));
+                fx.Projectiles.Add(new Projectile(false, Formation.X(state, layout, FighterKind.Archer) + 8, 17, target.X + 2, target.MiddleY, 0.16f, hit.Amount));
                 break;
             case HitSource.Mage:
                 motion.MageGlow = 0.25f;
-                fx.Projectiles.Add(new Projectile(true, layout.MageX + 7, 16, target.CenterX, target.MiddleY, 0.3f, hit.Amount));
+                fx.Projectiles.Add(new Projectile(true, Formation.X(state, layout, FighterKind.Mage) + 7, 16, target.CenterX, target.MiddleY, 0.3f, hit.Amount));
                 break;
             case HitSource.Click:
                 ArtPoint strike = scene.LastStrike ?? new ArtPoint(target.CenterX, target.Y + 4);
@@ -57,7 +57,7 @@ public static class CombatReactions
 
     private static void Assist(FrontierScene scene, Hit hit, MonsterBox target, FrontierLayout layout, FrontierState state, Random random)
     {
-        if (state.Allies.Find(ally => ally.Id == hit.Ally) is not Ally ally || TeamPainter.AllyX(state, layout, ally.Id) is not int x)
+        if (state.Allies.Find(ally => ally.Id == hit.Ally) is not Ally ally || Formation.AllyX(state, layout, ally.Id) is not int x)
         {
             return;
         }

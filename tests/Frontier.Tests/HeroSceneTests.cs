@@ -69,7 +69,7 @@ public sealed class HeroSceneTests
 
         ArtRaster frame = new ScenePainter().Paint(state, layout, scene, SceneLight.Noon, -1);
         Assert.Equal(width, frame.Width);
-        Assert.Equal(TargetKind.Ally, LaneHits.Find(state, layout, scene, layout.AllyX(1) + 4, 18).Kind);
+        Assert.Equal(TargetKind.Ally, LaneHits.Find(state, layout, scene, (Formation.AllyX(state, layout, 2) ?? 0) + 4, 18).Kind);
         if (Environment.GetEnvironmentVariable(SceneTests.SnapshotFolder) is string folder)
         {
             Directory.CreateDirectory(folder);

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using IdleBar.Frontier;
 
 namespace IdleBar.Scene;
@@ -34,21 +35,14 @@ public static class LaneHits
             return new LaneTarget(TargetKind.Monster);
         }
 
-        foreach (FighterInfo fighter in Fighters.All)
+        foreach (Post post in Formation.Posts(state, layout).Reverse())
         {
-            int left = FrontPainter.Walk(layout, fighter.Kind, scene.Motion);
-            if (state.Level(fighter.Kind) > 0 && x >= left && x < left + FighterWidth && y >= 9)
-            {
-                return new LaneTarget(TargetKind.Fighter, (int)fighter.Kind);
-            }
-        }
-
-        for (int slot = 0; slot < state.Allies.Count; slot++)
-        {
-            int left = layout.AllyX(slot);
+            int left = post.Member.Ally is null ? FrontPainter.Walk(post.X, layout, post.Member.Kind, scene.Motion) : post.X;
             if (x >= left && x < left + FighterWidth && y >= 9)
             {
-                return new LaneTarget(TargetKind.Ally, slot);
+                return post.Member.Ally is Ally ally
+                    ? new LaneTarget(TargetKind.Ally, state.Allies.IndexOf(ally))
+                    : new LaneTarget(TargetKind.Fighter, (int)post.Member.Kind);
             }
         }
 

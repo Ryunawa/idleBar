@@ -13,24 +13,28 @@ public static class TeamPainter
     public static void Paint(ArtRaster r, FrontierState state, FrontierLayout layout, FrontierScene scene)
     {
         SceneMotion motion = scene.Motion;
-        for (int slot = state.Allies.Count - 1; slot >= 0; slot--)
+        IReadOnlyList<Post> posts = Formation.Posts(state, layout);
+        foreach (Post post in posts)
         {
-            Reinforcement(r, state, state.Allies[slot], layout.AllyX(slot), scene);
+            switch (post.Member)
+            {
+                case { Ally: Ally ally }:
+                    Reinforcement(r, state, ally, post.X, scene);
+                    break;
+                case { Kind: FighterKind.Hero }:
+                    Hero(r, state, post.X, scene);
+                    break;
+                case { Kind: FighterKind kind }:
+                    Companion(r, state, kind, FrontPainter.Walk(post.X, layout, kind, motion), kind == FighterKind.Mage ? MageY : ArcherY, motion);
+                    break;
+            }
         }
 
-        Companion(r, state, FighterKind.Mage, FrontPainter.Walk(layout, FighterKind.Mage, motion), MageY, motion);
-        Companion(r, state, FighterKind.Archer, FrontPainter.Walk(layout, FighterKind.Archer, motion), ArcherY, motion);
-        Hero(r, state, layout, scene);
+        AllyNames.Paint(r, posts);
     }
 
     public static int HeroLean(HeroRole role, SceneMotion motion) =>
         !Roles.Of(role).Ranged && motion.HeroSwing > 0.4f ? 1 : 0;
-
-    public static int? AllyX(FrontierState state, FrontierLayout layout, long id)
-    {
-        int slot = state.Allies.FindIndex(ally => ally.Id == id);
-        return slot >= 0 ? layout.AllyX(slot) : null;
-    }
 
     private static void Reinforcement(ArtRaster r, FrontierState state, Ally ally, int x, FrontierScene scene)
     {
@@ -80,11 +84,11 @@ public static class TeamPainter
         Health(r, state, kind, x, y - 2);
     }
 
-    private static void Hero(ArtRaster r, FrontierState state, FrontierLayout layout, FrontierScene scene)
+    private static void Hero(ArtRaster r, FrontierState state, int post, FrontierScene scene)
     {
         SceneMotion motion = scene.Motion;
         HeroFigure figure = HeroSprites.Of(state.Role, state.Hero);
-        int x = layout.HeroX + HeroLean(state.Role, motion);
+        int x = post + HeroLean(state.Role, motion);
         int y = FrontierLayout.Ground - figure.Standing.Height;
         if (!Vitality.Up(state, FighterKind.Hero))
         {
