@@ -1,9 +1,12 @@
 using System;
+using IdleBar.Frontier;
 
 namespace IdleBar.Scene;
 
 public static class SceneText
 {
+    public static string Hero(FrontierState state) => $"{state.Hero?.Name ?? "Héros"} ({Roles.Of(state.Role).Name})";
+
     public static string Duration(double seconds)
     {
         if (seconds >= 3600)

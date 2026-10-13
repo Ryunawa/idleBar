@@ -13,6 +13,7 @@ public partial class FrontierWindow : Window
     private Label _wealth = null!;
     private CheckButton _intendant = null!;
     private FightersPanel _fighters = null!;
+    private HeroPanel _hero = null!;
     private VillagePanel _village = null!;
     private RetreatPanel _retreat = null!;
     private AchievementsPanel _achievements = null!;
@@ -20,6 +21,8 @@ public partial class FrontierWindow : Window
     private FrontierGame? _game;
 
     public JournalPanel Journal { get; private set; } = null!;
+
+    public HeroPanel Hero => _hero;
 
     public FrontierGame? Game
     {
@@ -48,11 +51,13 @@ public partial class FrontierWindow : Window
         content.AddChild(header);
         _tabs = new TabContainer { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
         _fighters = new FightersPanel();
+        _hero = new HeroPanel();
         _village = new VillagePanel();
         _retreat = new RetreatPanel();
         _achievements = new AchievementsPanel();
         Journal = new JournalPanel();
         _tabs.AddChild(_fighters);
+        _tabs.AddChild(_hero);
         _tabs.AddChild(_village);
         _tabs.AddChild(_retreat);
         _tabs.AddChild(_achievements);
@@ -64,6 +69,7 @@ public partial class FrontierWindow : Window
 
     public void Open(float scale, WindowTab tab)
     {
+        _hero.Reset();
         _tabs.CurrentTab = (int)tab;
         Refresh();
         WindowFrame.Present(this, BaseSize, scale);
@@ -87,6 +93,7 @@ public partial class FrontierWindow : Window
     private void Bind()
     {
         _fighters.Game = _game;
+        _hero.Game = _game;
         _village.Game = _game;
         _retreat.Game = _game;
         _achievements.Game = _game;
@@ -104,6 +111,7 @@ public partial class FrontierWindow : Window
         _intendant.Visible = state.IntendantUnlocked;
         _intendant.SetPressedNoSignal(state.IntendantOn);
         _fighters.Refresh();
+        _hero.Refresh();
         _village.Refresh();
         _retreat.Refresh();
         _achievements.Refresh();

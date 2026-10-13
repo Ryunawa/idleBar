@@ -49,8 +49,16 @@ public static class LaneHints
 
     private static string Fighter(FighterKind kind, FrontierState state)
     {
-        FighterInfo fighter = Fighters.Of(kind);
-        return $"{fighter.Name} niv {state.Level(kind)} · {NumberFormat.Rate(Economy.Dps(state, kind))} dégâts/s · clique pour l'améliorer";
+        bool hero = kind == FighterKind.Hero;
+        string name = hero ? SceneText.Hero(state) : Fighters.Of(kind).Name;
+        string action = hero ? "clique pour le personnaliser" : "clique pour l'améliorer";
+        if (!Vitality.Up(state, kind))
+        {
+            return $"{name} est à terre : de retour dans {Math.Ceiling(state.Downed[(int)kind])} s · {action}";
+        }
+
+        string life = $"{NumberFormat.Amount(Vitality.Hp(state, kind))} / {NumberFormat.Amount(Vitality.MaxHp(state, kind))} PV";
+        return $"{name} niv {state.Level(kind)} · {life} · {NumberFormat.Rate(Economy.Dps(state, kind))} dégâts/s · {action}";
     }
 
     private static string Plot(int plot, FrontierState state)

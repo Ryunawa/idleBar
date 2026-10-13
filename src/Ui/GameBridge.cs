@@ -18,6 +18,7 @@ public sealed class GameBridge : IDisposable
     private readonly FrontierSession? _session;
     private readonly Account? _account;
     private readonly GameDialogs? _dialogs;
+    private bool _heroAsked;
 
     public GameBridge(Node host)
     {
@@ -38,6 +39,7 @@ public sealed class GameBridge : IDisposable
                 SetGame(null);
             }
         };
+        _session.Changed += AskHeroOnce;
         _session.Noticed += text => Journal.Add(text);
         _account = new Account(keeper, _session);
         _dialogs = new GameDialogs(_session, _account, Journal, host);
@@ -46,6 +48,8 @@ public sealed class GameBridge : IDisposable
     public event Action<IReadOnlyList<FrontierEvent>>? Happened;
 
     public event Action<FrontierGame?>? GameChanged;
+
+    public event Action? HeroMissing;
 
     public Journal Journal { get; } = new();
 
@@ -95,6 +99,8 @@ public sealed class GameBridge : IDisposable
 
     public void OpenTab(float scale, WindowTab tab) => _dialogs?.Open(scale, tab);
 
+    public void AskHero(float scale) => _dialogs?.AskHero(scale);
+
     public void SignOut() => _account?.SignOut();
 
     public void Dispose() => _http?.Dispose();
@@ -133,9 +139,19 @@ public sealed class GameBridge : IDisposable
         SetGame(game);
     }
 
+    private void AskHeroOnce()
+    {
+        if (!_heroAsked && _session?.Status == SessionStatus.Ready && Game is { State.Hero: null })
+        {
+            _heroAsked = true;
+            HeroMissing?.Invoke();
+        }
+    }
+
     private void SetGame(FrontierGame? game)
     {
         Game = game;
+        _heroAsked = false;
         if (_session is not null)
         {
             _session.Game = game;
@@ -147,5 +163,6 @@ public sealed class GameBridge : IDisposable
         }
 
         GameChanged?.Invoke(game);
+        AskHeroOnce();
     }
 }

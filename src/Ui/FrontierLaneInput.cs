@@ -73,7 +73,7 @@ public partial class FrontierLane
                 game.Strike();
                 break;
             case TargetKind.Fighter:
-                ManageRequested?.Invoke(WindowTab.Fighters);
+                ManageRequested?.Invoke(_hovered.Index == (int)FighterKind.Hero ? WindowTab.Hero : WindowTab.Fighters);
                 break;
             case TargetKind.Building:
                 ManageRequested?.Invoke(WindowTab.Village);

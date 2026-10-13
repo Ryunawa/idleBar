@@ -16,8 +16,10 @@ public static class FrontierJournal
         TierReached tier => $"{Buildings.Of(tier.Kind).Name} atteint le palier {tier.Tier}.",
         Trained { Level: 1, Kind: not FighterKind.Hero } trained => $"{Fighters.Of(trained.Kind).Name} recrutée.",
         FrenzyStarted => "Poule dorée attrapée : or ×7 pendant 20 s.",
+        Routed { Boss: true } => $"Toute l'équipe est tombée face au boss : le front recule au niveau {state.Stage}. Clique sur « BOSS » dans le brouillard quand tu te sens prêt.",
+        Routed => $"Toute l'équipe est tombée : le front recule au niveau {state.Stage}.",
         AchievementUnlocked unlocked => $"Succès : {unlocked.Achievement.Name} ({unlocked.Achievement.Description})",
-        Retreated retreated => $"Repli : +{retreated.Souls} âmes, dégâts et or ×{retreated.Multiplier:0.##}.",
+        Retreated retreated => $"Repli : +{retreated.Souls} âmes, dégâts et or ×{retreated.Multiplier:0.##}. Tu peux changer le rôle de ton héros dans l'onglet Héros.",
         Returned { Seconds: >= 60 } returned => $"Pendant ton absence ({SceneText.Duration(returned.Seconds).ToLowerInvariant()}) : +{NumberFormat.Gold(returned.Gold)}.",
         _ => null,
     };

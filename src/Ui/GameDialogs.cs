@@ -27,6 +27,7 @@ public sealed class GameDialogs
         host.AddChild(_window);
         _login.Submitted += OnLoginSubmitted;
         _start.Submitted += OnStartSubmitted;
+        _window.Hero.SaveRequested += OnHeroSaveRequested;
         journal.Changed += () =>
         {
             if (_window.Visible)
@@ -69,7 +70,7 @@ public sealed class GameDialogs
                 _login.Open(scale, _account.LastEmail);
                 return;
             case SessionStatus.NeedsStart:
-                _start.Open(scale);
+                _start.Open(scale, null);
                 return;
             case SessionStatus.Elsewhere:
                 _ = _session.ResumeAsync();
@@ -83,11 +84,30 @@ public sealed class GameDialogs
         }
     }
 
-    private async void OnStartSubmitted()
+    public void AskHero(float scale)
+    {
+        _scale = scale;
+        if (!_start.Visible && _window.Game is FrontierGame game && game.State.Hero is null)
+        {
+            _start.Open(scale, game.State);
+        }
+    }
+
+    private async void OnStartSubmitted(HeroLook look, HeroRole role)
     {
         _start.SetBusy(true);
-        string? error = await ActionFeedback.CaptureAsync(_session.BeginAsync);
+        string status = FrontierSession.Unavailable;
+        string? error = await ActionFeedback.CaptureAsync(async () =>
+        {
+            if (_session.Status == SessionStatus.NeedsStart)
+            {
+                await _session.BeginAsync();
+            }
+
+            status = await _session.SetHeroAsync(look, role);
+        });
         _start.SetBusy(false);
+        error ??= HeroMessages.For(status);
         if (error is not null)
         {
             _start.ShowError(error);
@@ -95,6 +115,14 @@ public sealed class GameDialogs
         }
 
         _start.Hide();
+    }
+
+    private async void OnHeroSaveRequested(HeroLook look, HeroRole role)
+    {
+        _window.Hero.SetBusy(true);
+        string status = await _session.SetHeroAsync(look, role);
+        _window.Hero.SetBusy(false);
+        _window.Hero.ShowResult(HeroMessages.For(status));
     }
 
     private async void OnLoginSubmitted(string email, string password, bool createAccount)
@@ -127,7 +155,7 @@ public sealed class GameDialogs
         _login.Hide();
         if (_session.Status == SessionStatus.NeedsStart)
         {
-            _start.Open(_scale);
+            _start.Open(_scale, null);
         }
     }
 }
