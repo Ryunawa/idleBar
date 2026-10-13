@@ -25,7 +25,7 @@ as $$
   select public.save_frontier(p_revision, p_session, p_gold, p_lifetime, p_souls, p_retreats,
     p_stage, coalesce(p_max, p_stage), coalesce(p_best, p_max, p_stage), 0, false,
     '{5,1,0}', p_plots, p_levels, '{0,30.5,0}', false, false, p_achievements,
-    p_killed, 0, 0, 0, 0) ->> 'status';
+    p_killed, 0, 0, 0, 0, 0) ->> 'status';
 $$;
 
 grant execute on function pg_temp.check(boolean, text) to authenticated;
@@ -101,4 +101,4 @@ select pg_temp.check(not exists (select 1 from public.frontier_plots where playe
 select pg_temp.check((select count(*) from public.plots) = 12 and (select max(unlock_stage) from public.plots) = 101, 'douze emplacements, le dernier au boss 100');
 select pg_temp.check((select count(*) from public.building_kinds) = 12, 'douze bâtiments');
 select pg_temp.check((select count(*) from public.achievement_kinds) = 30, 'trente succès connus');
-select pg_temp.check((select min_client_version from private.settings) = '0.4.6', 'la 0.4.6 est exigée');
+select pg_temp.check((select min_client_version from private.settings) = '0.5.0', 'la 0.5.0 est exigée');

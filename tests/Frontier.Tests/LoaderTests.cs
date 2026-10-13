@@ -82,6 +82,29 @@ public sealed class LoaderTests
         Assert.False(plan.Unsent);
     }
 
+    [Fact]
+    public void TheServerHeroWinsOverAnUnsentLocalCopy()
+    {
+        LocalSave local = new("player", 4, true, Now.AddMinutes(-30), SaveCodec.Capture(new FrontierState { Stage = 26, MaxStage = 26, Armor = 9, Retreats = 3 }));
+        FrontierData data = Data(new FrontierState { Stage = 20, MaxStage = 20 }, 4, 7200) with { HeroName = "Aldric", HeroRole = "tank", RoleRetreats = 2, HeroOutfit = 5 };
+        LoadPlan plan = FrontierLoader.Plan(data, local, Now);
+        Assert.Equal(26, plan.State.Stage);
+        Assert.Equal(9, plan.State.Armor);
+        Assert.Equal(new HeroLook("Aldric", 0, 0, 0, 5), plan.State.Hero);
+        Assert.Equal(HeroRole.Tank, plan.State.Role);
+        Assert.Equal(2, plan.State.RoleRetreats);
+    }
+
+    [Fact]
+    public void AServerGameWithoutAHeroAsksForOne()
+    {
+        LoadPlan plan = FrontierLoader.Plan(Data(new FrontierState { Armor = 3 }, 1, 0), null, Now);
+        Assert.Null(plan.State.Hero);
+        Assert.Equal(HeroRole.Warrior, plan.State.Role);
+        Assert.Equal(3, plan.State.Armor);
+        Assert.Equal(3, SaveArguments.From(SaveCodec.Capture(plan.State), 1, Guid.Empty).PArmor);
+    }
+
     private static FrontierData Data(FrontierState state, int revision, double away, Guid? savedBy = null)
     {
         FrontierSave save = SaveCodec.Capture(state);
@@ -89,6 +112,6 @@ public sealed class LoaderTests
             revision, Now, away, save.Gold, save.LifetimeGold, save.Souls, save.Retreats, save.Stage, save.MaxStage,
             save.BestStage, save.Kills, save.BossHeld, save.IntendantUnlocked, save.IntendantOn, save.MonstersKilled,
             save.BossesKilled, save.Chickens, save.Clicks, save.SkillsUsed, save.Fighters, save.Plots, save.Levels,
-            save.Cooldowns, save.Achievements, savedBy);
+            save.Cooldowns, save.Achievements, savedBy, save.Armor);
     }
 }

@@ -27,10 +27,11 @@ public sealed record SaveArguments(
     long PBossesKilled,
     long PChickens,
     long PClicks,
-    long PSkillsUsed)
+    long PSkillsUsed,
+    int PArmor)
 {
     public static SaveArguments From(FrontierSave save, int revision, Guid session) => new(
         revision, session, save.Gold, save.LifetimeGold, save.Souls, save.Retreats, save.Stage, save.MaxStage, save.BestStage,
         save.Kills, save.BossHeld, save.Fighters, save.Plots, save.Levels, save.Cooldowns, save.IntendantUnlocked, save.IntendantOn,
-        save.Achievements, save.MonstersKilled, save.BossesKilled, save.Chickens, save.Clicks, save.SkillsUsed);
+        save.Achievements, save.MonstersKilled, save.BossesKilled, save.Chickens, save.Clicks, save.SkillsUsed, save.Armor);
 }

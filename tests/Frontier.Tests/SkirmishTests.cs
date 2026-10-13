@@ -158,6 +158,8 @@ public sealed class SkirmishTests
         Assert.False(new HeroLook("Aldric<script>", 0, 0, 0, 0).IsValid());
         Assert.False(new HeroLook("Aldric", HeroLook.Skins, 0, 0, 0).IsValid());
         Assert.True(new HeroLook("Jean-Éric d'Arc", 3, 2, 5, 7).IsValid());
+        Assert.False(new HeroLook("Алдрик", 0, 0, 0, 0).IsValid());
+        Assert.Equal("Jean d'Arc", HeroLook.Tidy("  Jean   d'Arc "));
     }
 
     [Fact]

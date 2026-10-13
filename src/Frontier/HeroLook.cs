@@ -1,4 +1,4 @@
-using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace IdleBar.Frontier;
 
@@ -11,11 +11,15 @@ public sealed record HeroLook(string Name, int Skin, int Hair, int HairColor, in
     public const int NameMin = 3;
     public const int NameMax = 16;
 
+    private static readonly Regex Allowed = new("^[A-Za-z0-9À-ÖØ-öø-ÿŒœ '_-]+$");
+    private static readonly Regex Spaces = new(@"\s+");
+
+    public static string Tidy(string? name) => Spaces.Replace(name ?? string.Empty, " ").Trim();
+
     public static bool ValidName(string? name)
     {
-        string trimmed = name?.Trim() ?? string.Empty;
-        return trimmed.Length is >= NameMin and <= NameMax
-            && trimmed.All(character => char.IsLetterOrDigit(character) || character is ' ' or '-' or '\'' or '_');
+        string tidy = Tidy(name);
+        return tidy.Length is >= NameMin and <= NameMax && Allowed.IsMatch(tidy);
     }
 
     public bool IsValid() =>
