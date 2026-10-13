@@ -10,6 +10,7 @@ public sealed class GameDialogs
     private const string ConfirmEmailMessage = "Compte créé. Confirme ton adresse depuis l'email reçu, puis connecte-toi.";
 
     private readonly FrontierSession _session;
+    private readonly SocialSession _social;
     private readonly Account _account;
     private readonly Journal _journal;
     private readonly LoginWindow _login = new();
@@ -17,7 +18,7 @@ public sealed class GameDialogs
     private readonly FrontierWindow _window = new();
     private float _scale = 1;
 
-    public GameDialogs(FrontierSession session, Account account, Journal journal, Node host)
+    public GameDialogs(FrontierSession session, SocialSession social, Account account, Journal journal, Node host)
     {
         _session = session;
         _account = account;
@@ -25,6 +26,8 @@ public sealed class GameDialogs
         host.AddChild(_login);
         host.AddChild(_start);
         host.AddChild(_window);
+        _window.Connect(social);
+        _social = social;
         _login.Submitted += OnLoginSubmitted;
         _start.Submitted += OnStartSubmitted;
         _window.Hero.SaveRequested += OnHeroSaveRequested;
@@ -79,6 +82,7 @@ public sealed class GameDialogs
 
         if (_window.Game is not null)
         {
+            _social.RefreshSoon();
             _window.Open(scale, tab);
             _window.Journal.Refresh(_journal);
         }

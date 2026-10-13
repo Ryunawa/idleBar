@@ -54,6 +54,8 @@ public sealed partial class FrontierSession
 
     public void RequestSave() => _saveSoon = true;
 
+    public Task<string> TokenAsync() => _access.TokenAsync();
+
     public void Reset()
     {
         Remember();

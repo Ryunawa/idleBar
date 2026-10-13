@@ -43,6 +43,15 @@ public static class LaneHits
             }
         }
 
+        for (int slot = 0; slot < state.Allies.Count; slot++)
+        {
+            int left = layout.AllyX(slot);
+            if (x >= left && x < left + FighterWidth && y >= 9)
+            {
+                return new LaneTarget(TargetKind.Ally, slot);
+            }
+        }
+
         foreach (Convoy convoy in state.Convoys)
         {
             int left = VillagePainter.CartLeft(layout, state, convoy);

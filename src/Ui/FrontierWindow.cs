@@ -1,5 +1,6 @@
 using Godot;
 using IdleBar.Frontier;
+using IdleBar.Online;
 
 namespace IdleBar.Ui;
 
@@ -17,10 +18,13 @@ public partial class FrontierWindow : Window
     private VillagePanel _village = null!;
     private RetreatPanel _retreat = null!;
     private AchievementsPanel _achievements = null!;
+    private GuildPanel _guild = null!;
+    private TitanPanel _titan = null!;
+    private HelpPanel _help = null!;
     private double _sinceRefresh;
     private FrontierGame? _game;
 
-    public JournalPanel Journal { get; private set; } = null!;
+    public JournalPanel Journal => _help.Journal;
 
     public HeroPanel Hero => _hero;
 
@@ -55,16 +59,25 @@ public partial class FrontierWindow : Window
         _village = new VillagePanel();
         _retreat = new RetreatPanel();
         _achievements = new AchievementsPanel();
-        Journal = new JournalPanel();
+        _guild = new GuildPanel();
+        _titan = new TitanPanel();
+        _help = new HelpPanel();
         _tabs.AddChild(_fighters);
         _tabs.AddChild(_hero);
         _tabs.AddChild(_village);
         _tabs.AddChild(_retreat);
+        _tabs.AddChild(_guild);
+        _tabs.AddChild(_titan);
         _tabs.AddChild(_achievements);
-        _tabs.AddChild(Journal);
-        _tabs.AddChild(new FaqPanel());
+        _tabs.AddChild(_help);
         content.AddChild(_tabs);
         Bind();
+    }
+
+    public void Connect(SocialSession social)
+    {
+        _guild.Connect(social);
+        _titan.Connect(social);
     }
 
     public void Open(float scale, WindowTab tab)
@@ -115,5 +128,7 @@ public partial class FrontierWindow : Window
         _village.Refresh();
         _retreat.Refresh();
         _achievements.Refresh();
+        _guild.Refresh();
+        _titan.Refresh();
     }
 }

@@ -16,6 +16,7 @@ public sealed class GameBridge : IDisposable
 
     private readonly HttpClient? _http;
     private readonly FrontierSession? _session;
+    private readonly SocialSession? _social;
     private readonly Account? _account;
     private readonly GameDialogs? _dialogs;
     private bool _heroAsked;
@@ -30,7 +31,9 @@ public sealed class GameBridge : IDisposable
 
         _http = new HttpClient { Timeout = TimeSpan.FromSeconds(HttpTimeoutSeconds) };
         SessionKeeper keeper = new(new SupabaseAuth(_http, settings), new SessionStore(ProjectSettings.GlobalizePath(SessionPath)));
-        _session = new FrontierSession(keeper, new FrontierApi(new SupabaseRpc(_http, settings)));
+        SupabaseRpc rpc = new(_http, settings);
+        _session = new FrontierSession(keeper, new FrontierApi(rpc));
+        _social = new SocialSession(_session, new SocialApi(rpc));
         _session.Loaded += Load;
         _session.Changed += () =>
         {
@@ -38,11 +41,16 @@ public sealed class GameBridge : IDisposable
             {
                 SetGame(null);
             }
+
+            if (_session.Status == SessionStatus.SignedOut)
+            {
+                _social.Reset();
+            }
         };
         _session.Changed += AskHeroOnce;
         _session.Noticed += text => Journal.Add(text);
         _account = new Account(keeper, _session);
-        _dialogs = new GameDialogs(_session, _account, Journal, host);
+        _dialogs = new GameDialogs(_session, _social, _account, Journal, host);
     }
 
     public event Action<IReadOnlyList<FrontierEvent>>? Happened;
@@ -76,6 +84,7 @@ public sealed class GameBridge : IDisposable
         }
 
         _session?.Tick(delta);
+        _social?.Tick(delta);
     }
 
     public Task FlushAsync() => _session?.FlushAsync() ?? Task.CompletedTask;
@@ -151,6 +160,7 @@ public sealed class GameBridge : IDisposable
     private void SetGame(FrontierGame? game)
     {
         Game = game;
+        _social?.RefreshSoon();
         _heroAsked = false;
         if (_session is not null)
         {

@@ -50,8 +50,10 @@ public static class FrontPainter
         return (int)Math.Round(gate + (post - gate) * BuildingPainter.Ease(time / SceneMotion.RecruitSeconds));
     }
 
-    public static float SwordAngle(SceneMotion motion, float time) =>
-        motion.HeroSwing > 0 ? -2.0f + (1 - motion.HeroSwing) * 2.6f : -1.15f + MathF.Sin(time * 2) * 0.06f;
+    public static float SwordAngle(SceneMotion motion, float time) => SwordAngle(motion.HeroSwing, time);
+
+    public static float SwordAngle(float swing, float time) =>
+        swing > 0 ? -2.0f + (1 - swing) * 2.6f : -1.15f + MathF.Sin(time * 2) * 0.06f;
 
     private static void Monster(ArtRaster r, MonsterBox box, bool white, int bob, float time)
     {

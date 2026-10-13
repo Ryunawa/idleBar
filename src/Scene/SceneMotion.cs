@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using IdleBar.Frontier;
 
 namespace IdleBar.Scene;
@@ -22,6 +23,10 @@ public sealed class SceneMotion
     public float MonsterLunge { get; set; }
 
     public float[] Hurt { get; } = new float[FrontierState.FighterCount];
+
+    public Dictionary<long, float> AllyHurt { get; } = [];
+
+    public Dictionary<long, float> AllySwing { get; } = [];
 
     public int MonsterShift => MonsterLunge > 0 ? -3 : MonsterKick > 0 ? 1 : 0;
 
@@ -66,6 +71,9 @@ public sealed class SceneMotion
             Hurt[index] = Math.Max(0, Hurt[index] - dt);
         }
 
+        Decay(AllyHurt, dt);
+        Decay(AllySwing, dt / SwingSeconds);
+
         MageGlow = Math.Max(0, MageGlow - dt);
         Lightning = Math.Max(0, Lightning - dt);
         Shake = Math.Max(0, Shake - dt);
@@ -93,6 +101,22 @@ public sealed class SceneMotion
         Array.Clear(Recruit);
         Corpse = null;
         Fleeing = null;
+    }
+
+    private static void Decay(Dictionary<long, float> timers, float amount)
+    {
+        foreach (long key in timers.Keys.ToList())
+        {
+            float left = timers[key] - amount;
+            if (left > 0)
+            {
+                timers[key] = left;
+            }
+            else
+            {
+                timers.Remove(key);
+            }
+        }
     }
 
     private static void Advance(float?[] timers, float dt, float limit)

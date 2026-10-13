@@ -18,7 +18,7 @@ public static class SceneReactions
         switch (frontierEvent)
         {
             case Hit hit:
-                CombatReactions.Hit(scene, hit, target, layout, state.Role, random);
+                CombatReactions.Hit(scene, hit, target, layout, state, random);
                 break;
             case Killed killed:
                 motion.Corpse = target;
@@ -74,7 +74,7 @@ public static class SceneReactions
             case Supplied:
                 fx.Float("+5 %", layout.HeroX + 5, 8, Palette.Green, 0.9f);
                 break;
-            case Struck or Fell or Revived or Routed or Healed or Armored:
+            case Struck or Fell or Revived or Routed or Healed or Armored or AllyArrived or Boosted:
                 TeamReactions.Apply(scene, frontierEvent, state, layout, target, random);
                 break;
             default:

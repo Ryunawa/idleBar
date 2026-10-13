@@ -20,6 +20,10 @@ public static class FrontierJournal
         Routed => $"Toute l'équipe est tombée : le front recule au niveau {state.Stage}.",
         AchievementUnlocked unlocked => $"Succès : {unlocked.Achievement.Name} ({unlocked.Achievement.Description})",
         Retreated retreated => $"Repli : +{retreated.Souls} âmes, dégâts et or ×{retreated.Multiplier:0.##}. Tu peux changer le rôle de ton héros dans l'onglet Héros.",
+        AllyArrived arrived => $"{arrived.Name} ({Roles.Of(arrived.Role).Name}) arrive en renfort de ta guilde.",
+        AllyLeft left => $"{left.Name} repart défendre sa propre frontière.",
+        Boosted { Source: "titan" } boosted => $"Récompense du titan : +{boosted.Gold} % d'or et de dégâts.",
+        Boosted boosted => $"Un convoi de ta guilde arrive : +{boosted.Gold} % d'or.",
         Returned { Seconds: >= 60 } returned => $"Pendant ton absence ({SceneText.Duration(returned.Seconds).ToLowerInvariant()}) : +{NumberFormat.Gold(returned.Gold)}.",
         _ => null,
     };

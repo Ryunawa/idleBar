@@ -12,4 +12,5 @@ public enum TargetKind
     Crier,
     Fog,
     BossCall,
+    Ally,
 }

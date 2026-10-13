@@ -6,7 +6,8 @@ public enum WindowTab
     Hero,
     Village,
     Retreat,
+    Guild,
+    Titan,
     Achievements,
-    Journal,
-    Faq,
+    Help,
 }

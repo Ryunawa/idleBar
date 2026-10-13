@@ -8,7 +8,7 @@ public static class CombatReactions
 {
     private static readonly Rgba[] Spark = [Palette.Yellow, Palette.White];
 
-    public static void Hit(FrontierScene scene, Hit hit, MonsterBox target, FrontierLayout layout, HeroRole role, Random random)
+    public static void Hit(FrontierScene scene, Hit hit, MonsterBox target, FrontierLayout layout, FrontierState state, Random random)
     {
         SceneFx fx = scene.Fx;
         SceneMotion motion = scene.Motion;
@@ -20,10 +20,13 @@ public static class CombatReactions
 
         switch (hit.Source)
         {
-            case HitSource.Hero when role == HeroRole.Archer:
+            case HitSource.Ally:
+                Assist(scene, hit, target, layout, state, random);
+                break;
+            case HitSource.Hero when state.Role == HeroRole.Archer:
                 fx.Projectiles.Add(new Projectile(false, layout.HeroX + 10, 17, target.X + 2, target.MiddleY, 0.12f, hit.Amount));
                 break;
-            case HitSource.Hero when role == HeroRole.Mage:
+            case HitSource.Hero when state.Role == HeroRole.Mage:
                 fx.Projectiles.Add(new Projectile(true, layout.HeroX + 10, 12, target.CenterX, target.MiddleY, 0.3f, hit.Amount));
                 break;
             case HitSource.Hero:
@@ -48,6 +51,29 @@ public static class CombatReactions
             case HitSource.Smite:
                 motion.MonsterFlash = 0.14f;
                 fx.Float(amount + " !", target.CenterX, target.Y - 3, Palette.Gold, 1.2f);
+                break;
+        }
+    }
+
+    private static void Assist(FrontierScene scene, Hit hit, MonsterBox target, FrontierLayout layout, FrontierState state, Random random)
+    {
+        if (state.Allies.Find(ally => ally.Id == hit.Ally) is not Ally ally || TeamPainter.AllyX(state, layout, ally.Id) is not int x)
+        {
+            return;
+        }
+
+        switch (ally.Role)
+        {
+            case HeroRole.Archer:
+                scene.Fx.Projectiles.Add(new Projectile(false, x + 10, 17, target.X + 2, target.MiddleY, 0.14f, hit.Amount));
+                break;
+            case HeroRole.Mage:
+                scene.Fx.Projectiles.Add(new Projectile(true, x + 10, 12, target.CenterX, target.MiddleY, 0.3f, hit.Amount));
+                break;
+            default:
+                scene.Motion.AllySwing[ally.Id] = 1;
+                scene.Motion.MonsterFlash = 0.07f;
+                scene.Fx.Float(NumberFormat.Amount(hit.Amount), target.CenterX + random.Next(-5, 6), target.Y - 2, Palette.Silver);
                 break;
         }
     }

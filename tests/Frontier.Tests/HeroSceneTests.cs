@@ -45,6 +45,38 @@ public sealed class HeroSceneTests
         Assert.Equal(400, frame.Width);
     }
 
+    [Theory]
+    [InlineData(815)]
+    [InlineData(538)]
+    public void ReinforcementsRender(int width)
+    {
+        FrontierState state = SceneTests.SampleState(47);
+        state.Hero = new HeroLook("Aldric", 0, 0, 1, 0);
+        state.Allies.AddRange(
+        [
+            new Ally(1, new HeroLook("Brune", 1, 1, 3, 3), HeroRole.Tank, 1, 900) { Health = 0.6 },
+            new Ally(2, new HeroLook("Corentin", 3, 2, 4, 6), HeroRole.Support, 1, 900),
+            new Ally(3, new HeroLook("Dalia", 2, 1, 2, 4), HeroRole.Archer, 1, 900) { Downed = 20 },
+        ]);
+        FrontierScene scene = new(new Random(3));
+        FrontierLayout layout = FrontierLayout.For(width, FrontierLayout.Rows);
+        FrontierGame game = new(state, new Random(3));
+        for (int tick = 0; tick < 60; tick++)
+        {
+            game.Advance(1 / 30.0);
+            scene.Update(1 / 30f, state, game.Events.Drain(), layout, false);
+        }
+
+        ArtRaster frame = new ScenePainter().Paint(state, layout, scene, SceneLight.Noon, -1);
+        Assert.Equal(width, frame.Width);
+        Assert.Equal(TargetKind.Ally, LaneHits.Find(state, layout, scene, layout.AllyX(1) + 4, 18).Kind);
+        if (Environment.GetEnvironmentVariable(SceneTests.SnapshotFolder) is string folder)
+        {
+            Directory.CreateDirectory(folder);
+            PngWriter.Write(frame, Path.Combine(folder, $"renforts-{width}.png"), 4);
+        }
+    }
+
     [Fact]
     public void TheHeroSheetRenders()
     {

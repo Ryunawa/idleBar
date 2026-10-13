@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using IdleBar.Frontier;
 
 namespace IdleBar.Scene;
@@ -12,6 +13,11 @@ public static class TeamPainter
     public static void Paint(ArtRaster r, FrontierState state, FrontierLayout layout, FrontierScene scene)
     {
         SceneMotion motion = scene.Motion;
+        for (int slot = state.Allies.Count - 1; slot >= 0; slot--)
+        {
+            Reinforcement(r, state, state.Allies[slot], layout.AllyX(slot), scene);
+        }
+
         Companion(r, state, FighterKind.Mage, FrontPainter.Walk(layout, FighterKind.Mage, motion), MageY, motion);
         Companion(r, state, FighterKind.Archer, FrontPainter.Walk(layout, FighterKind.Archer, motion), ArcherY, motion);
         Hero(r, state, layout, scene);
@@ -19,6 +25,39 @@ public static class TeamPainter
 
     public static int HeroLean(HeroRole role, SceneMotion motion) =>
         !Roles.Of(role).Ranged && motion.HeroSwing > 0.4f ? 1 : 0;
+
+    public static int? AllyX(FrontierState state, FrontierLayout layout, long id)
+    {
+        int slot = state.Allies.FindIndex(ally => ally.Id == id);
+        return slot >= 0 ? layout.AllyX(slot) : null;
+    }
+
+    private static void Reinforcement(ArtRaster r, FrontierState state, Ally ally, int x, FrontierScene scene)
+    {
+        SceneMotion motion = scene.Motion;
+        HeroFigure figure = HeroSprites.Of(ally.Role, ally.Look);
+        if (ally.Downed > 0)
+        {
+            r.Blit(figure.Down, x - 2, FrontierLayout.Ground - figure.Down.Height);
+            double total = Fighters.Of(FighterKind.Hero).Revive * (Team.SupportUp(state) ? Balance.SupportRevive : 1);
+            Bar(r, x + 1, FrontierLayout.Ground - figure.Down.Height - 2, 1 - ally.Downed / total, Palette.Cyan);
+            return;
+        }
+
+        float swing = motion.AllySwing.GetValueOrDefault(ally.Id);
+        int left = x + (!Roles.Of(ally.Role).Ranged && swing > 0.4f ? 1 : 0);
+        int y = FrontierLayout.Ground - figure.Standing.Height;
+        r.Blit(motion.AllyHurt.ContainsKey(ally.Id) ? figure.Flash : figure.Standing, left, y);
+        if (ally.Role == HeroRole.Warrior)
+        {
+            Sword(r, left + HeroGrids.HandX, y + HeroGrids.HandY, FrontPainter.SwordAngle(swing, scene.Time));
+        }
+
+        if (ally.Health < 0.999)
+        {
+            Bar(r, left + 1, y + figure.Top - 2, ally.Health, ally.Health > 0.5 ? Palette.Green : ally.Health > 0.25 ? Palette.Gold : Palette.Red);
+        }
+    }
 
     private static void Companion(ArtRaster r, FrontierState state, FighterKind kind, int x, int y, SceneMotion motion)
     {

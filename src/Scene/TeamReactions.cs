@@ -18,14 +18,14 @@ public static class TeamReactions
         {
             case Struck struck:
                 motion.MonsterLunge = 0.12f;
-                motion.Hurt[(int)struck.Target] = 0.1f;
-                fx.Burst(Center(layout, struck.Target, motion), 17, struck.Boss ? 5 : 3, Blood, random);
+                Hurt(motion, struck.Target, struck.Ally);
+                fx.Burst(Center(state, layout, struck.Target, struck.Ally, motion), 17, struck.Boss ? 5 : 3, Blood, random);
                 break;
             case Fell fell:
-                fx.Burst(Center(layout, fell.Kind, motion), 21, 8, Dust, random);
+                fx.Burst(Center(state, layout, fell.Kind, fell.Ally, motion), 21, 8, Dust, random);
                 break;
             case Revived revived:
-                fx.Burst(Center(layout, revived.Kind, motion), 16, 8, Glitter, random);
+                fx.Burst(Center(state, layout, revived.Kind, revived.Ally, motion), 16, 8, Glitter, random);
                 break;
             case Routed:
                 motion.Fleeing = target;
@@ -33,11 +33,11 @@ public static class TeamReactions
                 fx.Float("L'ÉQUIPE RECULE", layout.HeroX + 6, 1, Palette.Red, 2.2f, 0);
                 break;
             case Healed:
-                foreach (FighterInfo fighter in Fighters.All)
+                foreach (Combatant member in Team.Members(state))
                 {
-                    if (Vitality.Up(state, fighter.Kind))
+                    if (Team.Up(state, member))
                     {
-                        fx.Burst(Center(layout, fighter.Kind, motion), 15, 2, Mend, random);
+                        fx.Burst(Center(state, layout, member.Kind, member.AllyId, motion), 15, 2, Mend, random);
                     }
                 }
 
@@ -45,8 +45,31 @@ public static class TeamReactions
             case Armored:
                 fx.Float("+1", layout.HeroX + 4, 7, Palette.Yellow, 0.7f);
                 break;
+            case AllyArrived arrived:
+                scene.Banners.Add(["RENFORT DE TA GUILDE", $"{arrived.Name} ({Roles.Of(arrived.Role).Name})"]);
+                fx.Burst(Center(state, layout, FighterKind.Hero, arrived.Id, motion), 14, 14, Glitter, random);
+                break;
+            case Boosted { Source: "titan" } boosted:
+                scene.Banners.Add(["RÉCOMPENSE DU TITAN", $"+{boosted.Gold} % D'OR ET DE DÉGÂTS"], 4);
+                break;
+            case Boosted boosted:
+                scene.Banners.Add(["CONVOI DE TA GUILDE", $"+{boosted.Gold} % D'OR"]);
+                break;
         }
     }
 
-    private static int Center(FrontierLayout layout, FighterKind kind, SceneMotion motion) => FrontPainter.Walk(layout, kind, motion) + 5;
+    private static void Hurt(SceneMotion motion, FighterKind kind, long ally)
+    {
+        if (ally != 0)
+        {
+            motion.AllyHurt[ally] = 0.1f;
+        }
+        else
+        {
+            motion.Hurt[(int)kind] = 0.1f;
+        }
+    }
+
+    private static int Center(FrontierState state, FrontierLayout layout, FighterKind kind, long ally, SceneMotion motion) =>
+        ((ally != 0 ? TeamPainter.AllyX(state, layout, ally) : null) ?? FrontPainter.Walk(layout, kind, motion)) + 5;
 }

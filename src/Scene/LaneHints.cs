@@ -12,6 +12,7 @@ public static class LaneHints
         TargetKind.Skill => Skill((SkillKind)target.Index, state),
         TargetKind.Monster => Monster(state),
         TargetKind.Fighter => Fighter((FighterKind)target.Index, state),
+        TargetKind.Ally => Reinforcement(target.Index, state),
         TargetKind.Building => Plot(target.Index, state),
         TargetKind.Convoy => "Convoi de pain : +5 % de dégâts par livraison, 5 au plus",
         TargetKind.Crier => "Le crieur public et ses nouvelles du royaume",
@@ -59,6 +60,24 @@ public static class LaneHints
 
         string life = $"{NumberFormat.Amount(Vitality.Hp(state, kind))} / {NumberFormat.Amount(Vitality.MaxHp(state, kind))} PV";
         return $"{name} niv {state.Level(kind)} · {life} · {NumberFormat.Rate(Economy.Dps(state, kind))} dégâts/s · {action}";
+    }
+
+    private static string? Reinforcement(int slot, FrontierState state)
+    {
+        if (slot >= state.Allies.Count)
+        {
+            return null;
+        }
+
+        Ally ally = state.Allies[slot];
+        string name = $"{ally.Look.Name} ({Roles.Of(ally.Role).Name}), renfort de ta guilde";
+        if (ally.Downed > 0)
+        {
+            return $"{name}, à terre : de retour dans {Math.Ceiling(ally.Downed)} s";
+        }
+
+        string life = $"{NumberFormat.Amount(Vitality.AllyMaxHp(state, ally) * ally.Health)} PV";
+        return $"{name} · {life} · {NumberFormat.Rate(Economy.AllyDps(state, ally))} dégâts/s · encore {Wait(ally.Left)}";
     }
 
     private static string Plot(int plot, FrontierState state)
