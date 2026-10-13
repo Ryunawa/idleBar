@@ -12,14 +12,14 @@ public sealed record MonsterBox(int Template, bool Boss, int Stage, int X, int Y
 
     public int MiddleY => Y + Height / 2;
 
-    public static MonsterBox Of(Monster monster, FrontierLayout layout, bool kicked)
+    public static MonsterBox Of(Monster monster, FrontierLayout layout, int shift)
     {
         ArtSprite? sprite = SpriteOf(monster.Template, monster.Boss);
         int width = sprite?.Width ?? SlimeWidth;
         int height = sprite?.Height ?? SlimeHeight;
         int stand = monster.Boss ? layout.BossX : layout.MonsterX;
         double share = monster.Approach > 0 ? monster.Approach / monster.ApproachTotal : 0;
-        int x = (int)Math.Round(stand + (layout.SpawnX - stand) * share) + (kicked ? 1 : 0);
+        int x = (int)Math.Round(stand + (layout.SpawnX - stand) * share) + shift;
         return new MonsterBox(monster.Template, monster.Boss, monster.Stage, x, FrontierLayout.Ground - height, width, height);
     }
 

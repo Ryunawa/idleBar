@@ -24,6 +24,8 @@ public sealed class ArtSprite
 
     public ArtSprite Mirrored => _mirrored ??= Flip();
 
+    public int FirstRow => Enumerable.Range(0, Height).FirstOrDefault(y => Enumerable.Range(0, Width).Any(x => this[x, y] is not null));
+
     public Rgba? this[int x, int y] => _pixels[y * Width + x];
 
     public static ArtSprite Parse(IReadOnlyList<string> rows) => Parse(rows, Palette.Symbols);
@@ -41,6 +43,48 @@ public sealed class ArtSprite
         Rgba?[] pixels = [.. _pixels.Select(pixel => pixel is null ? (Rgba?)null : color)];
         return new ArtSprite(Width, Height, pixels);
     }
+
+    public ArtSprite Faded(Rgba toward, float amount)
+    {
+        Rgba?[] pixels = [.. _pixels.Select(pixel => pixel is Rgba color ? color.Mix(toward, amount) : (Rgba?)null)];
+        return new ArtSprite(Width, Height, pixels);
+    }
+
+    public ArtSprite Over(ArtSprite top)
+    {
+        int width = Math.Max(Width, top.Width);
+        int height = Math.Max(Height, top.Height);
+        Rgba?[] pixels = new Rgba?[width * height];
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                pixels[y * width + x] = top.At(x, y) ?? At(x, y);
+            }
+        }
+
+        return new ArtSprite(width, height, pixels);
+    }
+
+    public ArtSprite Lying()
+    {
+        int[] rows = [.. Enumerable.Range(0, Height).Where(y => Enumerable.Range(0, Width).Any(x => this[x, y] is not null))];
+        int[] columns = [.. Enumerable.Range(0, Width).Where(x => Enumerable.Range(0, Height).Any(y => this[x, y] is not null))];
+        int length = rows[^1] - rows[0] + 1;
+        int thickness = columns[^1] - columns[0] + 1;
+        Rgba?[] pixels = new Rgba?[length * thickness];
+        for (int y = 0; y < thickness; y++)
+        {
+            for (int x = 0; x < length; x++)
+            {
+                pixels[y * length + x] = this[columns[^1] - y, rows[0] + x];
+            }
+        }
+
+        return new ArtSprite(length, thickness, pixels);
+    }
+
+    private Rgba? At(int x, int y) => x < Width && y < Height ? this[x, y] : null;
 
     private static ArtSprite Parse(IReadOnlyList<string> rows, Func<char, Rgba> resolve)
     {

@@ -35,7 +35,7 @@ public static class LightPainter
         }
 
         float swing = scene.Motion.HeroSwing;
-        if (swing > 0.15f && swing < 0.85f)
+        if (state.Role == HeroRole.Warrior && swing > 0.15f && swing < 0.85f)
         {
             float end = FrontPainter.SwordAngle(scene.Motion, time);
             for (float angle = -2.0f; angle < end; angle += 0.12f)

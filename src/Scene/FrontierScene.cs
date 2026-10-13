@@ -70,7 +70,7 @@ public sealed class FrontierScene
     }
 
     public MonsterBox? Box(FrontierState state, FrontierLayout layout) =>
-        state.Monster is Monster monster ? MonsterBox.Of(monster, layout, Motion.MonsterKick > 0) : null;
+        state.Monster is Monster monster ? MonsterBox.Of(monster, layout, Motion.MonsterShift) : null;
 
     public ArtPoint Chicken(FrontierState state, FrontierLayout layout)
     {

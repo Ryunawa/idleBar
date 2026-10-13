@@ -20,17 +20,7 @@ public static class FrontPainter
         }
 
         SceneMotion motion = scene.Motion;
-        if (state.Level(FighterKind.Mage) > 0)
-        {
-            r.Blit(SceneSprites.Mage, Walk(layout, FighterKind.Mage, motion), 11);
-        }
-
-        if (state.Level(FighterKind.Archer) > 0)
-        {
-            r.Blit(SceneSprites.Archer, Walk(layout, FighterKind.Archer, motion), 12);
-        }
-
-        Hero(r, layout.HeroX + (motion.HeroSwing > 0.4f ? 1 : 0), state.FuryLeft > 0 && (int)(scene.Time * 10) % 2 == 0, motion, scene.Time);
+        TeamPainter.Paint(r, state, layout, scene);
         if (motion.Fleeing is MonsterBox fleeing)
         {
             Monster(r, fleeing with { X = fleeing.X + (int)(motion.FleeTime * 40) }, false, (int)(scene.Time * 8) % 2, scene.Time);
@@ -62,35 +52,6 @@ public static class FrontPainter
 
     public static float SwordAngle(SceneMotion motion, float time) =>
         motion.HeroSwing > 0 ? -2.0f + (1 - motion.HeroSwing) * 2.6f : -1.15f + MathF.Sin(time * 2) * 0.06f;
-
-    private static void Hero(ArtRaster r, int x, bool raging, SceneMotion motion, float time)
-    {
-        const int y = 10;
-        if (raging)
-        {
-            r.Blit(SceneSprites.HeroRage, x - 1, y);
-            r.Blit(SceneSprites.HeroRage, x + 1, y);
-            r.Blit(SceneSprites.HeroRage, x, y - 1);
-        }
-
-        r.Blit(SceneSprites.Hero, x, y);
-        float angle = SwordAngle(motion, time);
-        float cos = MathF.Cos(angle);
-        float sin = MathF.Sin(angle);
-        int handX = x + 8;
-        int handY = y + 8;
-        for (int radius = 0; radius <= 9; radius++)
-        {
-            int px = (int)MathF.Round(handX + cos * radius);
-            int py = (int)MathF.Round(handY + sin * radius);
-            r.Set(px, py, radius <= 1 ? Palette.Bark : radius == 2 ? Palette.Gold : radius == 9 ? Palette.White : Palette.Silver);
-            if (radius == 2)
-            {
-                r.Set((int)MathF.Round(px - sin), (int)MathF.Round(py + cos), Palette.Gold);
-                r.Set((int)MathF.Round(px + sin), (int)MathF.Round(py - cos), Palette.Gold);
-            }
-        }
-    }
 
     private static void Monster(ArtRaster r, MonsterBox box, bool white, int bob, float time)
     {

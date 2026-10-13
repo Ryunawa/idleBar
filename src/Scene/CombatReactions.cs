@@ -8,13 +8,24 @@ public static class CombatReactions
 {
     private static readonly Rgba[] Spark = [Palette.Yellow, Palette.White];
 
-    public static void Hit(FrontierScene scene, Hit hit, MonsterBox target, FrontierLayout layout, Random random)
+    public static void Hit(FrontierScene scene, Hit hit, MonsterBox target, FrontierLayout layout, HeroRole role, Random random)
     {
         SceneFx fx = scene.Fx;
         SceneMotion motion = scene.Motion;
         string amount = NumberFormat.Amount(hit.Amount);
+        if (hit.Critical)
+        {
+            fx.Float("CRITIQUE", target.CenterX, target.Y - 9, Palette.Gold, 0.9f);
+        }
+
         switch (hit.Source)
         {
+            case HitSource.Hero when role == HeroRole.Archer:
+                fx.Projectiles.Add(new Projectile(false, layout.HeroX + 10, 17, target.X + 2, target.MiddleY, 0.12f, hit.Amount));
+                break;
+            case HitSource.Hero when role == HeroRole.Mage:
+                fx.Projectiles.Add(new Projectile(true, layout.HeroX + 10, 12, target.CenterX, target.MiddleY, 0.3f, hit.Amount));
+                break;
             case HitSource.Hero:
                 motion.HeroSwing = 1;
                 motion.MonsterFlash = 0.07f;

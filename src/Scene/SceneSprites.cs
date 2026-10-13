@@ -5,13 +5,17 @@ namespace IdleBar.Scene;
 
 public static class SceneSprites
 {
-    public static ArtSprite Hero { get; } = ArtSprite.Parse(FighterGrids.Hero);
-
-    public static ArtSprite HeroRage { get; } = Hero.Silhouette(Palette.Red);
-
     public static ArtSprite Archer { get; } = ArtSprite.Parse(FighterGrids.Archer);
 
+    public static ArtSprite ArcherFlash { get; } = Archer.Silhouette(Palette.White);
+
+    public static ArtSprite ArcherDown { get; } = Archer.Lying().Faded(Palette.Gray, 0.45f);
+
     public static ArtSprite Mage { get; } = ArtSprite.Parse(FighterGrids.Mage);
+
+    public static ArtSprite MageFlash { get; } = Mage.Silhouette(Palette.White);
+
+    public static ArtSprite MageDown { get; } = Mage.Lying().Faded(Palette.Gray, 0.45f);
 
     public static IReadOnlyList<ArtSprite> Chicken { get; } = [ArtSprite.Parse(FighterGrids.ChickenUp), ArtSprite.Parse(FighterGrids.ChickenDown)];
 

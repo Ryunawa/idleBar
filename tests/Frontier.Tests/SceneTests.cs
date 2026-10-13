@@ -10,14 +10,14 @@ namespace IdleBar.Tests;
 
 public sealed class SceneTests
 {
-    private const string SnapshotFolder = "IDLEBAR_SNAPSHOTS";
+    internal const string SnapshotFolder = "IDLEBAR_SNAPSHOTS";
 
     public static IEnumerable<object[]> Grids()
     {
         IEnumerable<IReadOnlyList<string>> monsters = MonsterGrids.Templates.OfType<IReadOnlyList<string>>().Concat(MonsterGrids.Bosses);
         IEnumerable<IReadOnlyList<string>> others =
         [
-            FighterGrids.Hero, FighterGrids.Archer, FighterGrids.Mage, FighterGrids.ChickenUp, FighterGrids.ChickenDown,
+            FighterGrids.Archer, FighterGrids.Mage, FighterGrids.ChickenUp, FighterGrids.ChickenDown,
             FighterGrids.Lock, FighterGrids.Bread, FighterGrids.Bolt, FighterGrids.Flame, FighterGrids.Coins,
         ];
         return monsters.Concat(others).Select((grid, index) => new object[] { index, grid });
@@ -70,7 +70,7 @@ public sealed class SceneTests
         int x = 2;
         IEnumerable<ArtSprite> sprites = SceneSprites.Monsters.OfType<ArtSprite>()
             .Concat(SceneSprites.Bosses)
-            .Concat([SceneSprites.Hero, SceneSprites.Archer, SceneSprites.Mage, SceneSprites.Chicken[0]]);
+            .Concat([HeroSprites.Of(HeroRole.Warrior, null).Standing, SceneSprites.Archer, SceneSprites.Mage, SceneSprites.Chicken[0]]);
         foreach (ArtSprite sprite in sprites)
         {
             sheet.Blit(sprite, x, 24 - sprite.Height);
@@ -118,7 +118,7 @@ public sealed class SceneTests
         return new ScenePainter().Paint(state, layout, scene, light, -1);
     }
 
-    private static FrontierState SampleState(int stage)
+    internal static FrontierState SampleState(int stage)
     {
         FrontierState state = new() { Stage = stage, MaxStage = stage, BestStage = stage, Gold = 1e6, ConvoyTimer = 0.1, ChickenTimer = 1 };
         if (stage <= 1)

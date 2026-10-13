@@ -1,0 +1,72 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using IdleBar.Frontier;
+using IdleBar.Scene;
+using Xunit;
+
+namespace IdleBar.Tests;
+
+public sealed class HeroSceneTests
+{
+    [Fact]
+    public void EveryHeroSymbolHasAColor()
+    {
+        Dictionary<char, Rgba> looks = new() { ['S'] = Palette.Skin, ['H'] = Palette.Bark, ['O'] = Palette.Red, ['Q'] = Palette.Wine };
+        IEnumerable<IReadOnlyList<string>> grids = HeroGrids.Bodies.Concat(HeroGrids.Hairs).Append(HeroGrids.MageHat);
+        Assert.All(grids, grid => Assert.Empty(ArtSprite.UnknownSymbols(grid, looks)));
+        Assert.Equal(Roles.All.Count, HeroGrids.Bodies.Count);
+        Assert.Equal(HeroLook.Hairs, HeroGrids.Hairs.Count);
+        Assert.Equal(HeroLook.Skins, HeroSprites.Skins.Length);
+        Assert.Equal(HeroLook.HairColors, HeroSprites.HairColors.Length);
+        Assert.Equal(HeroLook.Outfits, HeroSprites.Outfits.Length);
+    }
+
+    [Fact]
+    public void AWoundedTeamRenders()
+    {
+        FrontierState state = SceneTests.SampleState(47);
+        state.Role = HeroRole.Mage;
+        state.Hero = new HeroLook("Aldric", 2, 1, 2, 3);
+        state.Health[(int)FighterKind.Hero] = 0.3;
+        state.Downed[(int)FighterKind.Archer] = 12;
+        state.Health[(int)FighterKind.Mage] = 0.7;
+        FrontierScene scene = new(new Random(3));
+        FrontierLayout layout = FrontierLayout.For(400, FrontierLayout.Rows);
+        scene.Update(1 / 30f, state, [], layout, false);
+        ArtRaster frame = new ScenePainter().Paint(state, layout, scene, SceneLight.Noon, -1);
+        if (Environment.GetEnvironmentVariable(SceneTests.SnapshotFolder) is string folder)
+        {
+            Directory.CreateDirectory(folder);
+            PngWriter.Write(frame, Path.Combine(folder, "equipe-blessee.png"), 4);
+        }
+
+        Assert.Equal(400, frame.Width);
+    }
+
+    [Fact]
+    public void TheHeroSheetRenders()
+    {
+        HeroLook[] looks = [HeroSprites.Default, new("a", 2, 1, 2, 1), new("b", 3, 2, 4, 6), new("c", 1, 0, 3, 7)];
+        ArtRaster sheet = new(5 * 4 * 16 + 4, 46);
+        sheet.Fill(0, 0, sheet.Width, sheet.Height, Palette.Sand.Mix(Palette.White, 0.6f));
+        int x = 2;
+        foreach (RoleInfo role in Roles.All)
+        {
+            foreach (HeroLook look in looks)
+            {
+                HeroFigure figure = HeroSprites.Of(role.Role, look);
+                sheet.Blit(figure.Standing, x, 24 - figure.Standing.Height);
+                sheet.Blit(figure.Down, x, 44 - figure.Down.Height);
+                x += 16;
+            }
+        }
+
+        if (Environment.GetEnvironmentVariable(SceneTests.SnapshotFolder) is string folder)
+        {
+            Directory.CreateDirectory(folder);
+            PngWriter.Write(sheet, Path.Combine(folder, "heros.png"), 6);
+        }
+    }
+}

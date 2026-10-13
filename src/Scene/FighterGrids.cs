@@ -4,12 +4,6 @@ namespace IdleBar.Scene;
 
 public static class FighterGrids
 {
-    public static IReadOnlyList<string> Hero { get; } =
-    [
-        "....rr....", "...rRr....", "..kkkkk...", ".kaaaaak..", ".kaaakkk..", ".kAaaaak..", "..kkkkk...",
-        "rkaaaaaak.", "rkAayyaAk.", "rkAaaaaAk.", ".kdddddk..", "..kakkak..", "..kAkkAk..", ".kkk.kkk..",
-    ];
-
     public static IReadOnlyList<string> Archer { get; } =
     [
         "..GGG...", ".GGGGG..", ".GGsssb.", ".GGsks.b", "..Gsss.b", ".gGGGgsb",

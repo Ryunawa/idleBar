@@ -19,6 +19,12 @@ public sealed class SceneMotion
 
     public float MonsterKick { get; set; }
 
+    public float MonsterLunge { get; set; }
+
+    public float[] Hurt { get; } = new float[FrontierState.FighterCount];
+
+    public int MonsterShift => MonsterLunge > 0 ? -3 : MonsterKick > 0 ? 1 : 0;
+
     public float MageGlow { get; set; }
 
     public float Lightning { get; set; }
@@ -54,6 +60,12 @@ public sealed class SceneMotion
         HeroSwing = Math.Max(0, HeroSwing - dt / SwingSeconds);
         MonsterFlash = Math.Max(0, MonsterFlash - dt);
         MonsterKick = Math.Max(0, MonsterKick - dt);
+        MonsterLunge = Math.Max(0, MonsterLunge - dt);
+        for (int index = 0; index < Hurt.Length; index++)
+        {
+            Hurt[index] = Math.Max(0, Hurt[index] - dt);
+        }
+
         MageGlow = Math.Max(0, MageGlow - dt);
         Lightning = Math.Max(0, Lightning - dt);
         Shake = Math.Max(0, Shake - dt);
