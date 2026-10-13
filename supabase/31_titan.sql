@@ -1,6 +1,6 @@
 alter table private.settings
-  add column if not exists titan_hp_per_player integer not null default 30000 check (titan_hp_per_player > 0),
-  add column if not exists titan_min_hp integer not null default 100000 check (titan_min_hp > 0),
+  add column if not exists titan_hp_per_player integer not null default 5000 check (titan_hp_per_player > 0),
+  add column if not exists titan_min_hp integer not null default 20000 check (titan_min_hp > 0),
   add column if not exists titan_kills_per_minute integer not null default 40 check (titan_kills_per_minute > 0);
 
 create table if not exists public.titans (

@@ -142,12 +142,12 @@ select pg_temp.check(public.send_help(pg_temp.member('Aldric'), 'hero') ->> 'sta
 select pg_temp.as_player('a1111111-1111-1111-1111-111111111111');
 select pg_temp.check((public.get_social() #>> '{help,allies,0,ratio}')::numeric <= 0.01, 'un renfort faible reste faible');
 reset role;
-update private.settings set help_front_max = 3;
+update private.settings set help_front_max = 3, titan_min_hp = 1000;
 delete from public.titans;
 set role authenticated;
 
 select pg_temp.as_player('b2222222-2222-2222-2222-222222222222');
-select pg_temp.check((public.get_social() #>> '{titan,hp}')::bigint = 120000, 'titan à 30 000 PV par joueur actif');
+select pg_temp.check((public.get_social() #>> '{titan,hp}')::bigint = 20000, 'titan à 5 000 PV par joueur actif');
 select pg_temp.check(pg_temp.save('b2222222-2222-2222-2222-222222222222', 0, 500) = 'ok', 'sauvegarde avec des monstres');
 select pg_temp.check((public.get_social() #>> '{titan,mine}')::bigint = 40, 'au plus 40 monstres par minute');
 reset role;

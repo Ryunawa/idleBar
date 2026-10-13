@@ -67,6 +67,14 @@ Toutes les constantes sont dans `src/Frontier/Balance.cs`.
 - Si tout le monde tombe, le front recule d'un niveau sans repasser derrière un boss vaincu (`Front.Floor`) ; face à un boss, il recule et le boss attend le bouton « BOSS ». Tout le monde se relève. Un front laissé seul perd donc au plus 9 niveaux.
 - L'absence et le repli relèvent toute l'équipe.
 
+**Guilde (0.6).**
+- Jusqu'à 20 joueurs, rejointe seulement par son code de 6 caractères (sans 0, O, 1 ni I). Il faut un héros pour fonder ou rejoindre. Le chef exclut, renomme et change le code ; s'il part ou disparaît, le plus ancien membre le remplace, et une guilde vide est supprimée. Après un départ volontaire, une heure d'attente avant d'en rejoindre une autre ; un exclu peut revenir tout de suite.
+- **Renfort** (`Ally`) : une image du héros d'un membre combat 30 min sur le front d'un autre, sans quitter le sien. Le serveur fige au départ le rapport entre la puissance des deux héros (`11 × niveau × 1,5^(niveau/10) × bonus des âmes`), plafonné à 1,2. L'image a le rôle et l'apparence de l'envoyeur ; ses dégâts et ses PV sont ceux du héros qui la reçoit multipliés par ce rapport et par son rôle. Elle est visée, tombe et revient comme un héros (45 s), compte dans la synergie, protège si elle est tank et soigne si elle est soutien. Trois renforts au plus par front.
+- **Convoi** (`Boost`) : +50 % d'or pendant 30 min ; les convois se suivent, 2 h au plus.
+- Chaque aide se recharge en 4 h par joueur et par type. Les bonus ne comptent que quand la barre tourne : l'absence ne les applique pas.
+- **Titan** : un par semaine (du lundi au lundi, UTC), avec 5 000 PV par joueur actif dans les 7 derniers jours (20 000 au moins). Un déclencheur sur `frontiers` lui verse les monstres de chaque sauvegarde, au plus 40 par minute écoulée et au plus la moitié de ses PV par joueur. S'il tombe, chacun réclame (`claim_titan`, jusqu'à la fin de la semaine suivante) : 200 monstres, +25 % d'or et de dégâts pendant 2 h ; 1 000, +50 % pendant 4 h ; 5 000, +100 % pendant 8 h. Les guildes sont classées sur les monstres versés par leurs membres.
+- Mesure : le joueur simulé abat environ 350 monstres par heure jouée, soit 2 800 par journée de 8 h. Un titan à 5 000 par joueur tombe donc en milieu de semaine si chacun joue environ 3 h par jour.
+
 **Biomes.** Tous les 50 niveaux, le front change de contrée : plaine (slime, gobelin), forêt sombre (loup, champignon), désert (scorpion, momie), toundra (yéti, golem de glace). Les boss sont l'ogre et le dragon. Seuls le front et le brouillard changent ; le village reste dans la plaine.
 
 **Village.**
@@ -158,7 +166,11 @@ Les rôles qui tombent le plus (archer, mage : une soixantaine de reculs en 6 h)
   - `25_more_plots.sql` porte le village à 12 emplacements et 12 bâtiments ;
   - `26_review_fixes.sql` ajoute `saved_by` (la session de la dernière sauvegarde), la liste des succès connus, et exige la 0.4.2 ;
   - `27_gold_souls.sql` contrôle les âmes d'après l'or total et la croissance de l'or total, et exige la 0.4.6 ;
-  - `28_heroes.sql` ajoute le héros (`hero_name`, `hero_role`, `role_retreats`, apparence) et l'armure à `frontiers`, la table `role_kinds`, un filtre de noms (`private.banned_words`, repris de la liste du script 14), `set_hero`, l'armure dans `save_frontier`, et exige la 0.5.0.
+  - `28_heroes.sql` ajoute le héros (`hero_name`, `hero_role`, `role_retreats`, apparence) et l'armure à `frontiers`, la table `role_kinds`, un filtre de noms (`private.banned_words`, repris de la liste du script 14), `set_hero`, l'armure dans `save_frontier`, et exige la 0.5.0 ;
+  - `29_guilds.sql` crée `guilds`, `guild_members` (avec le chef) et `guild_departures`, un déclencheur qui promeut le plus ancien ou supprime la guilde vide, et `create_guild`, `join_guild`, `leave_guild`, `kick_member`, `rename_guild`, `new_guild_code` et `get_social` ;
+  - `30_help.sql` crée `guild_help` (renforts figés et convois, avec leur fin) et `send_help(p_member, p_kind)` ;
+  - `31_titan.sql` crée `titans`, `titan_contributions` et `guild_titan`, le déclencheur `frontier_feeds_titan` et `claim_titan`. Les scripts 29 à 31 ne changent rien aux fonctions de la 0.5 : ils s'exécutent quand on veut après le 28.
+- **Le social** : chaque action renvoie la même réponse que `get_social()` : statut, guilde et membres (héros, niveau, record, dernière visite, renforts et convoi reçus), attente avant de rejoindre, recharges, renforts et bonus reçus avec leur durée restante, titan et classement. Les membres sont désignés par un identifiant de guilde, jamais par leur compte. Statuts : `ok`, `missing`, `no_hero`, `already_member`, `cooldown`, `invalid_name`, `banned_name`, `name_taken`, `unknown_code`, `full`, `not_member`, `not_leader`, `unknown_member`, `self`, `front_full`, `convoy_full`, `nothing`, `refused`.
 - **`set_hero(p_session, p_name, p_role, p_skin, p_hair, p_hair_color, p_outfit)`** crée ou modifie le héros. Elle nettoie les espaces du nom, puis répond `invalid_name` (longueur ou caractères), `banned_name` (insulte, même déguisée), `refused` (apparence ou rôle inconnus), `role_locked` (rôle déjà changé depuis le dernier repli enregistré), `elsewhere` ou `ok`. Le client sauvegarde la partie avant un changement de rôle, pour que le serveur connaisse le dernier repli. Le héros du serveur l'emporte toujours sur celui d'une copie locale.
 - **`start_frontier(p_session)`** crée la partie : héros niveau 1, 12 emplacements vides, compétences prêtes.
 - **`claim_frontier(p_session)`** fait de ce PC celui qui sauvegarde, et renvoie la partie et `away_seconds`, mesuré par le serveur. Le client l'appelle au démarrage, à la connexion, et quand le joueur reprend la partie ici.
@@ -195,6 +207,8 @@ Publiées : 0.4.1 (scripts 21 à 24), 0.4.2 (12 emplacements), 0.4.3 à 0.4.5 (c
 1. Pousser `main`, puis le tag `v0.5.0`, et attendre que GitHub publie la version.
 2. Dans l'éditeur SQL de Supabase, exécuter `25_more_plots.sql`, `26_review_fixes.sql` et `27_gold_souls.sql` s'ils ne sont pas encore passés, puis `28_heroes.sql`. Le 28 change la signature de `save_frontier` et exige la 0.5.0 : les versions plus anciennes affichent « Mise à jour requise ». Il ne faut donc le lancer qu'une fois la 0.5.0 en ligne.
 
+**La 0.6.0** se publie de la même façon, puis on exécute `29_guilds.sql`, `30_help.sql` et `31_titan.sql`. Ils n'exigent pas de nouvelle version : une 0.5 continue de jouer, sans voir la guilde.
+
 **Ne jamais rejouer `21_purge.sql`** : il supprime la table `frontiers` et toutes les parties. Les scripts déjà passés ne se rejouent pas ; on n'exécute que les nouveaux numéros.
 
 ## Les étapes
@@ -213,9 +227,9 @@ Publiées : 0.4.1 (scripts 21 à 24), 0.4.2 (12 emplacements), 0.4.3 à 0.4.5 (c
 | 9. 0.4.3 à 0.4.5 | Correctifs de la revue, script `26`, texte sur deux lignes, effets des bâtiments | Publiées |
 | 10. 0.4.6 et 0.4.7 | Âmes tirées de l'or total, compteur d'âmes en attente, équilibrage, script `27`, menu de l'icône, déconnexion dans les réglages | Publiées |
 | 11. 0.5.0 « Le héros » | Héros personnalisé et rôles, coups des monstres, personnages qui tombent, recul du front, armure, script `28`, fenêtre de création et onglet Héros | Prête ; voir « Publier la 0.5.0 » |
+| 12. 0.6.0 « Compagnons » | Guildes par code, renforts du héros et convois, titan de la semaine et classement, scripts `29` à `31`, onglets Guilde, Titan et Aide | Prête, après la 0.5.0 |
 
 **Ensuite**, validé le 13 octobre :
-- 0.6 « Compagnons » : des guildes à la place des amis, rejointes par un code de 6 caractères (20 membres). Les renforts envoient une image de son héros chez un membre pendant 30 min, avec une puissance figée par le serveur (au plus celle du héros qui reçoit +20 %) ; le convoi donne +50 % d'or pendant 30 min. Un titan mondial chaque semaine, une récompense selon sa propre participation, et un classement des guildes. Seulement des bonus temporaires ; pas de visite, de temps réel ni de chat.
 - 0.7 « Butin » : des objets tenus par le serveur (arme, armure, coiffe, quatre raretés), tirés par lui sur les boss vaincus, visibles sur le héros. Ils préparent un échange ou un marché (0.8).
 - Plus tard : les fêtes dans le village, les ères, les expéditions, le ciel.
 
@@ -224,7 +238,7 @@ Publiées : 0.4.1 (scripts 21 à 24), 0.4.2 (12 emplacements), 0.4.3 à 0.4.5 (c
 - **`src/Frontier/`** : les règles, en C# pur.
   - `FrontierGame` est la façade : `Advance`, `Strike`, `UseSkill`, `Buy`/`BuyMany`, `CallBoss`, `Retreat`, `CatchChicken`, `Absent`. Elle avance par pas de 0,05 s et range ses `FrontierEvent` dans un `EventLog`.
   - `FrontierState` porte l'état, et `Balance` toutes les constantes. Le village est `Built` (le bâtiment de chaque emplacement, ou rien) et `Levels` (le niveau de chaque emplacement).
-  - `Battle`, `Economy`, `Shop`, `Convoys`, `GoldenChicken`, `RetreatRules`, `Intendant`, `Achievements` et `Absence` portent chacun une règle. `Skirmish` fait frapper les monstres (cibles, chutes, retours, soins), `Vitality` calcule les PV, et `Front` fait avancer ou reculer le front.
+  - `Battle`, `Economy`, `Shop`, `Convoys`, `GoldenChicken`, `RetreatRules`, `Intendant`, `Achievements` et `Absence` portent chacun une règle. `Skirmish` fait frapper les monstres (cibles, chutes, retours, soins), `Vitality` calcule les PV, et `Front` fait avancer ou reculer le front. `Team` voit d'un même œil les combattants et les renforts (`Ally`, désignés par un `Combatant`), et `Help` applique les renforts et les bonus (`Boost`) reçus du serveur.
   - Les catalogues sont `Plots`, `Buildings`, `Fighters`, `Roles`, `Skills` et `Biomes`. Les achats sont `FighterPurchase`, `ArmorPurchase`, `Construction` et `PlotPurchase`. `HeroLook` porte l'apparence et la règle du nom, et `FrontierGame.Embody` applique un héros.
   - `SaveCodec` et `FrontierSave` gèrent la sauvegarde locale versionnée (format 3) en snake_case.
 - **`src/Scene/`** : la barre peinte, en C# pur.
@@ -233,14 +247,14 @@ Publiées : 0.4.1 (scripts 21 à 24), 0.4.2 (12 emplacements), 0.4.3 à 0.4.5 (c
   - `FrontierLayout` découpe les zones. `FrontierScene` porte l'état visuel (`SceneFx`, `SceneMotion`, `VillageLife`, `Crier`, `BannerQueue`) et réagit aux événements (`SceneReactions`, `CombatReactions`, `SkillReactions`).
   - `ScenePainter` compose les peintres : ciel, sol, bâtiments, paysage, village, front, brouillard, lumières, effets, surimpressions, compétences, météo.
   - `LaneHits` et `LaneHints` disent ce qu'il y a sous la souris. `BossButton` dessine et situe le bouton « BOSS ».
-  - `HeroGrids` dessine un corps par rôle, trois coupes et le chapeau du mage, avec des symboles remplacés par l'apparence (`S` peau, `H` cheveux, `O` et `Q` tenue). `HeroSprites` compose et garde chaque figure (debout, furie, coup reçu, à terre). `TeamPainter` peint l'équipe et ses barres de vie, `TeamReactions` les coups reçus, chutes, retours et soins.
+  - `HeroGrids` dessine un corps par rôle, trois coupes et le chapeau du mage, avec des symboles remplacés par l'apparence (`S` peau, `H` cheveux, `O` et `Q` tenue). `HeroSprites` compose et garde chaque figure (debout, furie, coup reçu, à terre). `TeamPainter` peint l'équipe et ses barres de vie, renforts compris (`FrontierLayout.AllyX`), `TeamReactions` les coups reçus, chutes, retours et soins.
 - **`src/Ui/`** : la coquille Godot.
   - `FrontierLane` (et `FrontierLaneInput`) affiche la scène à travers le shader `SharpPixels` et gère la souris.
   - `OfferRow` est une ligne d'achat : bouton, « ×10 », « Max ×N », ou liste des bâtiments pour un emplacement libre.
   - `GameBridge` relie la partie, la session et les fenêtres.
-  - `GameDialogs` ouvre `LoginWindow`, `StartWindow` (création du héros, `HeroForm`) et `FrontierWindow`, avec ses onglets Combattants, Héros (`HeroPanel`), Village, Repli, Succès, Journal et FAQ. Un joueur sans héros se le voit demander une fois par chargement.
+  - `GameDialogs` ouvre `LoginWindow`, `StartWindow` (création du héros, `HeroForm`) et `FrontierWindow`, avec ses onglets Combattants, Héros (`HeroPanel`), Village, Repli, Guilde (`GuildPanel`, `MemberRow`), Titan (`TitanPanel`), Succès et Aide (`HelpPanel` : journal et FAQ). Un joueur sans héros se le voit demander une fois par chargement.
   - `StatusBuilder` décrit la barre, et `FrontierJournal` traduit les événements en lignes de journal.
-- **`src/Online/`** : `FrontierSession` (et `FrontierSessionSave`, `FrontierSessionHero`), `FrontierApi`, `FrontierData` (la partie lue dans les tables), `SaveArguments` (les paramètres typés de `save_frontier`), `FrontierLoader`, `LocalCopy`, `SessionAccess` (garde-fou de version).
+- **`src/Online/`** : `SocialSession` lit `get_social` toutes les minutes et après chaque action (`SocialApi`, `SocialData`), puis donne les renforts et les bonus au moteur (`FrontierGame.Reinforce`). `FrontierSession` (et `FrontierSessionSave`, `FrontierSessionHero`), `FrontierApi`, `FrontierData` (la partie lue dans les tables), `SaveArguments` (les paramètres typés de `save_frontier`), `FrontierLoader`, `LocalCopy`, `SessionAccess` (garde-fou de version).
   - `RealtimeClient` et ses messages sont gardés pour le social v2.
 - **`src/Cloud/`** : comptes, session chiffrée, appels RPC, flux des versions.
 - **`src/Desktop/`** : l'ancrage dans Windows (`AppBar`) et au-dessus du Dock sur macOS (`FloatingDock`), à l'échelle donnée par `ScreenFit`. Ne pas casser.
