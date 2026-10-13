@@ -7,4 +7,5 @@ public enum HitSource
     Mage,
     Click,
     Smite,
+    Ally,
 }

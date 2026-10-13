@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace IdleBar.Frontier;
 
@@ -9,19 +11,20 @@ public static class Skirmish
 
     public static void Recover(FrontierState state, double dt, EventLog events)
     {
-        foreach (FighterInfo fighter in Fighters.All)
+        foreach (Combatant member in Team.Members(state))
         {
-            int index = (int)fighter.Kind;
-            if (state.Downed[index] <= 0)
+            double downed = member.Ally?.Downed ?? state.Downed[(int)member.Kind];
+            if (downed <= 0)
             {
                 continue;
             }
 
-            state.Downed[index] = Math.Max(0, state.Downed[index] - dt);
-            if (state.Downed[index] <= 0)
+            downed = Math.Max(0, downed - dt);
+            Team.Down(state, member, downed);
+            if (downed <= 0)
             {
-                state.Health[index] = 1;
-                events.Add(new Revived(fighter.Kind));
+                Team.SetHealth(state, member, 1);
+                events.Add(new Revived(member.Kind, member.AllyId));
             }
         }
     }
@@ -45,49 +48,42 @@ public static class Skirmish
     {
         Array.Fill(state.Health, 1);
         Array.Clear(state.Downed);
+        foreach (Ally ally in state.Allies)
+        {
+            ally.Health = 1;
+            ally.Downed = 0;
+        }
+
         state.HealTimer = 0;
     }
 
-    public static FighterKind? Target(FrontierState state, Monster monster)
+    public static Combatant? Target(FrontierState state, Monster monster)
     {
-        if (state.Role == HeroRole.Tank && Vitality.Up(state, FighterKind.Hero))
+        if (Team.Tank(state) is Combatant tank)
         {
-            return FighterKind.Hero;
+            return tank;
         }
 
-        double total = 0;
-        foreach (FighterInfo fighter in Fighters.All)
+        List<Combatant> members = [.. Team.Members(state).Where(member => Team.Up(state, member))];
+        double pick = (monster.Id * Spread + monster.Strikes * Golden) % 1 * members.Sum(member => Weight(state, member));
+        foreach (Combatant member in members)
         {
-            total += Weight(state, fighter.Kind);
-        }
-
-        double pick = (monster.Id * Spread + monster.Strikes * Golden) % 1 * total;
-        FighterKind? last = null;
-        foreach (FighterInfo fighter in Fighters.All)
-        {
-            double weight = Weight(state, fighter.Kind);
-            if (weight <= 0)
-            {
-                continue;
-            }
-
-            last = fighter.Kind;
-            pick -= weight;
+            pick -= Weight(state, member);
             if (pick < 0)
             {
-                return fighter.Kind;
+                return member;
             }
         }
 
-        return last;
+        return members.Count > 0 ? members[^1] : null;
     }
 
-    private static double Weight(FrontierState state, FighterKind kind) =>
-        !Vitality.Up(state, kind) ? 0 : Vitality.Ranged(state, kind) ? Balance.RangedWeight : Balance.MeleeWeight;
+    private static double Weight(FrontierState state, Combatant member) =>
+        Team.Ranged(state, member) ? Balance.RangedWeight : Balance.MeleeWeight;
 
     private static void Heal(FrontierState state, double dt, EventLog events)
     {
-        if (!Vitality.SupportUp(state))
+        if (!Team.SupportUp(state))
         {
             state.HealTimer = 0;
             return;
@@ -104,12 +100,11 @@ public static class Skirmish
 
     private static void Mend(FrontierState state, double share)
     {
-        foreach (FighterInfo fighter in Fighters.All)
+        foreach (Combatant member in Team.Members(state))
         {
-            if (Vitality.Up(state, fighter.Kind))
+            if (Team.Up(state, member))
             {
-                int index = (int)fighter.Kind;
-                state.Health[index] = Math.Min(1, state.Health[index] + share);
+                Team.SetHealth(state, member, Math.Min(1, Team.Health(state, member) + share));
             }
         }
     }
@@ -117,24 +112,25 @@ public static class Skirmish
     private static void Strike(FrontierState state, Monster monster, EventLog events)
     {
         monster.Strikes++;
-        if (Target(state, monster) is not FighterKind target)
+        if (Target(state, monster) is not Combatant target)
         {
             return;
         }
 
-        int index = (int)target;
         double damage = Vitality.MonsterHit(monster.Stage, monster.Boss);
-        state.Health[index] -= damage / Vitality.MaxHp(state, target);
-        events.Add(new Struck(target, damage, monster.Boss));
-        if (state.Health[index] > 0)
+        double health = Team.Health(state, target) - damage / Team.MaxHp(state, target);
+        Team.SetHealth(state, target, Math.Max(0, health));
+        events.Add(new Struck(target.Kind, damage, monster.Boss, target.AllyId));
+        if (health > 0)
         {
             return;
         }
 
-        state.Health[index] = 0;
-        state.Downed[index] = Vitality.ReviveSeconds(state, target);
-        events.Add(new Fell(target, state.Downed[index]));
-        if (!Vitality.AnyUp(state))
+        Team.Down(state, target, Fighters.Of(target.Kind).Revive);
+        double seconds = Team.ReviveSeconds(state, target);
+        Team.Down(state, target, seconds);
+        events.Add(new Fell(target.Kind, seconds, target.AllyId));
+        if (!Team.AnyUp(state))
         {
             Rout(state, monster, events);
         }

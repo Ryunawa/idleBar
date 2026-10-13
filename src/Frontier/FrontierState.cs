@@ -66,6 +66,10 @@ public sealed class FrontierState
 
     public List<Convoy> Convoys { get; } = [];
 
+    public List<Ally> Allies { get; } = [];
+
+    public List<Boost> Boosts { get; } = [];
+
     public double ConvoyTimer { get; set; } = 2;
 
     public long ConvoySequence { get; set; }

@@ -18,5 +18,5 @@ public static class Roles
 
     public static HeroRole? Parse(string? id) => All.FirstOrDefault(role => role.Id == id)?.Role;
 
-    public static IReadOnlySet<HeroRole> OnFront(FrontierState state) => new HashSet<HeroRole> { state.Role };
+    public static IReadOnlySet<HeroRole> OnFront(FrontierState state) => new HashSet<HeroRole>(state.Allies.Select(ally => ally.Role)) { state.Role };
 }

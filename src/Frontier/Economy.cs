@@ -29,12 +29,15 @@ public static class Economy
     public static double Synergy(FrontierState state) => 1 + Balance.SynergyBonus * Roles.OnFront(state).Count;
 
     public static double Buff(FrontierState state) =>
-        (state.FuryLeft > 0 ? Balance.FuryFactor : 1) * (1 + Balance.SupplyBonus * state.Supply) * Synergy(state);
+        (state.FuryLeft > 0 ? Balance.FuryFactor : 1) * (1 + Balance.SupplyBonus * state.Supply) * Synergy(state) * Help.DamageFactor(state);
 
     public static double HeroPower(FrontierState state) => BaseDps(state, FighterKind.Hero, state.Level(FighterKind.Hero)) * Buff(state);
 
     public static double Dps(FrontierState state, FighterKind kind) =>
         BaseDps(state, kind, state.Level(kind)) * Buff(state) * (kind == FighterKind.Hero ? Roles.Of(state.Role).Dps : 1);
+
+    public static double AllyDps(FrontierState state, Ally ally) =>
+        BaseDps(state, FighterKind.Hero, state.Level(FighterKind.Hero)) * ally.Ratio * Roles.Of(ally.Role).Dps * Buff(state);
 
     public static double TotalDps(FrontierState state)
     {
@@ -42,6 +45,11 @@ public static class Economy
         foreach (FighterInfo fighter in Fighters.All)
         {
             total += Dps(state, fighter.Kind);
+        }
+
+        foreach (Ally ally in state.Allies)
+        {
+            total += AllyDps(state, ally);
         }
 
         return total;
@@ -87,7 +95,7 @@ public static class Economy
     }
 
     public static double GoldPerSecond(FrontierState state) =>
-        BaseGoldPerSecond(state) * (state.FrenzyLeft > 0 ? Balance.FrenzyGold : 1);
+        BaseGoldPerSecond(state) * (state.FrenzyLeft > 0 ? Balance.FrenzyGold : 1) * Help.GoldFactor(state);
 
     public static double MonsterHp(int stage)
     {
@@ -115,7 +123,7 @@ public static class Economy
         double gold = (MonsterHp(state.Stage) * Balance.KillGoldRatio + Balance.KillGoldFlat)
             * Wealth(state)
             * (1 + Balance.MarketBonus * state.Level(BuildingKind.Market));
-        return gold * (boss ? Balance.BossGoldFactor : 1) * (state.FrenzyLeft > 0 ? Balance.FrenzyGold : 1);
+        return gold * (boss ? Balance.BossGoldFactor : 1) * (state.FrenzyLeft > 0 ? Balance.FrenzyGold : 1) * Help.GoldFactor(state);
     }
 
     public static double FighterCost(FrontierState state, FighterKind kind) =>

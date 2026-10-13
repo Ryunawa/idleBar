@@ -185,7 +185,7 @@ public sealed class SkirmishTests
         for (int strike = 0; strike < 600; strike++)
         {
             monster.Strikes++;
-            targets.Add(Skirmish.Target(state, monster) ?? throw new InvalidOperationException());
+            targets.Add(Skirmish.Target(state, monster)?.Kind ?? throw new InvalidOperationException());
         }
 
         return targets;

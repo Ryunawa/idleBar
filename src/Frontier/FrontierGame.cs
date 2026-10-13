@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace IdleBar.Frontier;
 
@@ -87,6 +88,8 @@ public sealed class FrontierGame
         return true;
     }
 
+    public void Reinforce(IReadOnlyList<Ally> allies, IReadOnlyList<Boost> boosts) => Help.Sync(State, allies, boosts, Events);
+
     public void SetIntendant(bool on) => State.IntendantOn = Frozen ? State.IntendantOn : on && State.IntendantUnlocked;
 
     public bool UseSkill(SkillKind kind)
@@ -134,6 +137,7 @@ public sealed class FrontierGame
 
         state.FuryLeft = Math.Max(0, state.FuryLeft - dt);
         state.FrenzyLeft = Math.Max(0, state.FrenzyLeft - dt);
+        Help.Elapse(state, dt, Events);
         Convoys.Update(state, dt, Events);
         GoldenChicken.Update(state, dt, _random, Events);
         Battle.Update(state, dt, Events);
