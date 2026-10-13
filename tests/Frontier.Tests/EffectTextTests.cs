@@ -7,7 +7,7 @@ namespace IdleBar.Tests;
 public sealed class EffectTextTests
 {
     [Theory]
-    [InlineData(BuildingKind.Forge, 30, "+30 % de dégâts du héros")]
+    [InlineData(BuildingKind.Forge, 30, "+30 % de dégâts et de PV du héros")]
     [InlineData(BuildingKind.Market, 8, "+16 % d'or des monstres")]
     [InlineData(BuildingKind.Workshop, 25, "-12,5 % sur le prix des combattants")]
     [InlineData(BuildingKind.Workshop, 400, "-50 % sur le prix des combattants")]

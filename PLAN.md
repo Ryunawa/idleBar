@@ -44,7 +44,28 @@ Toutes les constantes sont dans `src/Frontier/Balance.cs`.
 - Les PV croissent de +35 % par niveau jusqu'au 50, +19 % jusqu'au 100, puis +13 %.
 - Le butin vaut 35 % des PV, plus 2, et ×6 pour un boss.
 
-**Combattants.** Dégâts = base × niveau × 1,5 par tranche de 10 niveaux. Coût ×1,11 par niveau. Le héros coûte 200 au départ, l'archère et la mage se recrutent.
+**Combattants.** Dégâts et PV = base × niveau × 1,5 par tranche de 10 niveaux. Coût ×1,11 par niveau. Le héros coûte 200 au départ, l'archère et la mage se recrutent. L'armure (`ArmorPurchase`, 400 au départ, ×1,11) donne +10 % de PV à toute l'équipe par niveau ; le repli la remet à zéro.
+
+**Héros (0.5).**
+- Le joueur le crée : nom de 3 à 16 caractères (lettres, chiffres, espace, tiret, apostrophe), 4 peaux, 3 coupes, 6 couleurs de cheveux, 8 tenues (`HeroLook`). L'apparence change quand il veut ; le rôle change une fois par repli (`RoleRetreats`).
+- Les rôles (`Roles`) changent les dégâts, les PV et la cadence du héros :
+
+| Rôle | Dégâts | PV | Coup | Particularité |
+|---|---|---|---|---|
+| Guerrier | ×1 | ×1 | 0,6 s | chaque coup retarde celui du monstre de 0,12 s |
+| Tank | ×0,8 | ×2,5 | 0,8 s | reçoit tous les coups tant qu'il est debout |
+| Archer | ×0,9 | ×0,6 | 0,5 s | à distance, un tir sur cinq est critique (×2,5) |
+| Mage | ×0,95 | ×0,6 | 2,4 s | à distance, ×1,5 contre les boss |
+| Soutien | ×0,75 | ×1 | 0,8 s | soigne l'équipe de 6 % toutes les 3 s, retours deux fois plus rapides |
+
+- Synergie : +5 % de dégâts par rôle différent parmi les héros du front (`Roles.OnFront`) ; en 0.5, seul le héros du joueur compte.
+
+**Coups des monstres (`Skirmish`, `Vitality`).**
+- Un monstre frappe toutes les 1,5 s pour 10 % de ses PV ; un boss toutes les 2 s pour 100 % des PV d'un monstre de son niveau. Ces coups montent progressivement jusqu'au niveau 40 (15 % au départ).
+- Cible : le tank s'il est debout, sinon un tirage régulier où un personnage au contact pèse 4 et un personnage à distance 1.
+- Chaque monstre vaincu rend 15 % de PV aux personnages debout. Un personnage tombé revient après 30 s, 45 s pour le héros, moitié moins avec un soutien debout.
+- Si tout le monde tombe, le front recule d'un niveau sans repasser derrière un boss vaincu (`Front.Floor`) ; face à un boss, il recule et le boss attend le bouton « BOSS ». Tout le monde se relève. Un front laissé seul perd donc au plus 9 niveaux.
+- L'absence et le repli relèvent toute l'équipe.
 
 **Biomes.** Tous les 50 niveaux, le front change de contrée : plaine (slime, gobelin), forêt sombre (loup, champignon), désert (scorpion, momie), toundra (yéti, golem de glace). Les boss sont l'ogre et le dragon. Seuls le front et le brouillard changent ; le village reste dans la plaine.
 
@@ -74,11 +95,11 @@ Le joueur choisit le bâtiment de chaque emplacement libre (`Construction`), pui
 | Ferme | la poule dorée passe 1 % plus souvent par niveau, jusqu'à 2 fois plus souvent |
 | Moulin | +10 min d'absence comptée par niveau, jusqu'à 24 h |
 | Boulangerie | convois de pain : +5 % de dégâts par livraison, 5 au plus |
-| Forge | +1 % de dégâts du héros par niveau |
+| Forge | +1 % de dégâts et de PV du héros par niveau |
 | Marché | +2 % d'or des monstres par niveau |
 | Tour du mage | +3 % de dégâts de la mage par niveau |
 | Portail | +1 % d'or de tous les emplacements par niveau |
-| Caserne | +2 % de dégâts de l'archère par niveau |
+| Caserne | +2 % de dégâts de l'archère et de PV des compagnons par niveau |
 | Chapelle | compétences rechargées 1 % plus vite par niveau, jusqu'à 2 fois plus vite |
 | Taverne | clics 3 % plus forts par niveau |
 | Atelier | combattants 0,5 % moins chers par niveau, jusqu'à moitié prix |
@@ -101,7 +122,7 @@ Le joueur choisit le bâtiment de chaque emplacement libre (`Construction`), pui
 **Repli.**
 - Disponible à partir du niveau 50. Les âmes viennent de tout l'or gagné depuis le début : âmes totales = ⌊5 × (or total ÷ 1 million)^0,23⌋ (`RetreatRules.TotalSouls`). Un repli ajoute la différence avec les âmes déjà possédées (`Pending`), si bien que se replier en boucle ne rapporte rien. Chaque âme donne +2,5 % de dégâts et d'or.
 - La barre affiche « repli : +X âmes » dès qu'un repli rapporterait quelque chose ; l'onglet Repli dit aussi combien d'or manque pour la prochaine âme.
-- Il remet à zéro le niveau, l'or, les bâtiments et les compagnons, et garde les succès et les compteurs.
+- Il remet à zéro le niveau, l'or, les bâtiments, les compagnons et l'armure, et garde les succès, les compteurs et le héros, dont le rôle peut alors changer une fois.
 - Le premier repli débloque l'Intendant, qui achète la meilleure valeur atteignable en 20 s. Il bâtit d'abord chaque emplacement libre, dans l'ordre forge, boulangerie, atelier, marché, caserne, tour, beffroi, portail, chapelle, moulin, ferme, taverne.
 
 **Succès.** 30, chacun +2 % d'or et de dégâts.
@@ -113,16 +134,19 @@ Le joueur choisit le bâtiment de chaque emplacement libre (`Construction`), pui
 
 ## Rythme mesuré
 
-`PacingTests` simule un joueur idle : actif les 10 premières minutes, puis un passage toutes les 5 min. Il bâtit comme l'Intendant, défie le boss à chaque passage, rattrape 30 % des poules, se replie après 30 min sans progrès s'il gagne au moins 10 % d'âmes, et joue 8 h par jour.
+`PacingTests` simule un joueur idle : actif les 10 premières minutes, puis un passage toutes les 5 min. Il bâtit et achète l'armure comme l'Intendant, défie le boss à chaque passage, rattrape 30 % des poules, se replie après 30 min sans progrès s'il gagne au moins 10 % d'âmes, et joue 8 h par jour. Le rapport compte aussi les personnages tombés et les reculs.
 
-| Moment | Cible | Mesuré (0.4.1) |
+| Moment | Cible | Mesuré (0.5.0, guerrier) |
 |---|---|---|
 | Premier bâtiment | < 1 min | quelques secondes |
 | Boss du niveau 10 | 3 à 5 min | 3,6 min |
-| Repli possible | 2 à 4 h | 2,0 h |
-| Deuxième partie jusqu'au niveau 50 | 1,5 à 5 fois plus rapide | 2,9 fois |
-| Niveau 150 | 1 à 2 semaines | 79 h, soit 10 jours (488 âmes au niveau 100, ×13) |
-| Premier bâtiment au niveau 100 | 2 jours à 2 semaines | 59 h, soit 7 jours |
+| Repli possible | 2 à 4 h | 3,4 h ; de 2,7 h (soutien) à 3,6 h (mage) selon le rôle |
+| Deuxième partie jusqu'au niveau 50 | 1,5 à 5 fois plus rapide | 4,4 fois |
+| Niveau 150 | 1 à 2 semaines | 100 h, soit 12,5 jours |
+| Premier bâtiment au niveau 100 | 2 jours à 2 semaines | 84 h, soit 10,5 jours |
+| Front laissé seul 8 h | ne perd pas plus de 10 niveaux | vérifié pour le guerrier et l'archer |
+
+Les rôles qui tombent le plus (archer, mage : une soixantaine de reculs en 6 h) compensent par leurs dégâts ; le tank et le soutien reculent deux à trois fois moins.
 
 ## La sauvegarde
 
@@ -133,11 +157,13 @@ Le joueur choisit le bâtiment de chaque emplacement libre (`Construction`), pui
   - `24_frontier_actions.sql` contient les actions du joueur ;
   - `25_more_plots.sql` porte le village à 12 emplacements et 12 bâtiments ;
   - `26_review_fixes.sql` ajoute `saved_by` (la session de la dernière sauvegarde), la liste des succès connus, et exige la 0.4.2 ;
-  - `27_gold_souls.sql` contrôle les âmes d'après l'or total et la croissance de l'or total, et exige la 0.4.6.
+  - `27_gold_souls.sql` contrôle les âmes d'après l'or total et la croissance de l'or total, et exige la 0.4.6 ;
+  - `28_heroes.sql` ajoute le héros (`hero_name`, `hero_role`, `role_retreats`, apparence) et l'armure à `frontiers`, la table `role_kinds`, un filtre de noms (`private.banned_words`, repris de la liste du script 14), `set_hero`, l'armure dans `save_frontier`, et exige la 0.5.0.
+- **`set_hero(p_session, p_name, p_role, p_skin, p_hair, p_hair_color, p_outfit)`** crée ou modifie le héros. Elle nettoie les espaces du nom, puis répond `invalid_name` (longueur ou caractères), `banned_name` (insulte, même déguisée), `refused` (apparence ou rôle inconnus), `role_locked` (rôle déjà changé depuis le dernier repli enregistré), `elsewhere` ou `ok`. Le client sauvegarde la partie avant un changement de rôle, pour que le serveur connaisse le dernier repli. Le héros du serveur l'emporte toujours sur celui d'une copie locale.
 - **`start_frontier(p_session)`** crée la partie : héros niveau 1, 12 emplacements vides, compétences prêtes.
 - **`claim_frontier(p_session)`** fait de ce PC celui qui sauvegarde, et renvoie la partie et `away_seconds`, mesuré par le serveur. Le client l'appelle au démarrage, à la connexion, et quand le joueur reprend la partie ici.
 - **`rejoin_frontier(p_session)`** sert aux reconnexions automatiques après une coupure. Elle ne reprend la main que si aucun autre PC n'a donné signe de vie depuis `frontier_idle_seconds` (120 s) ; sinon elle répond `elsewhere`.
-- **`save_frontier(p_revision, p_session, p_gold, …, p_skills_used)`** reçoit chaque valeur dans un paramètre typé (`SaveArguments`) : tableaux pour les combattants, les emplacements, leurs niveaux et les recharges.
+- **`save_frontier(p_revision, p_session, p_gold, …, p_skills_used, p_armor)`** reçoit chaque valeur dans un paramètre typé (`SaveArguments`) : tableaux pour les combattants, les emplacements, leurs niveaux et les recharges.
   - Elle répond `ok`, `conflict` (mauvaise révision), `elsewhere` (autre session), `refused` (invraisemblable ou mal formé) ou `missing`, sans jamais lever d'erreur.
   - Forme : bon nombre de valeurs, héros au moins niveau 1, bâtiments connus et uniques, emplacements conquis, nombres finis, succès bien nommés.
   - Vraisemblance :
@@ -150,7 +176,7 @@ Le joueur choisit le bâtiment de chaque emplacement libre (`Construction`), pui
 - **Client** (`FrontierSession`).
   - Il réclame la partie au démarrage et sauvegarde toutes les 30 s, après un repli, un succès, une conquête ou une construction, et à la fermeture.
   - Chaque PC a un identifiant de session stable (`user://device.id`) : un redémarrage n'est pas pris pour un autre PC.
-  - La copie locale `user://frontier-<joueur>.json` (format 2) est propre à chaque compte. Elle est écrite à chaque envoi, toutes les 30 s hors ligne, à la déconnexion et à la fermeture. Hors ligne, on joue dessus. Au retour, une copie non envoyée l'emporte si elle est de la même révision que le serveur, ou si la dernière sauvegarde du serveur vient de ce PC (`saved_by`, script 26) : une réponse perdue ne fait donc pas revenir la partie en arrière. Son absence se compte depuis son écriture.
+  - La copie locale `user://frontier-<joueur>.json` (format 3, qui ajoute le rôle, l'apparence et l'armure ; le format 2 se lit encore) est propre à chaque compte. Elle est écrite à chaque envoi, toutes les 30 s hors ligne, à la déconnexion et à la fermeture. Hors ligne, on joue dessus. Au retour, une copie non envoyée l'emporte si elle est de la même révision que le serveur, ou si la dernière sauvegarde du serveur vient de ce PC (`saved_by`, script 26) : une réponse perdue ne fait donc pas revenir la partie en arrière. Son absence se compte depuis son écriture.
   - La version minimale est relue à chaque connexion. Deux refus de suite (`refused`) passent en « Mise à jour requise » ; `missing` renvoie au départ ; une réponse qui arrive après une déconnexion est ignorée.
   - Pendant « Partie ouverte ailleurs » ou « Mise à jour requise », la partie est gelée : clics et achats sont ignorés (`FrontierGame.Frozen`).
   - Le serveur ne garde que les succès connus (`achievement_kinds`, script 26), et le client écarte les inconnus au chargement.
@@ -161,17 +187,15 @@ Le joueur choisit le bâtiment de chaque emplacement libre (`Construction`), pui
 
 Le jeu calcule la partie, et le serveur vérifie qu'elle reste vraisemblable avant de l'enregistrer. C'est la pratique courante des jeux idle en solo (Cookie Clicker, la ferme d'Egg, Inc.) : la partie avance hors ligne et sans latence, et une seule version des règles existe, en C#.
 - Faire calculer la partie par le serveur obligerait à y faire tourner tout le moteur : combat, absence, achats. Il faudrait le porter dans une Edge Function ou un service .NET, garder deux moteurs identiques, rejouer chaque action reçue, et renoncer au jeu hors ligne.
-- Cela ne devient nécessaire que si une partie peut nuire aux autres : classement, échanges, marché. Ce qui passera d'un joueur à l'autre dans le social v2 (renforts, convois, titan commun) devra donc être calculé et plafonné par le serveur, à partir de valeurs qu'il contrôle.
+- Cela ne devient nécessaire que si une partie peut nuire aux autres : classement, échanges, marché. Ce qui passera d'un joueur à l'autre (renforts, convois, titan commun, objets) sera donc calculé et plafonné par le serveur, à partir de valeurs qu'il contrôle. C'est déjà le cas du héros : son nom et son rôle ne s'écrivent que par `set_hero`.
 
-## Publier la 0.4.6
+## Publier la 0.5.0
 
-Publiées : 0.4.1 (scripts 21 à 24), 0.4.2 (12 emplacements), 0.4.3 à 0.4.5 (correctifs, effets des bâtiments).
-1. Dans l'éditeur SQL de Supabase, exécuter `25_more_plots.sql` et `26_review_fixes.sql` s'ils ne sont pas encore passés, puis `27_gold_souls.sql`. Le 27 exige la 0.4.6 : les versions plus anciennes, qui comptent les âmes au niveau, affichent « Mise à jour requise ».
-2. Pousser `main`, puis le tag `v0.4.6` : GitHub lance les tests, construit et publie.
+Publiées : 0.4.1 (scripts 21 à 24), 0.4.2 (12 emplacements), 0.4.3 à 0.4.5 (correctifs, effets des bâtiments), 0.4.6 et 0.4.7 (âmes tirées de l'or, menu de l'icône).
+1. Pousser `main`, puis le tag `v0.5.0`, et attendre que GitHub publie la version.
+2. Dans l'éditeur SQL de Supabase, exécuter `25_more_plots.sql`, `26_review_fixes.sql` et `27_gold_souls.sql` s'ils ne sont pas encore passés, puis `28_heroes.sql`. Le 28 change la signature de `save_frontier` et exige la 0.5.0 : les versions plus anciennes affichent « Mise à jour requise ». Il ne faut donc le lancer qu'une fois la 0.5.0 en ligne.
 
 **Ne jamais rejouer `21_purge.sql`** : il supprime la table `frontiers` et toutes les parties. Les scripts déjà passés ne se rejouent pas ; on n'exécute que les nouveaux numéros.
-
-**Ensuite.** Le social v2 repartira de zéro : nouveau code ami et nouvelles tables, rattachés aux comptes.
 
 ## Les étapes
 
@@ -187,34 +211,36 @@ Publiées : 0.4.1 (scripts 21 à 24), 0.4.2 (12 emplacements), 0.4.3 à 0.4.5 (c
 | 7. 0.4.1 | Barre proportionnelle à l'écran, « Max ×N », boss au clic, moulin, bâtiments au choix, purge et vraies tables | Publiée |
 | 8. 0.4.2 | 12 emplacements et 5 nouveaux bâtiments, compétences à débloquer | Publiée |
 | 9. 0.4.3 à 0.4.5 | Correctifs de la revue, script `26`, texte sur deux lignes, effets des bâtiments | Publiées |
-| 10. 0.4.6 | Âmes tirées de l'or total, compteur d'âmes en attente, équilibrage, script `27` | Prête ; voir « Publier la 0.4.6 » |
+| 10. 0.4.6 et 0.4.7 | Âmes tirées de l'or total, compteur d'âmes en attente, équilibrage, script `27`, menu de l'icône, déconnexion dans les réglages | Publiées |
+| 11. 0.5.0 « Le héros » | Héros personnalisé et rôles, coups des monstres, personnages qui tombent, recul du front, armure, script `28`, fenêtre de création et onglet Héros | Prête ; voir « Publier la 0.5.0 » |
 
-**Ensuite.**
-- 0.4.x : les fêtes (Halloween, Noël) dans le village.
-- v2 : les ères (le village repeint, l'ancien en silhouette dans les collines), les expéditions de 1, 4 ou 8 h, le sceau royal quotidien, le social (contrats entre amis, visites de frontière, chat filtré repris du script `14`).
-- v3 : le ciel (dirigeables, îles flottantes) et des constellations pour un arbre de reliques.
+**Ensuite**, validé le 13 octobre :
+- 0.6 « Compagnons » : des guildes à la place des amis, rejointes par un code de 6 caractères (20 membres). Les renforts envoient une image de son héros chez un membre pendant 30 min, avec une puissance figée par le serveur (au plus celle du héros qui reçoit +20 %) ; le convoi donne +50 % d'or pendant 30 min. Un titan mondial chaque semaine, une récompense selon sa propre participation, et un classement des guildes. Seulement des bonus temporaires ; pas de visite, de temps réel ni de chat.
+- 0.7 « Butin » : des objets tenus par le serveur (arme, armure, coiffe, quatre raretés), tirés par lui sur les boss vaincus, visibles sur le héros. Ils préparent un échange ou un marché (0.8).
+- Plus tard : les fêtes dans le village, les ères, les expéditions, le ciel.
 
 ## Repères dans le code
 
 - **`src/Frontier/`** : les règles, en C# pur.
   - `FrontierGame` est la façade : `Advance`, `Strike`, `UseSkill`, `Buy`/`BuyMany`, `CallBoss`, `Retreat`, `CatchChicken`, `Absent`. Elle avance par pas de 0,05 s et range ses `FrontierEvent` dans un `EventLog`.
   - `FrontierState` porte l'état, et `Balance` toutes les constantes. Le village est `Built` (le bâtiment de chaque emplacement, ou rien) et `Levels` (le niveau de chaque emplacement).
-  - `Battle`, `Economy`, `Shop`, `Convoys`, `GoldenChicken`, `RetreatRules`, `Intendant`, `Achievements` et `Absence` portent chacun une règle.
-  - Les catalogues sont `Plots`, `Buildings`, `Fighters`, `Skills` et `Biomes`. Les achats sont `FighterPurchase`, `Construction` et `PlotPurchase`.
-  - `SaveCodec` et `FrontierSave` gèrent la sauvegarde locale versionnée (format 2) en snake_case.
+  - `Battle`, `Economy`, `Shop`, `Convoys`, `GoldenChicken`, `RetreatRules`, `Intendant`, `Achievements` et `Absence` portent chacun une règle. `Skirmish` fait frapper les monstres (cibles, chutes, retours, soins), `Vitality` calcule les PV, et `Front` fait avancer ou reculer le front.
+  - Les catalogues sont `Plots`, `Buildings`, `Fighters`, `Roles`, `Skills` et `Biomes`. Les achats sont `FighterPurchase`, `ArmorPurchase`, `Construction` et `PlotPurchase`. `HeroLook` porte l'apparence et la règle du nom, et `FrontierGame.Embody` applique un héros.
+  - `SaveCodec` et `FrontierSave` gèrent la sauvegarde locale versionnée (format 3) en snake_case.
 - **`src/Scene/`** : la barre peinte, en C# pur.
   - `ArtRaster` est le tampon RGBA. Il gère le décalage des rangées du ciel, le découpage pour l'animation de construction, la teinte et la composition.
   - `ArtSprite` lit des grilles de caractères (`Palette.Symbols`, palette Endesga 32). `ArtFont` est la police 3×5.
   - `FrontierLayout` découpe les zones. `FrontierScene` porte l'état visuel (`SceneFx`, `SceneMotion`, `VillageLife`, `Crier`, `BannerQueue`) et réagit aux événements (`SceneReactions`, `CombatReactions`, `SkillReactions`).
   - `ScenePainter` compose les peintres : ciel, sol, bâtiments, paysage, village, front, brouillard, lumières, effets, surimpressions, compétences, météo.
   - `LaneHits` et `LaneHints` disent ce qu'il y a sous la souris. `BossButton` dessine et situe le bouton « BOSS ».
+  - `HeroGrids` dessine un corps par rôle, trois coupes et le chapeau du mage, avec des symboles remplacés par l'apparence (`S` peau, `H` cheveux, `O` et `Q` tenue). `HeroSprites` compose et garde chaque figure (debout, furie, coup reçu, à terre). `TeamPainter` peint l'équipe et ses barres de vie, `TeamReactions` les coups reçus, chutes, retours et soins.
 - **`src/Ui/`** : la coquille Godot.
   - `FrontierLane` (et `FrontierLaneInput`) affiche la scène à travers le shader `SharpPixels` et gère la souris.
   - `OfferRow` est une ligne d'achat : bouton, « ×10 », « Max ×N », ou liste des bâtiments pour un emplacement libre.
   - `GameBridge` relie la partie, la session et les fenêtres.
-  - `GameDialogs` ouvre `LoginWindow`, `StartWindow` et `FrontierWindow`, avec ses onglets Combattants, Village, Repli, Succès, Journal et FAQ.
+  - `GameDialogs` ouvre `LoginWindow`, `StartWindow` (création du héros, `HeroForm`) et `FrontierWindow`, avec ses onglets Combattants, Héros (`HeroPanel`), Village, Repli, Succès, Journal et FAQ. Un joueur sans héros se le voit demander une fois par chargement.
   - `StatusBuilder` décrit la barre, et `FrontierJournal` traduit les événements en lignes de journal.
-- **`src/Online/`** : `FrontierSession` (et `FrontierSessionSave`), `FrontierApi`, `FrontierData` (la partie lue dans les tables), `SaveArguments` (les paramètres typés de `save_frontier`), `FrontierLoader`, `LocalCopy`, `SessionAccess` (garde-fou de version).
+- **`src/Online/`** : `FrontierSession` (et `FrontierSessionSave`, `FrontierSessionHero`), `FrontierApi`, `FrontierData` (la partie lue dans les tables), `SaveArguments` (les paramètres typés de `save_frontier`), `FrontierLoader`, `LocalCopy`, `SessionAccess` (garde-fou de version).
   - `RealtimeClient` et ses messages sont gardés pour le social v2.
 - **`src/Cloud/`** : comptes, session chiffrée, appels RPC, flux des versions.
 - **`src/Desktop/`** : l'ancrage dans Windows (`AppBar`) et au-dessus du Dock sur macOS (`FloatingDock`), à l'échelle donnée par `ScreenFit`. Ne pas casser.

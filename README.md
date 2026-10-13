@@ -1,7 +1,7 @@
 # IdleBar
 
 La Frontière : un petit jeu idle en pixel art qui vit dans une barre en bas de ton écran. Pendant que tu fais autre chose :
-- ton héros, ton archère et ta mage repoussent les monstres, et un boss t'attend tous les 10 niveaux ;
+- ton héros, à ton image et dans le rôle de ton choix (guerrier, tank, archer, mage ou soutien), repousse les monstres avec l'archère et la mage ; ils encaissent des coups, tombent et se relèvent, et un boss t'attend tous les 10 niveaux ;
 - chaque boss vaincu fait reculer le brouillard et libère un terrain pour ton village ;
 - tu choisis quoi bâtir sur chaque terrain : la ferme, le moulin, la boulangerie, la forge… Chaque terrain produit de l'or, même quand le jeu est fermé, et chaque bâtiment y apporte son effet ;
 - tu te replies quand tu veux repartir plus fort, et la frontière avance de contrée en contrée.
@@ -32,9 +32,9 @@ xattr -dr com.apple.quarantine /Applications/IdleBar.app
 
 ### Premiers pas
 
-1. Clique sur « Bienvenue ! » à gauche de la barre pour créer ton compte, puis sur « Prendre la route ».
+1. Clique sur « Bienvenue ! » à gauche de la barre pour créer ton compte, puis crée ton héros (nom, apparence, rôle) et clique sur « Prendre la route ».
 2. Le héros se bat tout seul. Clique sur le monstre si tu veux l'aider, et sur la poule dorée quand elle passe. Si un boss te résiste, entraîne-toi un peu, puis clique sur « BOSS » dans le brouillard pour le défier de nouveau.
-3. Clique sur ton or, sur un combattant ou sur un bâtiment pour ouvrir la gestion : combattants, village, repli, succès, journal et FAQ.
+3. Clique sur ton or, sur un combattant ou sur un bâtiment pour ouvrir la gestion : combattants, héros, village, repli, succès, journal et FAQ.
 4. Survole n'importe quoi dans la barre pour savoir ce que c'est.
 
 Toutes les questions fréquentes sont dans le jeu : onglet FAQ de la gestion, ou bouton « Questions fréquentes » des réglages (l'engrenage).
