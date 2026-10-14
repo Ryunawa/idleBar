@@ -54,7 +54,7 @@ public sealed record Routed(int Stage, bool Boss) : FrontierEvent;
 
 public sealed record ActiveUsed(FighterKind Kind, HeroRole Role, int Raised = 0) : FrontierEvent;
 
-public sealed record Armored(int Level) : FrontierEvent;
+public sealed record Mended(FighterKind Kind, long Ally = 0) : FrontierEvent;
 
 public sealed record AllyArrived(long Id, string Name, HeroRole Role) : FrontierEvent;
 

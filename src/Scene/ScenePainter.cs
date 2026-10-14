@@ -30,8 +30,11 @@ public sealed class ScenePainter
         VillagePainter.Paint(_layer, state, layout, scene);
         FrontPainter.Paint(_layer, state, layout, scene);
         PicoFilter.Apply(_layer);
-        PicoFilter.Shade(_layer, sky.NightTint, SkyTones.NightRamp);
-        PicoFilter.Shade(_layer, sky.DuskTint, SkyTones.DuskRamp);
+        if (light.Daylight < SkyTones.NightLine)
+        {
+            PicoFilter.Shade(_layer, SkyTones.NightRamp);
+        }
+
         int shake = scene.Motion.Shake > 0 ? ((int)(scene.Time * 40) % 2 == 0 ? 1 : -1) : 0;
         _frame.Over(_layer, shake);
 

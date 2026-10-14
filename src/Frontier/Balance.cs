@@ -19,10 +19,9 @@ public static class Balance
     public const double BossRetrySeconds = 1.5;
     public const double ChargeShare = 0.9;
 
-    public const double ArmorCostGrowth = 1.11;
     public const double XpGrowth = 1.35;
     public const double OldLevelsPerLevel = 2.876;
-    public const double BuildingCostGrowth = 1.17;
+    public const double BuildingCostGrowth = 1.25;
     public const double TierFactor = 2;
     public const double MilestoneFactor = 3.2;
     public const int MilestoneLevels = 10;
@@ -105,10 +104,13 @@ public static class Balance
     public const double BlastCooldown = 10;
     public const double RaiseCooldown = 20;
     public const double PrayerHeal = 0.3;
+    public const double ClericTouch = 0.03;
     public const double ActiveStagger = 3;
     public const double SynergyBonus = 0.1;
     public const double ArmorBonus = 0.1;
-    public const double ArmorCost = 400;
+    public const double FrontToughness = 0.25;
+    public const double LateToughness = 0.12;
+    public const int ToughStages = 70;
     public const double BarracksHpBonus = 0.02;
 
     public const double XpRatio = 0.012;

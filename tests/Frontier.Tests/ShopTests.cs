@@ -54,7 +54,7 @@ public sealed class ShopTests
     {
         FrontierState state = new() { Gold = 1 };
         FrontierGame game = new(state, new Random(1));
-        Assert.False(game.Buy(new ArmorPurchase()));
+        Assert.False(game.Buy(new Construction(0, BuildingKind.Forge)));
         Assert.Equal(1, state.Gold);
     }
 
@@ -109,17 +109,18 @@ public sealed class ShopTests
     public void TenLevelsCostTheSumOfEachLevel()
     {
         FrontierState state = new() { Gold = 1e12 };
+        Village.Build(state, BuildingKind.Forge, 1, 0);
         FrontierGame game = new(state, new Random(1));
-        ArmorPurchase armor = new();
-        double expected = Shop.CostOf(state, armor, 10);
-        game.BuyMany(armor, 10);
+        PlotPurchase raise = new(0);
+        double expected = Shop.CostOf(state, raise, 10);
+        game.BuyMany(raise, 10);
         Assert.Equal(1e12 - expected, state.Gold, 3);
     }
 
     [Fact]
     public void MaxCountIsZeroWhenNothingCanBeBought()
     {
-        Assert.Equal(0, Shop.MaxCount(new FrontierState { Gold = 1 }, new ArmorPurchase()));
+        Assert.Equal(0, Shop.MaxCount(new FrontierState { Gold = 1 }, new Construction(0, BuildingKind.Forge)));
         Assert.Equal(0, Shop.MaxCount(new FrontierState { Gold = 1e30 }, new PlotPurchase(0)));
         Assert.Equal(0, Shop.MaxCount(new FrontierState { Gold = 1e30 }, new Construction(6, BuildingKind.Portal)));
     }

@@ -2,8 +2,11 @@ using System.Collections.Generic;
 
 namespace IdleBar.Scene;
 
-public sealed record SkyTones(IReadOnlyList<Rgba> Bands, Rgba FogLight, Rgba FogDark, float NightTint, float DuskTint, float Stars, bool Lit)
+public sealed record SkyTones(IReadOnlyList<Rgba> Bands, Rgba FogLight, Rgba FogDark, float Stars, bool Lit)
 {
+    public const float NightLine = 0.45f;
+    private const float DuskLine = 0.5f;
+
     public static readonly int[] NightRamp = [0, 0, 1, 1, 5, 1, 13, 6, 2, 4, 9, 3, 1, 1, 2, 5];
     public static readonly int[] DuskRamp = [0, 1, 2, 3, 2, 2, 13, 15, 8, 8, 9, 3, 13, 2, 8, 9];
 
@@ -25,9 +28,12 @@ public sealed record SkyTones(IReadOnlyList<Rgba> Bands, Rgba FogLight, Rgba Fog
         Rgba fogLight = Rgba.Hex("5a6589").Mix(Rgba.Hex("e9eef6"), light.Daylight);
         Rgba fogDark = Rgba.Hex("454d6b").Mix(Rgba.Hex("cfd8e6"), light.Daylight);
         float stars = wet ? 0 : (0.5f - light.Daylight) * 2;
-        return new SkyTones(bands, fogLight, fogDark, (1 - light.Daylight) * 1.15f - 0.15f, light.Warmth * 0.5f, stars, light.Night || light.Warmth > 0.5f);
+        return new SkyTones(bands, fogLight, fogDark, stars, light.Night || light.Warmth > DuskLine);
     }
 
     public Rgba Hill(Rgba day, SceneLight light) =>
-        light.Daylight < 0.45f ? PicoFilter.Ramp(day, NightRamp) : light.Warmth > 0.5f ? PicoFilter.Ramp(day, DuskRamp) : day;
+        Tone(light) is IReadOnlyList<int> ramp ? PicoFilter.Ramp(day, ramp) : day;
+
+    private static IReadOnlyList<int>? Tone(SceneLight light) =>
+        light.Daylight < NightLine ? NightRamp : light.Warmth > DuskLine ? DuskRamp : null;
 }

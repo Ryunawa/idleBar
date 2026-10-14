@@ -47,6 +47,25 @@ public static class Skirmish
         Mend(state, member => amount / Team.MaxHp(state, member));
     }
 
+    public static void Touch(FrontierState state, double healerHp, double healing, EventLog events)
+    {
+        Combatant? weakest = null;
+        foreach (Combatant member in Team.Members(state))
+        {
+            if (Team.Up(state, member) && Team.Health(state, member) < 1 && (weakest is not Combatant other || Team.Health(state, member) < Team.Health(state, other)))
+            {
+                weakest = member;
+            }
+        }
+
+        if (weakest is Combatant target)
+        {
+            double amount = Balance.ClericTouch * healerHp * (1 + healing);
+            Team.SetHealth(state, target, Math.Min(1, Team.Health(state, target) + amount / Team.MaxHp(state, target)));
+            events.Add(new Mended(target.Kind, target.AllyId));
+        }
+    }
+
     public static void Restore(FrontierState state)
     {
         Array.Fill(state.Health, 1);

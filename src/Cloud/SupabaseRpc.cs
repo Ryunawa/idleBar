@@ -51,7 +51,7 @@ public sealed class SupabaseRpc
             { Code: RaisedExceptionCode, Message: not null } => new ActionRefusedException(error.Message),
             { Code: DeadlockCode or SerializationCode } => new ActionRefusedException(BusyMessage),
             { Code: UnknownFunctionCode } => new CloudRequestException(
-                $"La fonction {function} n'existe pas sur Supabase : exécute les scripts du dossier supabase.", status),
+                $"la fonction {function} n'existe pas.", status),
             _ => new CloudRequestException($"{function} : HTTP {status} {error?.Message ?? body}", status),
         };
     }

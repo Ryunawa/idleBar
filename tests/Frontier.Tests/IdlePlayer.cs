@@ -168,7 +168,7 @@ public sealed class IdlePlayer
         if (_milestones.TryAdd(milestone, Clock))
         {
             FrontierState state = Game.State;
-            _notes.Add($"{milestone}: fighters {string.Join('/', state.Fighters)} armor {state.Armor} gear {Shopper.Gear.Count} hero+{state.Gears[0].Damage:0.00} routs {_counts.GetValueOrDefault(nameof(Routed))} falls {_counts.Where(pair => pair.Key.StartsWith("tombe")).Sum(pair => pair.Value)} buildings {string.Join('/', state.Built.Select(kind => kind?.ToString() ?? "-"))} levels {string.Join('/', state.Levels)} gps {Economy.BaseGoldPerSecond(state):0} dps {Economy.TotalDps(state):0} souls {state.Souls} lifetime {state.LifetimeGold:0.00e0} stage {state.MaxStage}");
+            _notes.Add($"{milestone}: fighters {string.Join('/', state.Fighters)} gear {Shopper.Gear.Count} hero+{state.Gears[0].Damage:0.00} routs {_counts.GetValueOrDefault(nameof(Routed))} falls {_counts.Where(pair => pair.Key.StartsWith("tombe")).Sum(pair => pair.Value)} buildings {string.Join('/', state.Built.Select(kind => kind?.ToString() ?? "-"))} levels {string.Join('/', state.Levels)} gps {Economy.BaseGoldPerSecond(state):0} dps {Economy.TotalDps(state):0} souls {state.Souls} lifetime {state.LifetimeGold:0.00e0} stage {state.MaxStage}");
         }
     }
 }

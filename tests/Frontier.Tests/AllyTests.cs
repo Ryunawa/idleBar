@@ -55,6 +55,7 @@ public sealed class AllyTests
     public void AFallenSupportHeroWaitsFortyFiveSeconds()
     {
         FrontierState state = new() { Role = HeroRole.Support, Stage = 25, MaxStage = 25 };
+        state.Health[(int)FighterKind.Hero] = 0.01;
         FrontierGame game = new(state, new Random(1));
         BattleTests.Run(game, 30);
         Fell fell = game.Events.Drain().OfType<Fell>().First();

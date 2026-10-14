@@ -17,7 +17,6 @@ public static class Shop
     public static double Cost(FrontierState state, Purchase purchase) => purchase switch
     {
         Recruitment => 0,
-        ArmorPurchase => Economy.ArmorCost(state),
         Construction build => Economy.PlotCost(state, build.Plot),
         PlotPurchase raise => Economy.PlotCost(state, raise.Plot),
         _ => double.PositiveInfinity,
@@ -28,7 +27,7 @@ public static class Shop
 
     public static double CostOf(FrontierState state, Purchase purchase, int count)
     {
-        double growth = Growth(purchase);
+        double growth = Balance.BuildingCostGrowth;
         return Cost(state, purchase) * (Math.Pow(growth, count) - 1) / (growth - 1);
     }
 
@@ -39,7 +38,7 @@ public static class Shop
             return Affordable(state, purchase) ? 1 : 0;
         }
 
-        double growth = Growth(purchase);
+        double growth = Balance.BuildingCostGrowth;
         double levels = Math.Log(1 + state.Gold * (growth - 1) / Cost(state, purchase)) / Math.Log(growth);
         int count = (int)Math.Min(MaxBatch, Math.Floor(levels));
         while (count > 1 && CostOf(state, purchase, count) > state.Gold)
@@ -71,10 +70,6 @@ public static class Shop
                 state.Xp[(int)recruit.Kind] = 0;
                 events.Add(new Trained(recruit.Kind, 1));
                 break;
-            case ArmorPurchase:
-                state.Armor++;
-                events.Add(new Armored(state.Armor));
-                break;
             case Construction build:
                 state.Built[build.Plot] = build.Kind;
                 Raise(state, build.Plot, events);
@@ -86,9 +81,6 @@ public static class Shop
 
         return true;
     }
-
-    private static double Growth(Purchase purchase) =>
-        purchase is ArmorPurchase ? Balance.ArmorCostGrowth : Balance.BuildingCostGrowth;
 
     private static void Raise(FrontierState state, int plot, EventLog events)
     {

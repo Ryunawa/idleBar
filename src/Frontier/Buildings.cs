@@ -17,7 +17,7 @@ public static class Buildings
         new(BuildingKind.Barracks, "barracks", "Caserne", "+2 % de dégâts du premier compagnon et de PV des compagnons par niveau."),
         new(BuildingKind.Chapel, "chapel", "Chapelle", "Les compétences se rechargent 2 % plus vite par niveau, jusqu'à 3 fois plus vite."),
         new(BuildingKind.Tavern, "tavern", "Taverne", "Les villageois t'encouragent : tes clics frappent 3 % plus fort par niveau."),
-        new(BuildingKind.Workshop, "workshop", "Atelier", "L'équipement et l'armure coûtent 0,5 % moins cher par niveau, jusqu'à moitié prix."),
+        new(BuildingKind.Workshop, "workshop", "Atelier", "L'équipement coûte 0,5 % moins cher par niveau, jusqu'à moitié prix."),
         new(BuildingKind.Belfry, "belfry", "Beffroi", "+0,5 s au chrono des boss par niveau, jusqu'à +30 s."),
     ];
 

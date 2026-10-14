@@ -8,6 +8,7 @@ public static class TeamReactions
     private static readonly Rgba[] Blood = [Palette.Red, Palette.Wine];
     private static readonly Rgba[] Dust = [Palette.Sand, Palette.Gray, Palette.Wood];
     private static readonly Rgba[] Glitter = [Palette.Yellow, Palette.White, Palette.Cyan];
+    private static readonly Rgba[] Mend = [Palette.Green, Palette.White];
 
     public static void Apply(FrontierScene scene, FrontierEvent frontierEvent, FrontierState state, FrontierLayout layout, MonsterBox target, Random random)
     {
@@ -23,6 +24,9 @@ public static class TeamReactions
             case Fell fell:
                 fx.Burst(Center(state, layout, fell.Kind, fell.Ally, motion), 21, 8, Dust, random);
                 break;
+            case Mended mended:
+                fx.Burst(Center(state, layout, mended.Kind, mended.Ally, motion), 15, 2, Mend, random);
+                break;
             case Revived revived:
                 fx.Burst(Center(state, layout, revived.Kind, revived.Ally, motion), 16, 8, Glitter, random);
                 break;
@@ -33,9 +37,6 @@ public static class TeamReactions
                 break;
             case ActiveUsed used:
                 fx.Float(Shout(used), Center(state, layout, used.Kind, 0, motion), 4, used.Role == HeroRole.Tank ? Palette.Cyan : Palette.Gold, 0.9f);
-                break;
-            case Armored:
-                fx.Float("+1", layout.HeroX + 4, 7, Palette.Yellow, 0.7f);
                 break;
             case AllyArrived arrived:
                 scene.Banners.Add(["RENFORT DE TA GUILDE", $"{arrived.Name} ({Roles.Of(arrived.Role).Name})"]);

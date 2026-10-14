@@ -15,11 +15,22 @@ public static class Blows
         }
 
         Battle.Damage(state, amount * (critical ? Balance.CriticalFactor : 1), Source(kind), events, critical);
+        if (state.ClassOf(kind) == HeroRole.Support)
+        {
+            Skirmish.Touch(state, Vitality.MaxHp(state, kind), state.Gears[index].Healing, events);
+        }
+
         Experience.Gain(state, kind, Balance.XpSmall, monster.Stage, events);
     }
 
-    public static void Assist(FrontierState state, Ally ally, double amount, EventLog events) =>
+    public static void Assist(FrontierState state, Ally ally, double amount, EventLog events)
+    {
         Battle.Damage(state, amount, HitSource.Ally, events, ally: ally.Id);
+        if (ally.Role == HeroRole.Support)
+        {
+            Skirmish.Touch(state, Vitality.AllyMaxHp(state, ally), 0, events);
+        }
+    }
 
     public static HitSource Source(FighterKind kind) => kind switch
     {

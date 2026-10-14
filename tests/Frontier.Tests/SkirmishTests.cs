@@ -105,13 +105,21 @@ public sealed class SkirmishTests
     }
 
     [Fact]
+    public void MonstersHitLessAsTheFrontGoesDeeper()
+    {
+        Assert.Equal(1 + Balance.FrontToughness * Balance.ToughStages, Vitality.Toughness(Balance.ToughStages), 6);
+        Assert.Equal(1 + Balance.FrontToughness * Balance.ToughStages + Balance.LateToughness * 30, Vitality.Toughness(Balance.ToughStages + 30), 6);
+        Assert.True(Vitality.Toughness(10) < 1 + Balance.FrontToughness * 10);
+        Assert.Equal(1, Vitality.MonsterHit(80, false) * Vitality.Toughness(80) / (Economy.MonsterHp(80) * Balance.MonsterHit), 6);
+    }
+
+    [Fact]
     public void ArmorRaisesEveryonesHealth()
     {
         FrontierState state = Team(HeroRole.Warrior);
         double before = Vitality.MaxHp(state, FighterKind.Second);
         state.Armor = 10;
         Assert.Equal(2, Vitality.MaxHp(state, FighterKind.Second) / before, 6);
-        Assert.True(new FrontierGame(new FrontierState { Gold = 1_000 }, new Random(1)).Buy(new ArmorPurchase()));
     }
 
     [Fact]

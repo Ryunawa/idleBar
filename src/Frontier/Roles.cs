@@ -20,7 +20,7 @@ public static class Roles
             $"Lance ses sorts de loin. Passif : l'équipe inflige {Percent(Balance.MageBossBonus)} de dégâts en plus aux boss. Actif, toutes les {Balance.BlastCooldown:0} s : un sort à {Percent(Balance.BlastFactor)}.",
             "Gagne surtout son xp avec son grand sort ; ses autres sorts en rapportent un peu."),
         new(HeroRole.Support, "support", "Clerc", 0.5, 0.9, 0.8, false, Balance.RaiseCooldown,
-            $"Peu de dégâts. Passif : l'équipe inflige {Percent(Balance.SupportBlessing)} de dégâts en plus. Actif, toutes les {Balance.RaiseCooldown:0} s : ressuscite les alliés tombés et rend à chacun {Percent(Balance.PrayerHeal)} de ses propres PV : plus il monte de niveau, plus il soigne.",
+            $"Peu de dégâts, mais chacun de ses coups soigne le plus blessé de l'équipe, lui compris, de {Percent(Balance.ClericTouch)} de ses propres PV. Passif : l'équipe inflige {Percent(Balance.SupportBlessing)} de dégâts en plus. Actif, toutes les {Balance.RaiseCooldown:0} s : ressuscite les alliés tombés et rend à chacun {Percent(Balance.PrayerHeal)} de ses propres PV : plus il monte de niveau, plus il soigne.",
             "Gagne surtout son xp en ressuscitant ses alliés ; ses coups en rapportent un peu."),
     ];
 

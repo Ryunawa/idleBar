@@ -120,13 +120,13 @@ public sealed class SideSystemsTests
     {
         FrontierState state = new() { Gold = 1e9, Stage = 60, MaxStage = 60, BestStage = 60, BossHeld = false };
         FrontierGame game = new(state, new Random(1)) { Frozen = true };
-        Assert.False(game.Buy(new ArmorPurchase()));
+        Assert.False(game.Buy(new Construction(0, BuildingKind.Forge)));
         Assert.Equal(0, game.BuyMany(new Construction(0, BuildingKind.Forge), 3));
         Assert.False(game.UseSkill(SkillKind.GoldRain));
         Assert.Equal(0, game.Retreat());
         Assert.Equal(1e9, state.Gold);
         game.Frozen = false;
-        Assert.True(game.Buy(new ArmorPurchase()));
+        Assert.True(game.Buy(new Construction(0, BuildingKind.Forge)));
     }
 
     [Fact]

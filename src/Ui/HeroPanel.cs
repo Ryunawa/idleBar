@@ -57,7 +57,7 @@ public partial class HeroPanel : VBoxContainer
         string health = Vitality.Up(state, FighterKind.Hero)
             ? $"{NumberFormat.Amount(Vitality.Hp(state, FighterKind.Hero))} / {NumberFormat.Amount(max)} PV"
             : $"à terre, de retour dans {Math.Ceiling(state.Downed[(int)FighterKind.Hero])} s";
-        _stats.Text = $"Niveau {state.Level(FighterKind.Hero)} · {health} · {NumberFormat.Rate(Economy.Dps(state, FighterKind.Hero))} dégâts/s · armure niv {state.Armor}";
+        _stats.Text = $"Niveau {state.Level(FighterKind.Hero)} · {health} · {NumberFormat.Rate(Economy.Dps(state, FighterKind.Hero))} dégâts/s";
     }
 
     public void SetBusy(bool busy) => _save.Disabled = busy;

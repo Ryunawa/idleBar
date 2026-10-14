@@ -34,8 +34,8 @@ public sealed class Shopper
 
     public static (HeroRole First, HeroRole Second) Complement(HeroRole hero) => hero switch
     {
-        HeroRole.Archer => (HeroRole.Tank, HeroRole.Mage),
-        HeroRole.Mage => (HeroRole.Warrior, HeroRole.Archer),
+        HeroRole.Archer => (HeroRole.Support, HeroRole.Warrior),
+        HeroRole.Mage => (HeroRole.Support, HeroRole.Archer),
         _ => (HeroRole.Mage, HeroRole.Archer),
     };
 
@@ -95,9 +95,6 @@ public sealed class Shopper
             yield return (price, Worth(state, wearer, Gear.Offers[index].Slot, Gear.OfferGain(wearer, index)) / price, () => Gear.Buy(_game, wearer, index));
         }
 
-        double armor = Economy.ArmorCost(state);
-        double armorGain = Vitality.ArmorFactor(state.Armor + 1) / Vitality.ArmorFactor(state.Armor) - 1;
-        yield return (armor, FighterWeight * ArmorWeight * CombatRate(state) * Economy.TotalDps(state) * armorGain / armor, () => _game.Buy(new ArmorPurchase()));
         for (int plot = 0; plot < FrontierState.PlotCount; plot++)
         {
             int index = plot;

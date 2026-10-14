@@ -46,14 +46,8 @@ public static class PicoFilter
         }
     }
 
-    public static void Shade(ArtRaster raster, float strength, IReadOnlyList<int> ramp)
+    public static void Shade(ArtRaster raster, IReadOnlyList<int> ramp)
     {
-        int threshold = (int)MathF.Round(Math.Clamp(strength, 0, 1) * Levels);
-        if (threshold <= 0)
-        {
-            return;
-        }
-
         byte[] data = raster.Data;
         int lastKey = -1;
         Rgba lastColor = default;
@@ -62,7 +56,7 @@ public static class PicoFilter
             for (int x = 0; x < raster.Width; x++)
             {
                 int index = (y * raster.Width + x) * 4;
-                if (data[index + 3] == 0 || Bayer[(y & 3) * 4 + (x & 3)] >= threshold)
+                if (data[index + 3] == 0)
                 {
                     continue;
                 }

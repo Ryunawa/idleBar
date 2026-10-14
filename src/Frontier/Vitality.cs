@@ -23,7 +23,11 @@ public static class Vitality
     public static double StrikeSeconds(bool boss) => boss ? Balance.BossStrikeSeconds : Balance.MonsterStrikeSeconds;
 
     public static double MonsterHit(int stage, bool boss) =>
-        Economy.MonsterHp(stage) * (boss ? Balance.BossHit : Balance.MonsterHit) * Math.Clamp(stage / Balance.HitRampStages, Balance.HitRampFloor, 1);
+        Economy.MonsterHp(stage) * (boss ? Balance.BossHit : Balance.MonsterHit) * Math.Clamp(stage / Balance.HitRampStages, Balance.HitRampFloor, 1) / Toughness(stage);
+
+    public static double Toughness(int stage) =>
+        1 + Balance.FrontToughness * Math.Min(stage, Balance.ToughStages) * Math.Clamp(stage / Balance.HitRampStages, 0, 1)
+        + Balance.LateToughness * Math.Max(0, stage - Balance.ToughStages);
 
     public static double ReviveSeconds(FrontierState state, FighterKind kind) =>
         Fighters.Of(kind).Revive;

@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using IdleBar.Frontier;
 using Xunit;
@@ -67,6 +68,51 @@ public sealed class TalentTests
         Skirmish.Update(state, monster, 0.02, events);
         Assert.Equal(Balance.MonsterStrikeSeconds / (1 - Balance.WarriorIntimidation) - 0.01, monster.StrikeIn, 6);
         Assert.Single(events.Drain().OfType<Struck>());
+    }
+
+    [Fact]
+    public void TheClericsBlowsHealTheMostWoundedAlly()
+    {
+        FrontierState state = new() { Role = HeroRole.Support, Fighters = [10, 10, 10] };
+        state.Health[(int)FighterKind.First] = 0.3;
+        state.Health[(int)FighterKind.Second] = 0.6;
+        Monster monster = new(1, 0, false, 5, 1e15, 0);
+        state.Monster = monster;
+        EventLog events = new();
+        Blows.Swing(state, FighterKind.Hero, monster, 1, events);
+        double healed = Balance.ClericTouch * Vitality.MaxHp(state, FighterKind.Hero) / Vitality.MaxHp(state, FighterKind.First);
+        Assert.Equal(Math.Min(1, 0.3 + healed), state.Health[(int)FighterKind.First], 6);
+        Assert.Equal(0.6, state.Health[(int)FighterKind.Second], 6);
+        Assert.Contains(events.Drain(), frontierEvent => frontierEvent is Mended { Kind: FighterKind.First });
+    }
+
+    [Fact]
+    public void TheClericsTouchSkipsTheFallenAndTheUnhurt()
+    {
+        FrontierState state = new() { Role = HeroRole.Support, Fighters = [10, 10, 10] };
+        state.Downed[(int)FighterKind.First] = 20;
+        state.Health[(int)FighterKind.First] = 0;
+        Monster monster = new(1, 0, false, 5, 1e15, 0);
+        state.Monster = monster;
+        EventLog events = new();
+        Blows.Swing(state, FighterKind.Hero, monster, 1, events);
+        Assert.Equal(0, state.Health[(int)FighterKind.First]);
+        Assert.DoesNotContain(events.Drain(), frontierEvent => frontierEvent is Mended);
+    }
+
+    [Fact]
+    public void AClericReinforcementHealsWithHisBlows()
+    {
+        FrontierState state = Hero(HeroRole.Warrior);
+        state.Health[0] = 0.5;
+        Ally cleric = new(7, new HeroLook("Brune", 1, 1, 1, 1), HeroRole.Support, 1, 1800);
+        state.Allies.Add(cleric);
+        state.Monster = new Monster(1, 0, false, 5, 1e15, 0);
+        EventLog events = new();
+        Blows.Assist(state, cleric, 1, events);
+        double healed = Balance.ClericTouch * Vitality.AllyMaxHp(state, cleric) / Vitality.MaxHp(state, FighterKind.Hero);
+        Assert.Equal(Math.Min(1, 0.5 + healed), state.Health[0], 6);
+        Assert.Contains(events.Drain(), frontierEvent => frontierEvent is Mended { Kind: FighterKind.Hero, Ally: 0 });
     }
 
     private static FrontierState Hero(HeroRole role) => new() { Role = role, Fighters = [10, 0, 0] };
