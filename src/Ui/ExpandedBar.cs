@@ -74,10 +74,10 @@ public partial class ExpandedBar : MarginContainer
         row.AddChild(Lane);
 
         _update = new BarSlot();
-        _update.Button.Visible = false;
-        _update.Button.SizeFlagsVertical = SizeFlags.ShrinkCenter;
+        _update.Root.Visible = false;
+        _update.Root.SizeFlagsVertical = SizeFlags.ShrinkCenter;
         ClickBinding.OnLeftPress(_update.Button, () => UpdateRequested?.Invoke());
-        row.AddChild(_update.Button);
+        row.AddChild(_update.Root);
 
         row.AddChild(WindowButtons.CreateSettings(() => SettingsRequested?.Invoke()));
 
@@ -112,7 +112,7 @@ public partial class ExpandedBar : MarginContainer
             $"version {version}",
             BarPalette.Gold,
             $"La version {version} d'IdleBar est disponible. {action} Ta partie est gardée sur le serveur."));
-        _update.Button.Visible = true;
+        _update.Root.Visible = true;
     }
 
     public void ShowUpdateStep(string version, string step)
