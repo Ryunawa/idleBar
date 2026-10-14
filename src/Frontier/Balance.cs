@@ -120,6 +120,7 @@ public static class Balance
     public const double XpTaken = 1;
     public const double XpBossTaken = 3;
     public const double XpRevive = 10;
+    public const double FallXp = 0.1;
 
     public const double ShopKills = 30;
     public const double UpgradeShare = 0.5;

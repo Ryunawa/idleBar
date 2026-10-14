@@ -34,4 +34,12 @@ public static class Experience
             events.Add(new LeveledUp(kind, state.Level(kind)));
         }
     }
+
+    public static double Lose(FrontierState state, FighterKind kind, double share)
+    {
+        int index = (int)kind;
+        double lost = Math.Clamp(share * ToNext(state, kind), 0, Math.Max(0, state.Xp[index]));
+        state.Xp[index] -= lost;
+        return lost / ToNext(state, kind);
+    }
 }

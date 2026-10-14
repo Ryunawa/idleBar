@@ -23,6 +23,11 @@ public static class TeamReactions
                 break;
             case Fell fell:
                 fx.Burst(Center(state, layout, fell.Kind, fell.Ally, motion), 21, 8, Dust, random);
+                if (fell.Lost > 0)
+                {
+                    fx.Float($"-{Math.Max(1, Math.Round(fell.Lost * 100)):0} % XP", Center(state, layout, fell.Kind, 0, motion), 10, Palette.Red, 1.2f, -2);
+                }
+
                 break;
             case Mended mended:
                 fx.Burst(Center(state, layout, mended.Kind, mended.Ally, motion), 15, 2, Mend, random);

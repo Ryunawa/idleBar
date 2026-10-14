@@ -64,6 +64,39 @@ public sealed class ExperienceTests
     }
 
     [Fact]
+    public void AFallCostsAShareOfTheNextLevelButNeverTheLevel()
+    {
+        FrontierState state = new() { Role = HeroRole.Warrior, Fighters = [10, 0, 0], Stage = 5, MaxStage = 5 };
+        double level = Experience.ToNext(state, FighterKind.Hero);
+        state.Xp[0] = level * 0.5;
+        Assert.Equal(Balance.FallXp, Fall(state).Lost, 6);
+        Assert.Equal(level * (0.5 - Balance.FallXp), state.Xp[0], 6);
+        state.Xp[0] = level * Balance.FallXp / 2;
+        Assert.Equal(Balance.FallXp / 2, Fall(state).Lost, 6);
+        Assert.Equal(0, state.Xp[0]);
+        Assert.Equal(0, Fall(state).Lost);
+        Assert.Equal(10, state.Level(FighterKind.Hero));
+    }
+
+    [Fact]
+    public void AFallenReinforcementCostsTheHeroNothing()
+    {
+        FrontierState state = new() { Role = HeroRole.Warrior, Fighters = [10, 0, 0], Stage = 5, MaxStage = 5 };
+        state.Xp[0] = Experience.ToNext(state, FighterKind.Hero) * 0.5;
+        state.Downed[0] = 20;
+        Ally ally = new(7, new HeroLook("Brune", 1, 1, 1, 1), HeroRole.Warrior, 1, 1800) { Health = 1e-9 };
+        state.Allies.Add(ally);
+        Monster monster = new(1, 0, false, state.Stage, 1e12, 0) { StrikeIn = 0.01 };
+        state.Monster = monster;
+        EventLog events = new();
+        Skirmish.Update(state, monster, 0.02, events);
+        Fell fell = events.Drain().OfType<Fell>().Single();
+        Assert.Equal(ally.Id, fell.Ally);
+        Assert.Equal(0, fell.Lost);
+        Assert.Equal(Experience.ToNext(state, FighterKind.Hero) * 0.5, state.Xp[0], 6);
+    }
+
+    [Fact]
     public void EnoughExperienceRaisesTheLevel()
     {
         FrontierState state = new();
@@ -97,6 +130,16 @@ public sealed class ExperienceTests
         Assert.Equal(common * 15, GearPrices.Offer(state, 31, 2), 3);
         Assert.Equal(common * 0.5 * (Math.Pow(1.25, 3) - 1) / 0.25, GearPrices.Upgrade(state, 0, 0, 3), 3);
         Assert.Equal(1.6, Items.Upgraded(1, 3), 6);
+    }
+
+    private static Fell Fall(FrontierState state)
+    {
+        state.Health[0] = 1e-9;
+        Monster monster = new(1, 0, false, state.Stage, 1e12, 0) { StrikeIn = 0.01 };
+        state.Monster = monster;
+        EventLog events = new();
+        Skirmish.Update(state, monster, 0.02, events);
+        return events.Drain().OfType<Fell>().Single(fell => fell.Kind == FighterKind.Hero && fell.Ally == 0);
     }
 
     private static FrontierState Steady(HeroRole role) =>

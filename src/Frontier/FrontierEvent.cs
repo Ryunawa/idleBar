@@ -46,7 +46,7 @@ public sealed record Returned(double Seconds, double Counted, double Gold) : Fro
 
 public sealed record Struck(FighterKind Target, double Damage, bool Boss, long Ally = 0) : FrontierEvent;
 
-public sealed record Fell(FighterKind Kind, double Seconds, long Ally = 0) : FrontierEvent;
+public sealed record Fell(FighterKind Kind, double Seconds, long Ally = 0, double Lost = 0) : FrontierEvent;
 
 public sealed record Revived(FighterKind Kind, long Ally = 0) : FrontierEvent;
 

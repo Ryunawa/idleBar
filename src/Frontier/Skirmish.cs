@@ -140,9 +140,10 @@ public static class Skirmish
             return;
         }
 
+        double lost = target.Ally is null ? Experience.Lose(state, target.Kind, Balance.FallXp) : 0;
         double seconds = Team.ReviveSeconds(state, target);
         Team.Down(state, target, seconds);
-        events.Add(new Fell(target.Kind, seconds, target.AllyId));
+        events.Add(new Fell(target.Kind, seconds, target.AllyId, lost));
         if (!Team.AnyUp(state))
         {
             Rout(state, monster, events);
