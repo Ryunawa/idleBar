@@ -57,31 +57,34 @@ public static class Balance
 
     public const double MillAbsenceSeconds = 600;
     public const double AbsenceMaxSeconds = 24 * 3600;
+    public const double AbsenceFrontShare = 0.2;
     public const double ForgeBonus = 0.03;
     public const double MarketBonus = 0.02;
     public const double TowerBonus = 0.02;
-    public const double PortalBonus = 0.01;
+    public const double PortalBonus = 0.005;
     public const double FarmChickenBonus = 0.01;
     public const double FarmChickenMax = 1;
+    public const double BakeryBonus = 0.01;
+    public const double BakeryMax = 1;
     public const double BarracksBonus = 0.02;
-    public const double ChapelBonus = 0.01;
-    public const double ChapelMax = 1;
+    public const double ChapelBonus = 0.02;
+    public const double ChapelMax = 2;
     public const double TavernBonus = 0.03;
     public const double WorkshopDiscount = 0.005;
     public const double WorkshopMax = 0.5;
-    public const double BelfrySeconds = 1;
+    public const double BelfrySeconds = 0.5;
     public const double BelfryMax = 30;
 
-    public const double MonsterHit = 0.2;
+    public const double MonsterHit = 0.3;
     public const double MonsterStrikeSeconds = 1.5;
-    public const double BossHit = 1.5;
+    public const double BossHit = 3;
     public const double BossStrikeSeconds = 2;
     public const double HitRampStages = 40;
     public const double HitRampFloor = 0.15;
     public const double FirstStrikeShare = 0.6;
     public const double MeleeWeight = 4;
     public const double RangedWeight = 1;
-    public const double KillHeal = 0.03;
+    public const double KillHeal = 0.01;
     public const double StunSeconds = 0.36;
     public const int StunEvery = 3;
     public const int SpellEvery = 4;
@@ -94,7 +97,8 @@ public static class Balance
     public const double HealSeconds = 3;
     public const double HealShare = 0.1;
     public const double TankGuard = 0.6;
-    public const double SupportRevive = 0.5;
+    public const double SupportRevive = 0.7;
+    public const double SupportBlessing = 0.3;
     public const double SynergyBonus = 0.1;
     public const double ArmorBonus = 0.1;
     public const double ArmorCost = 400;
@@ -117,8 +121,6 @@ public static class Balance
     public const double UpgradeGrowth = 1.25;
     public const double UpgradeBonus = 0.2;
     public const int MaxUpgrades = 100;
-
-    public const int ShopRarities = 3;
 
     public static readonly double[] RarityPrices = [1, 4, 15, 40];
 

@@ -34,6 +34,7 @@ public sealed class SocialDataTests
             "claimable": { "percent": 50, "hours": 4 },
             "ranking": [ { "rank": 1, "name": "Les Épées", "monsters": 1290, "mine": true } ]
           },
+          "shop": { "refresh_in": 3600.5, "offers": [ { "id": 5, "slot": "weapon", "rarity": "rare", "level": 40, "stat_a": "damage", "value_a": 11, "stat_b": "critical", "value_b": 3.1, "look": 2, "role": "archer", "price": 1234.5, "sold": true } ] },
           "items": {
             "max": 60,
             "bag": [
@@ -77,6 +78,12 @@ public sealed class SocialDataTests
         Assert.Equal(FighterKind.Second, items.Bag[3].Wearer);
         Assert.Equal(0.14, items.ToGear(FighterKind.Second).Health, 6);
         Assert.Equal("Cotte rare +2", items.Bag[3].Name);
+        OfferData offer = data.Shop!.Offers[0];
+        Assert.Equal(3600.5, data.Shop.RefreshIn);
+        Assert.True(offer.Sold);
+        Assert.Equal(1234.5, offer.Price);
+        Assert.Equal("Arc long rare", offer.ToItem().Name);
+        Assert.True(offer.ToItem().Bound);
     }
 
     [Fact]

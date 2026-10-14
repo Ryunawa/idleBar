@@ -78,7 +78,7 @@ public sealed class CompanionTests
         FrontierState state = new() { Fighters = [10, 10, 0] };
         Assert.Equal(45, Vitality.ReviveSeconds(state, FighterKind.Hero));
         state.Companions[0] = HeroRole.Support;
-        Assert.Equal(22.5, Vitality.ReviveSeconds(state, FighterKind.Hero));
+        Assert.Equal(45 * Balance.SupportRevive, Vitality.ReviveSeconds(state, FighterKind.Hero), 6);
     }
 
     [Fact]

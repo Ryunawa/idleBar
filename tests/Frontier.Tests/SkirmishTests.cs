@@ -51,10 +51,10 @@ public sealed class SkirmishTests
     }
 
     [Fact]
-    public void ASupportBringsTheFallenBackTwiceAsFast()
+    public void ASupportBringsTheFallenBackSooner()
     {
         FrontierState state = Team(HeroRole.Support);
-        Assert.Equal(15, Vitality.ReviveSeconds(state, FighterKind.First));
+        Assert.Equal(30 * Balance.SupportRevive, Vitality.ReviveSeconds(state, FighterKind.First), 6);
         state.Downed[(int)FighterKind.Hero] = 10;
         Assert.Equal(30, Vitality.ReviveSeconds(state, FighterKind.First));
     }

@@ -64,16 +64,16 @@ Un compagnon se recrute gratuitement quand le front l'a débloqué (`Recruitment
 |---|---|---|---|---|
 | Guerrier | ×1 | ×1 | 0,6 s | un coup sur trois étourdit le monstre 0,36 s, au plus la moitié de sa cadence entre deux coups |
 | Tank | ×0,5 | ×3 | 0,8 s | reçoit tous les coups tant qu'il est debout, et en amortit 40 % |
-| Archer | ×1 | ×0,55 | 0,5 s | à distance, un tir sur cinq est critique (×2,5) |
+| Archer | ×0,85 | ×0,55 | 0,5 s | à distance, un tir sur cinq est critique (×2,5) |
 | Mage | ×1 | ×0,5 | 0,8 s | à distance, trois petits sorts (×0,5) puis un gros (×2,5), ×1,5 contre les boss |
-| Soutien | ×0,5 | ×0,9 | 0,8 s | soigne l'équipe de 10 % toutes les 3 s, retours deux fois plus rapides |
+| Soutien | ×0,5 | ×0,9 | 0,8 s | bénit l'équipe (+30 % de dégâts tant qu'il est debout), la soigne de 10 % toutes les 3 s, retours 30 % plus rapides |
 
-- Synergie (0.8, voulue forte) : +10 % de dégâts par rôle différent sur le front (`Roles.OnFront`) : héros, compagnons et renforts. Sans guerrier, archer ni mage, l'équipe manque de dégâts ; sans soutien, elle s'use (une victoire ne rend plus que 3 % de PV) ; sans tank, elle tombe vite. `SynergyTests` vérifie qu'une équipe guerrier, soutien et tank devance chaque équipe d'une seule classe en 6 h, et que trois classes de dégâts tombent plus de trois fois plus souvent qu'elle (338 chutes contre 31).
+- Synergie (0.8, voulue forte) : +10 % de dégâts par rôle différent sur le front (`Roles.OnFront`) : héros, compagnons et renforts. Sans guerrier, archer ni mage, l'équipe manque de dégâts ; sans soutien, elle s'use (une victoire ne rend que 1 % de PV) ; sans tank, elle tombe vite. Le but est un vrai choix de stratégie : mesuré sur deux semaines avec un héros guerrier, le niveau 150 arrive en 67 h avec soutien et mage (43 000 âmes, 3 300 chutes), 67 h avec tank et mage (38 000 âmes, 3 300 chutes), 75 h avec tank et soutien (30 000 âmes, 360 chutes) et 76 h avec archer et mage (27 000 âmes, 5 400 chutes) ; les autres héros donnent 66 à 82 h. `SynergyTests` vérifie qu'une équipe guerrier, soutien et tank devance chaque équipe d'une seule classe en 6 h, et que trois classes de dégâts tombent plus de trois fois plus souvent qu'elle.
 
 **Coups des monstres (`Skirmish`, `Vitality`).**
-- Un monstre frappe toutes les 1,5 s pour 20 % de ses PV ; un boss toutes les 2 s pour 150 % des PV d'un monstre de son niveau. Ces coups montent progressivement jusqu'au niveau 40 (15 % au départ).
+- Un monstre frappe toutes les 1,5 s pour 30 % de ses PV ; un boss toutes les 2 s pour 300 % des PV d'un monstre de son niveau. Ces coups montent progressivement jusqu'au niveau 40 (15 % au départ).
 - Cible : le tank s'il est debout, sinon un tirage régulier où un personnage au contact pèse 4 et un personnage à distance 1.
-- Chaque monstre vaincu rend 3 % de PV aux personnages debout. Un personnage tombé revient après 30 s, 45 s pour le héros, moitié moins avec un soutien debout.
+- Chaque monstre vaincu rend 1 % de PV aux personnages debout. Un personnage tombé revient après 30 s, 45 s pour le héros, 30 % plus vite avec un soutien debout.
 - Si tout le monde tombe, le front recule d'un niveau sans repasser derrière un boss vaincu (`Front.Floor`) ; face à un boss, il recule et le boss attend le bouton « BOSS ». Tout le monde se relève. Un front laissé seul perd donc au plus 9 niveaux.
 - L'absence et le repli relèvent toute l'équipe.
 
@@ -114,19 +114,19 @@ Le joueur choisit le bâtiment de chaque emplacement libre (`Construction`), pui
 |---|---|
 | Ferme | la poule dorée passe 1 % plus souvent par niveau, jusqu'à 2 fois plus souvent |
 | Moulin | +10 min d'absence comptée par niveau, jusqu'à 24 h |
-| Boulangerie | convois de pain : +5 % de dégâts par livraison, 5 au plus |
+| Boulangerie | convois de pain : +5 % de dégâts par livraison pendant 25 s, 5 au plus ; un convoi part toutes les 9 s, 1 % plus souvent par niveau, jusqu'à 2 fois plus souvent (environ 3 livraisons au niveau 1, 5 vers le niveau 80) |
 | Forge | +3 % de dégâts et de PV du héros par niveau |
 | Marché | +2 % d'or des monstres par niveau |
 | Tour du mage | +2 % de dégâts du second compagnon par niveau |
-| Portail | +1 % d'or de tous les emplacements par niveau |
+| Portail | +0,5 % de tout l'or par niveau (emplacements, monstres, absence) |
 | Caserne | +2 % de dégâts du premier compagnon et de PV des compagnons par niveau |
-| Chapelle | compétences rechargées 1 % plus vite par niveau, jusqu'à 2 fois plus vite |
+| Chapelle | compétences rechargées 2 % plus vite par niveau, jusqu'à 3 fois plus vite |
 | Taverne | clics 3 % plus forts par niveau |
 | Atelier | équipement et armure 0,5 % moins chers par niveau, jusqu'à moitié prix |
-| Beffroi | +1 s au chrono des boss par niveau, jusqu'à +30 s |
+| Beffroi | +0,5 s au chrono des boss par niveau, jusqu'à +30 s au niveau 60 |
 
 - Coût ×1,17 par niveau.
-- Un emplacement bon marché fait vite monter un effet qui grandit à chaque niveau ; un effet fixe (boulangerie) peut aller sur un emplacement cher.
+- Un emplacement bon marché fait vite monter un effet qui grandit à chaque niveau ; un effet plafonné (ferme, boulangerie, chapelle, atelier, beffroi) cesse de grandir entre les niveaux 60 et 100 et peut aller sur un emplacement cher. Mesuré sur 7 jours en plaçant chaque bâtiment sur le premier emplacement : forge et marché en tête, beffroi, chapelle, portail, moulin, boulangerie, ferme et tour au milieu, atelier, caserne (avec un soutien pour premier compagnon) et taverne (sans clics) derrière.
 - Aux niveaux 10, 25, 50, 100 et 250, un palier double la production et transforme le bâtiment : fanion, ajout propre (silo, seconde cheminée…), socle de pierre, fleurs, toit doré et étincelles.
 
 **Achats.** Dans la gestion, « ×10 » n'est actif que si les 10 niveaux sont payables, et « Max ×N » achète tous les niveaux payables (`Shop.MaxCount`, `Shop.CostOf`).
@@ -153,12 +153,12 @@ Le joueur choisit le bâtiment de chaque emplacement libre (`Construction`), pui
 - Un objet a un emplacement (arme, armure, coiffe), une rareté (commune 62 %, rare 28 %, épique 8 %, légendaire 2 %), le niveau atteint, une apparence (4 par emplacement) et une ou deux caractéristiques (deux dès la rareté rare, la seconde à 60 %). Valeur = base × rareté (1 ; 1,6 ; 2,5 ; 4) × (1 + niveau / 100, niveau plafonné à 1 000). Bases : dégâts 4 %, PV 6 %, coups critiques 2 %, soins 5 %, vitesse 3 %. L'armure porte PV ou soins ; la coiffe tout. Le rôle du héros triple les chances de ses caractéristiques (guerrier : dégâts et vitesse ; tank : PV ; archer : critiques et vitesse ; mage : dégâts et critiques ; soutien : soins et PV).
 - **Armes de classe (0.8, script 37)** : chaque arme appartient à une classe (`items.role`), celle du héros trois fois sur quatre. Épée, hache, masse ou lame pour le guerrier ; bouclier, targe, pavois ou rondache pour le tank ; arc, arbalète, arc long ou fronde pour l'archer ; bâton, baguette, grimoire ou tome pour le mage ; sceptre, crosse, encensoir ou relique pour le soutien. Elle porte des dégâts ou les caractéristiques de sa classe. `equip_item` refuse une arme d'une autre classe (`wrong_class`), et changer de rôle range l'arme qui ne va plus. Un seul objet par emplacement : une arme, une armure, une coiffe.
 - Chaque combattant porte son équipement (`hero_equipment.fighter`, `FrontierState.Gears`) : dégâts (et clics pour le héros), PV, vitesse de frappe, coups critiques pour tous les rôles (une jauge en centièmes, que l'archer remplit déjà de 20 par tir), soins des victoires et du soutien.
-- **Boutique (0.8, script 37)** : l'or achète une pièce neuve pour un combattant et un emplacement (commune, rare ou épique, au niveau atteint, arme de sa classe) et améliore n'importe quel objet : +20 % de ses valeurs par amélioration, cent au plus. Prix : 30 butins d'un monstre du niveau × rareté (1, 4, 15 ; 40 pour améliorer un légendaire) × remise de l'atelier ; une amélioration coûte la moitié du prix d'achat au niveau du record × 1,25 par amélioration déjà faite (`GearPrices`, `private.gear_base`). Contre la triche, le serveur fixe le prix, débite l'or de la dernière sauvegarde (le jeu sauvegarde juste avant, puis `buy_item` ou `upgrade_item` vérifient session et révision, augmentent la révision et rendent l'or dépensé), tire l'objet lui-même, et tout ce que l'or achète ou améliore devient lié (`items.bound`) : seul un butin jamais amélioré pourra s'échanger. Un tricheur ne peut donc renforcer que lui-même. La sauvegarde refuse aussi un or supérieur à l'or précédent plus l'or gagné depuis (l'or total ne fait que croître), et un achat efface `saved_by` : une réponse perdue fait recharger la partie du serveur au lieu de garder l'or d'avant l'achat. Un objet acheté ne se recycle que pour le quart de son prix à son niveau, pour qu'acheter puis recycler ne rapporte jamais d'or. Après un repli, l'équipement d'un compagnon l'attend ; son arme repart au sac seulement s'il revient dans une autre classe.
+- **Boutique (0.8.1, script 38)** : chaque joueur voit quatre offres tirées par le serveur (emplacement, rareté selon les mêmes chances que le butin, caractéristiques, classe des armes : trois fois sur quatre celle d'un de ses combattants), au niveau atteint, renouvelées toutes les 3 heures (`shop_offers`, `shop_window_hours`). Le joueur ne choisit ni l'emplacement ni la rareté ; un objet acheté rejoint le sac. L'or améliore aussi les objets portés : +20 % de leurs valeurs par amélioration, cent au plus. Prix : 30 butins d'un monstre du niveau × rareté (1, 4, 15, 40) × remise de l'atelier ; une amélioration coûte la moitié du prix d'achat au niveau du record × 1,25 par amélioration déjà faite (`GearPrices`, `private.gear_base`). Contre la triche, le serveur fixe le prix, débite l'or de la dernière sauvegarde (le jeu sauvegarde juste avant, puis `buy_offer` ou `upgrade_item` vérifient session et révision, augmentent la révision et rendent l'or dépensé), tire l'objet lui-même, et tout ce que l'or achète ou améliore devient lié (`items.bound`) : seul un butin jamais amélioré pourra s'échanger. Un tricheur ne peut donc renforcer que lui-même. La sauvegarde refuse aussi un or supérieur à l'or précédent plus l'or gagné depuis (l'or total ne fait que croître), et un achat efface `saved_by` : une réponse perdue fait recharger la partie du serveur au lieu de garder l'or d'avant l'achat. Un objet acheté ne se recycle que pour le quart de son prix à son niveau, pour qu'acheter puis recycler ne rapporte jamais d'or. Après un repli, l'équipement d'un compagnon l'attend ; son arme repart au sac seulement s'il revient dans une autre classe.
 - Sac de 60 objets (`bag_size`) : plein, il laisse perdre les butins. Recycler rend l'or d'un boss, sans frénésie ni bonus, × 2, 5, 12 ou 30 selon la rareté ; une partie ouverte ailleurs ne recycle pas.
 - La coiffe se dessine sur chaque combattant (barbute, couronne, capuche, toque) et remplace le chapeau du mage ; l'épée d'un guerrier prend la couleur de la rareté de son arme. Les icônes du sac sont des grilles du code (`ItemGrids`), teintées par rareté.
 
 **Absence.**
-- Les emplacements produisent pendant l'absence, 8 h au plus, jusqu'à 24 h avec le moulin ; le combat est en pause.
+- Pendant l'absence, 8 h au plus, jusqu'à 24 h avec le moulin, les emplacements produisent et l'équipe rapporte le cinquième de l'or qu'elle gagnait au front (`AbsenceFrontShare`, calculé au niveau où elle se trouve). Sans cette part, l'absence ne payait que le village, soit 1 à 2 % des revenus passé les premières heures : 16 h d'absence valaient 10 minutes de jeu ; elles en valent maintenant 2 à 3 h, 3 à 4 h avec le moulin ; le combat est en pause.
 - Au retour, la scène rejoue l'absence en accéléré, puis une bannière annonce le gain.
 - Un trou de plus de 5 s entre deux images (veille) compte comme une absence.
 
@@ -166,14 +166,14 @@ Le joueur choisit le bâtiment de chaque emplacement libre (`Construction`), pui
 
 `PacingTests` simule un joueur idle : actif les 10 premières minutes, puis un passage toutes les 5 min. Il achète comme l'ancien Intendant (`Shopper`, dans les tests) : bâtiments, armure et équipement au prix du serveur (`GearCase`). Il recrute ses compagnons dès qu'ils arrivent, pour compléter son équipe (soutien puis tank pour un héros de dégâts, soutien et mage pour un tank, mage et archer pour un soutien), défie le boss à chaque passage, rattrape 30 % des poules, se replie après 30 min sans progrès s'il gagne au moins 10 % d'âmes, et joue 8 h par jour. Le rapport compte aussi les personnages tombés et les reculs.
 
-| Moment | Cible | Mesuré (0.8.0 avec l'xp, guerrier, soutien et tank) |
+| Moment | Cible | Mesuré (0.8.1, guerrier, soutien et tank) |
 |---|---|---|
 | Premier bâtiment | < 1 min | quelques secondes |
-| Boss du niveau 10 | 3 à 5 min, 25 pour un soutien | 3,6 min ; 20 min pour un héros soutien, seul et sans personne à relever |
-| Repli possible | 2 à 4 h | 2,8 h ; de 2,2 h (mage) à 3,2 h (tank) selon le rôle |
+| Boss du niveau 10 | 3 à 5 min, 7 pour un tank ou un mage, 30 pour un soutien | 4,8 min ; 6,2 min pour un mage ou un tank, 20 min pour un héros soutien, seul et sans personne à relever |
+| Repli possible | 2 à 4 h | 2,7 h ; de 2,5 h (mage) à 3,6 h (soutien) selon le rôle |
 | Deuxième partie jusqu'au niveau 50 | 1,5 à 5 fois plus rapide | vérifié |
-| Niveau 150 | 1 à 2 semaines | 94 h, soit 11,8 jours |
-| Premier bâtiment au niveau 100 | 2 jours à 2 semaines | 74 h, soit 9,2 jours |
+| Niveau 150 | 1 à 2 semaines | 66 h, soit 8,3 jours |
+| Premier bâtiment au niveau 100 | 2 jours à 2 semaines | 58 h, soit 7,3 jours |
 | Front laissé seul 8 h | ne perd pas plus de 10 niveaux | vérifié pour le guerrier et l'archer |
 
 Un déséquilibre au début est voulu : le héros joue seul jusqu'au boss 10, et un soutien seul n'a personne à relever. Il s'inverse ensuite avec les compagnons.
@@ -199,6 +199,7 @@ Un déséquilibre au début est voulu : le héros joue seul jusqu'au boss 10, et
   - `35_companions.sql` ajoute la classe des compagnons (`frontier_fighters.role`), retire l'Intendant (colonnes et paramètres), change la signature de `save_frontier` (`p_companions`) et exige la 0.8.0 ;
   - `36_review_fixes.sql` corrige la relecture : crédit glissant pour le titan et le butin, codes de guilde limités, départ noté à l'exclusion, `bag_full` avant de réclamer le titan, un seul bonus du titan, ligne du titan verrouillée, et titan recalibré (12 000 PV par joueur actif, 36 000 au moins).
   - `37_gear_shop.sql` donne une classe aux armes (`items.role`, les armes existantes prennent celle de leur propriétaire, `wrong_class`), un équipement à chaque combattant (`hero_equipment.fighter`), ajoute `bound` et `upgrades` aux objets, les prix (`gear_base`, `upgrade_price`, réglages `shop_kills`, `upgrade_share`, `upgrade_growth`, `max_upgrades`), `buy_item` et `upgrade_item`, `equip_item(p_item, p_fighter)` et `unequip_item(p_slot, p_fighter)`, et range l'arme du héros ou d'un compagnon qui change de classe. Le 35 enregistre aussi l'xp de chaque combattant (`frontier_fighters.xp`, `p_xp`).
+  - `38_rotating_shop.sql` remplace l'achat ciblé par la boutique tournante (`shop_offers`, `buy_offer`, offres dans la réponse sociale) et exige la 0.8.1 ;
   - `wipe_progress.sql` (sans numéro) efface toute la progression : parties, héros, guildes, titans et objets. Il garde les comptes et les réglages. Fermer les jeux avant : au prochain lancement, chacun recrée son héros.
 - **Le social** : chaque action renvoie la même réponse que `get_social()` : statut, guilde et membres (héros, niveau, record, dernière visite, renforts et convoi reçus), attente avant de rejoindre, recharges, renforts et bonus reçus avec leur durée restante, titan et classement. Les membres sont désignés par un identifiant de guilde, jamais par leur compte. Statuts : `ok`, `missing`, `no_hero`, `already_member`, `cooldown`, `invalid_name`, `banned_name`, `name_taken`, `unknown_code`, `full`, `not_member`, `not_leader`, `unknown_member`, `self`, `front_full`, `convoy_full`, `nothing`, `unknown_item`, `wrong_class`, `bag_full`, `too_many_tries`, `too_poor`, `unknown_fighter`, `maxed`, `conflict`, `elsewhere`, `refused`. Les achats de la boutique ajoutent `revision` et `spent` à la réponse.
 - **`set_hero(p_session, p_name, p_role, p_skin, p_hair, p_hair_color, p_outfit)`** crée ou modifie le héros. Elle nettoie les espaces du nom, puis répond `invalid_name` (longueur ou caractères), `banned_name` (insulte, même déguisée), `refused` (apparence ou rôle inconnus), `role_locked` (rôle déjà changé depuis le dernier repli enregistré), `elsewhere` ou `ok`. Le client sauvegarde la partie avant un changement de rôle, pour que le serveur connaisse le dernier repli. Le héros du serveur l'emporte toujours sur celui d'une copie locale.
@@ -231,13 +232,13 @@ Le jeu calcule la partie, et le serveur vérifie qu'elle reste vraisemblable ava
 - Faire calculer la partie par le serveur obligerait à y faire tourner tout le moteur : combat, absence, achats. Il faudrait le porter dans une Edge Function ou un service .NET, garder deux moteurs identiques, rejouer chaque action reçue, et renoncer au jeu hors ligne.
 - Cela ne devient nécessaire que si une partie peut nuire aux autres : classement, échanges, marché. Ce qui passera d'un joueur à l'autre (renforts, convois, titan commun, objets) sera donc calculé et plafonné par le serveur, à partir de valeurs qu'il contrôle. C'est déjà le cas du héros : son nom et son rôle ne s'écrivent que par `set_hero`.
 
-## Publier la 0.8.0
+## Publier la 0.8.1
 
 Publiées : 0.4.1 (scripts 21 à 24), 0.4.2 (12 emplacements), 0.4.3 à 0.4.5 (correctifs, effets des bâtiments), 0.4.6 et 0.4.7 (âmes tirées de l'or, menu de l'icône). La 0.7.0 (tag du 14 octobre) réunit le héros (0.5), la guilde et le titan (0.6), le butin et le style PICO-8 (0.7).
-1. La 0.8.0 (compagnons au choix, xp par classe, boutique d'équipement, armes de classe, synergie forte, sans Intendant) est prête dans `config/version` : la commiter, la pousser et poser le tag `v0.8.0`, puis attendre que GitHub publie la version.
+1. La 0.8.0 (compagnons au choix, xp par classe, boutique d'équipement, armes de classe, synergie forte, sans Intendant) est publiée (tag du 14 octobre). La 0.8.1 (boutique tournante, synergie réglée : bénédiction du soutien, usure ; boulangerie corrigée ; absence, portail, chapelle et beffroi rééquilibrés) est prête dans `config/version` : la commiter, la pousser et poser le tag `v0.8.1`, puis attendre que GitHub publie la version.
 2. Si les scripts 25 à 34 ne sont pas encore passés, voir l'étape suivante ; sinon passer à la 4.
 3. Dans l'éditeur SQL de Supabase, exécuter dans l'ordre `25_more_plots.sql`, `26_review_fixes.sql` et `27_gold_souls.sql` s'ils ne sont pas encore passés, puis `28_heroes.sql` à `34_loot_actions.sql`. Le 28 change la signature de `save_frontier` et exige la 0.5.0 : les versions plus anciennes affichent « Mise à jour requise ». Il ne faut donc le lancer qu'une fois la 0.7.0 en ligne. Les scripts 29 à 34 n'exigent rien de plus.
-4. Une fois la 0.8.0 en ligne, exécuter `35_companions.sql`, `36_review_fixes.sql` et `37_gear_shop.sql`. Le 35 change la signature de `save_frontier` et exige la 0.8.0 : la 0.7.0 affiche « Mise à jour requise ».
+4. Une fois la 0.8.0 en ligne, exécuter `35_companions.sql`, `36_review_fixes.sql` et `37_gear_shop.sql`. Le 35 change la signature de `save_frontier` et exige la 0.8.0 : la 0.7.0 affiche « Mise à jour requise ». Une fois la 0.8.1 en ligne, exécuter `38_rotating_shop.sql`, qui exige la 0.8.1.
 5. Pour repartir de zéro, exécuter `wipe_progress.sql` après avoir fermé les jeux.
 
 Les scripts déjà passés ne se rejouent pas en production ; on n'exécute que les nouveaux numéros.
@@ -260,7 +261,8 @@ Les scripts déjà passés ne se rejouent pas en production ; on n'exécute que 
 | 11. Le héros | Héros personnalisé et rôles, coups des monstres, personnages qui tombent, recul du front, armure, script `28`, fenêtre de création et onglet Héros | Publié dans la 0.7.0 |
 | 12. Compagnons | Guildes par code, renforts du héros et convois, titan de la semaine en évènement, formation par rôle, scripts `29` à `32`, onglets Guilde, Titan et Aide | Publié dans la 0.7.0 |
 | 13. 0.7.0 « Butin » | Objets tenus par le serveur, butin des boss et du titan, onglet Butin, équipement sur le héros, scripts `33` et `34`, tous les dessins en PICO-8 | Tag `v0.7.0` le 14 octobre |
-| 14. 0.8.0 « Compagnons au choix » | Compagnons débloqués par le front et classe choisie, xp par l'action de chaque classe, boutique d'équipement liée, équipement pour chaque combattant, armes de classe, rôles spécialisés et synergie forte, Intendant retiré, correctifs de la relecture, scripts `35` à `37`, `wipe_progress.sql` | Prête, à publier : voir « Publier la 0.8.0 » |
+| 14. 0.8.0 « Compagnons au choix » | Compagnons débloqués par le front et classe choisie, xp par l'action de chaque classe, boutique d'équipement liée, équipement pour chaque combattant, armes de classe, rôles spécialisés et synergie forte, Intendant retiré, correctifs de la relecture, scripts `35` à `37`, `wipe_progress.sql` | Tag `v0.8.0` le 14 octobre |
+| 15. 0.8.1 | Boutique tournante (quatre offres au hasard toutes les 3 heures), bénédiction du soutien et usure pour un vrai choix de composition, livraisons de pain qui expirent une à une, absence qui rapporte une part du front, portail, chapelle et beffroi rééquilibrés, script `38` | Prête, à publier : voir « Publier la 0.8.1 » |
 
 **Ensuite** : un échange ou un marché d'objets entre joueurs (0.9), puis les fêtes dans le village, les ères, les expéditions, le ciel.
 

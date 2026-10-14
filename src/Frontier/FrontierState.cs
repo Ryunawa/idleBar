@@ -70,9 +70,9 @@ public sealed class FrontierState
 
     public double FrenzyLeft { get; set; }
 
-    public int Supply { get; set; }
+    public List<double> Rations { get; } = [];
 
-    public double SupplyLeft { get; set; }
+    public int Supply => Rations.Count;
 
     public List<Convoy> Convoys { get; } = [];
 

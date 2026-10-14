@@ -4,9 +4,7 @@ namespace IdleBar.Frontier;
 
 public static class GearPrices
 {
-    public static int Rarities => Balance.ShopRarities;
-
-    public static double Buy(FrontierState state, int rarity) => Base(state, state.MaxStage, Math.Min(rarity, Balance.ShopRarities - 1));
+    public static double Offer(FrontierState state, int level, int rarity) => Base(state, level, rarity);
 
     public static double Upgrade(FrontierState state, int rarity, int upgrades, int count)
     {

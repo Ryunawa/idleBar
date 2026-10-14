@@ -14,6 +14,6 @@ public sealed record EquipArguments(long PItem, string PFighter);
 
 public sealed record UnequipArguments(string PSlot, string PFighter);
 
-public sealed record BuyArguments(System.Guid PSession, int PRevision, string PFighter, string PSlot, string PRarity);
+public sealed record OfferArguments(System.Guid PSession, int PRevision, long POffer);
 
 public sealed record UpgradeArguments(System.Guid PSession, int PRevision, long PItem, int PCount);

@@ -74,9 +74,9 @@ public sealed class GearTests
     {
         FrontierState state = new() { Stage = 80, MaxStage = 80, BestStage = 80, Souls = 500 };
         Village.Build(state, BuildingKind.Market, 50);
-        for (int rarity = 0; rarity < GearPrices.Rarities; rarity++)
+        for (int rarity = 0; rarity < Balance.RarityPrices.Length; rarity++)
         {
-            Assert.True(Items.SalvageGold(state, rarity, true, 80) < GearPrices.Buy(state, rarity) * 0.3);
+            Assert.True(Items.SalvageGold(state, rarity, true, 80) < GearPrices.Offer(state, 80, rarity) * 0.3);
             Assert.True(Items.SalvageGold(state, rarity, false, 80) > Items.SalvageGold(state, rarity, true, 80));
         }
     }

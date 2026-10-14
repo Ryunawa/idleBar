@@ -15,16 +15,16 @@ public static class EffectText
         {
             BuildingKind.Farm => $"poule dorée {Times(Economy.ChickenPace(state))} plus fréquente",
             BuildingKind.Mill => $"absence comptée jusqu'à {Hours(Economy.AbsenceCap(state))}",
-            BuildingKind.Bakery => $"+{Percent(Balance.SupplyBonus * state.Supply)} de dégâts ({state.Supply}/{Balance.SupplyMax} livraisons)",
+            BuildingKind.Bakery => $"+{Percent(Balance.SupplyBonus * state.Supply)} de dégâts ({state.Supply}/{Balance.SupplyMax} livraisons), convois {Times(Economy.ConvoyPace(state))} plus fréquents",
             BuildingKind.Forge => $"+{Percent(Balance.ForgeBonus * level)} de dégâts et de PV du héros",
             BuildingKind.Market => $"+{Percent(Balance.MarketBonus * level)} d'or des monstres",
             BuildingKind.Tower => $"+{Percent(Balance.TowerBonus * level)} de dégâts du second compagnon",
-            BuildingKind.Portal => $"+{Percent(Balance.PortalBonus * level)} d'or de tous les emplacements",
+            BuildingKind.Portal => $"+{Percent(Balance.PortalBonus * level)} de tout l'or",
             BuildingKind.Barracks => $"+{Percent(Balance.BarracksBonus * level)} de dégâts du premier compagnon et de PV des compagnons",
             BuildingKind.Chapel => $"compétences rechargées {Times(Skills.Of(SkillKind.Smite).Cooldown / Economy.SkillCooldown(state, SkillKind.Smite))} plus vite",
             BuildingKind.Tavern => $"+{Percent(Balance.TavernBonus * level)} de dégâts des clics",
             BuildingKind.Workshop => $"-{Percent(Math.Min(Balance.WorkshopMax, Balance.WorkshopDiscount * level))} sur l'équipement et l'armure",
-            _ => $"+{(Economy.BossSeconds(state) - Balance.BossSeconds).ToString("0", French)} s au chrono des boss",
+            _ => $"+{(Economy.BossSeconds(state) - Balance.BossSeconds).ToString("0.#", French)} s au chrono des boss",
         };
     }
 

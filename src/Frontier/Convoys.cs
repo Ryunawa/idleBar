@@ -1,5 +1,3 @@
-using System;
-
 namespace IdleBar.Frontier;
 
 public static class Convoys
@@ -11,9 +9,18 @@ public static class Convoys
             state.ConvoyTimer -= dt;
             if (state.ConvoyTimer <= 0)
             {
-                state.ConvoyTimer = Balance.ConvoyEvery;
+                state.ConvoyTimer = Balance.ConvoyEvery / Economy.ConvoyPace(state);
                 state.ConvoySequence++;
                 state.Convoys.Add(new Convoy(state.ConvoySequence));
+            }
+        }
+
+        for (int index = state.Rations.Count - 1; index >= 0; index--)
+        {
+            state.Rations[index] -= dt;
+            if (state.Rations[index] <= 0)
+            {
+                state.Rations.RemoveAt(index);
             }
         }
 
@@ -24,8 +31,7 @@ public static class Convoys
             if (!convoy.Delivered && convoy.Time >= Balance.ConvoyTravel)
             {
                 convoy.Delivered = true;
-                state.Supply = Math.Min(Balance.SupplyMax, state.Supply + 1);
-                state.SupplyLeft = Balance.SupplySeconds;
+                Deliver(state);
                 events.Add(new Supplied(state.Supply));
             }
 
@@ -34,22 +40,32 @@ public static class Convoys
                 state.Convoys.RemoveAt(index);
             }
         }
-
-        if (state.Supply > 0)
-        {
-            state.SupplyLeft -= dt;
-            if (state.SupplyLeft <= 0)
-            {
-                state.Supply = 0;
-            }
-        }
     }
 
     public static void Clear(FrontierState state)
     {
         state.Convoys.Clear();
-        state.Supply = 0;
-        state.SupplyLeft = 0;
+        state.Rations.Clear();
         state.ConvoyTimer = 2;
+    }
+
+    private static void Deliver(FrontierState state)
+    {
+        if (state.Rations.Count < Balance.SupplyMax)
+        {
+            state.Rations.Add(Balance.SupplySeconds);
+            return;
+        }
+
+        int oldest = 0;
+        for (int index = 1; index < state.Rations.Count; index++)
+        {
+            if (state.Rations[index] < state.Rations[oldest])
+            {
+                oldest = index;
+            }
+        }
+
+        state.Rations[oldest] = Balance.SupplySeconds;
     }
 }

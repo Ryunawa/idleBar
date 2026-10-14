@@ -31,7 +31,7 @@ public sealed class BattleTests
     public void TheBelfryGivesTheBossMoreTime()
     {
         FrontierState state = new() { Stage = 10, MaxStage = 10, Armor = 1_000 };
-        Village.Build(state, BuildingKind.Belfry, 12);
+        Village.Build(state, BuildingKind.Belfry, 24);
         FrontierGame game = new(state, new Random(1));
         Run(game, Balance.BossSeconds + 5);
         Assert.Equal(10, state.Stage);

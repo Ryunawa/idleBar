@@ -10,8 +10,8 @@ public sealed partial class SocialSession
 
     public Task<string> UnequipAsync(string slot, FighterKind kind) => RunAsync(token => _api.UnequipAsync(token, slot, Fighters.Of(kind).Id));
 
-    public Task<string> BuyAsync(FighterKind kind, string slot, int rarity) => SpendAsync((token, session, revision) =>
-        _api.BuyAsync(token, new BuyArguments(session, revision, Fighters.Of(kind).Id, slot, Items.RarityId(rarity))));
+    public Task<string> BuyAsync(OfferData offer) => SpendAsync((token, session, revision) =>
+        _api.BuyAsync(token, new OfferArguments(session, revision, offer.Id)));
 
     public Task<string> UpgradeAsync(ItemData item, int count) => SpendAsync((token, session, revision) =>
         _api.UpgradeAsync(token, new UpgradeArguments(session, revision, item.Id, count)));

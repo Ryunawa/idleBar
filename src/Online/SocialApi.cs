@@ -44,8 +44,8 @@ public sealed class SocialApi
     public Task<SocialData> UnequipAsync(string token, string slot, string fighter) =>
         _rpc.CallAsync<UnequipArguments, SocialData>(token, "unequip_item", new UnequipArguments(slot, fighter));
 
-    public Task<SocialData> BuyAsync(string token, BuyArguments arguments) =>
-        _rpc.CallAsync<BuyArguments, SocialData>(token, "buy_item", arguments);
+    public Task<SocialData> BuyAsync(string token, OfferArguments arguments) =>
+        _rpc.CallAsync<OfferArguments, SocialData>(token, "buy_offer", arguments);
 
     public Task<SocialData> UpgradeAsync(string token, UpgradeArguments arguments) =>
         _rpc.CallAsync<UpgradeArguments, SocialData>(token, "upgrade_item", arguments);

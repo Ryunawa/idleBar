@@ -15,7 +15,7 @@ public static class LaneHints
         TargetKind.Ally => Reinforcement(target.Index, state),
         TargetKind.Titan => Titan(state),
         TargetKind.Building => Plot(target.Index, state),
-        TargetKind.Convoy => "Convoi de pain : +5 % de dégâts par livraison, 5 au plus",
+        TargetKind.Convoy => "Convoi de pain : +5 % de dégâts par livraison pendant 25 s, 5 au plus",
         TargetKind.Crier => "Le crieur public et ses nouvelles du royaume",
         TargetKind.Fog => "Brouillard : chaque boss vaincu le fait reculer",
         TargetKind.BossCall => $"Défier le boss du niveau {state.Stage + 1} : {Economy.BossSeconds(state):0} s pour le vaincre",

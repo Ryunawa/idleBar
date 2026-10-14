@@ -7,15 +7,16 @@ namespace IdleBar.Tests;
 public sealed class AbsenceTests
 {
     [Fact]
-    public void AbsencePaysTheBuildingsOnly()
+    public void AbsencePaysTheVillageAndAQuarterOfTheFront()
     {
-        FrontierState state = new();
+        FrontierState state = new() { Stage = 30, MaxStage = 30 };
         Village.Build(state, BuildingKind.Farm, 10);
         FrontierGame game = new(state, new Random(1));
-        double rate = Economy.BaseGoldPerSecond(state);
+        double rate = Economy.BaseGoldPerSecond(state) + Balance.AbsenceFrontShare * Economy.FrontGoldPerSecond(state);
+        Assert.True(Economy.FrontGoldPerSecond(state) > 0);
         game.Absent(600);
         Assert.Equal(rate * 600, state.Gold, 6);
-        Assert.Equal(1, state.Stage);
+        Assert.Equal(30, state.Stage);
         Assert.Equal(0, state.MonstersKilled);
     }
 
@@ -26,7 +27,7 @@ public sealed class AbsenceTests
         Village.Build(state, BuildingKind.Farm, 10);
         FrontierGame game = new(state, new Random(1));
         game.Absent(48 * 3600);
-        Assert.Equal(Economy.BaseGoldPerSecond(state) * Balance.AbsenceCapSeconds, state.Gold, 3);
+        Assert.Equal(Economy.AbsenceGoldPerSecond(state) * Balance.AbsenceCapSeconds, state.Gold, 3);
         Assert.Contains(game.Events.Drain(), frontierEvent => frontierEvent is Returned { Seconds: 48 * 3600, Counted: Balance.AbsenceCapSeconds });
     }
 
@@ -38,7 +39,7 @@ public sealed class AbsenceTests
         FrontierGame game = new(state, new Random(1));
         game.Advance(3_600);
         Assert.Contains(game.Events.Drain(), frontierEvent => frontierEvent is Returned { Seconds: 3_600 });
-        Assert.Equal(Economy.BaseGoldPerSecond(state) * 3_600, state.Gold, 3);
+        Assert.Equal(Economy.AbsenceGoldPerSecond(state) * 3_600, state.Gold, 3);
     }
 
     [Fact]

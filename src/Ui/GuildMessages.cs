@@ -30,6 +30,8 @@ public static class GuildMessages
         SocialData.BagFull => "Ton sac est plein : recycle un objet pour faire de la place.",
         SocialData.Paused => "Ta partie est ouverte ailleurs : reprends-la d'abord.",
         SocialData.Refused => "Le serveur a refusé cette action.",
+        SocialData.UnknownOffer => "Cette offre n'est plus en boutique : un nouvel arrivage l'a remplacée.",
+        SocialData.Sold => "Cet objet est déjà vendu.",
         SocialData.TooPoor => "Pas assez d'or : le serveur compte l'or de ta dernière sauvegarde.",
         SocialData.UnknownFighter => "Ce compagnon n'a pas encore rejoint l'équipe.",
         SocialData.Conflict => "Ta partie vient d'être sauvegardée : réessaie.",

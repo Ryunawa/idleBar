@@ -11,11 +11,11 @@ public static class Roles
             "Gagne son xp en étourdissant les monstres."),
         new(HeroRole.Tank, "tank", "Tank", 0.5, 3, 0.8, false, "Peu de dégâts, mais il encaisse tous les coups des monstres, amortis de 40 % : le reste de l'équipe est protégé.",
             "Gagne son xp en encaissant les coups."),
-        new(HeroRole.Archer, "archer", "Archer", 1, 0.55, 0.5, true, "Tire de loin, rarement visé, et un tir sur cinq est critique.",
+        new(HeroRole.Archer, "archer", "Archer", 0.85, 0.55, 0.5, true, "Tire de loin, rarement visé, et un tir sur cinq est critique.",
             "Gagne son xp avec ses tirs critiques."),
         new(HeroRole.Mage, "mage", "Mage", 1, 0.5, 0.8, true, "Trois petits sorts, puis un gros, plus fort contre les boss.",
             "Gagne son xp avec ses gros sorts."),
-        new(HeroRole.Support, "support", "Soutien", 0.5, 0.9, 0.8, false, "Peu de dégâts, mais il soigne toute l'équipe et fait revenir plus vite les personnages tombés.",
+        new(HeroRole.Support, "support", "Soutien", 0.5, 0.9, 0.8, false, "Peu de dégâts, mais il bénit l'équipe (+30 % de dégâts), la soigne et fait revenir plus vite les personnages tombés.",
             "Gagne son xp en relevant les personnages tombés."),
     ];
 

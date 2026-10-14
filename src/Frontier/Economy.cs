@@ -29,7 +29,8 @@ public static class Economy
     public static double Synergy(FrontierState state) => 1 + Balance.SynergyBonus * Roles.OnFront(state).Count;
 
     public static double Buff(FrontierState state) =>
-        (state.FuryLeft > 0 ? Balance.FuryFactor : 1) * (1 + Balance.SupplyBonus * state.Supply) * Synergy(state) * Help.DamageFactor(state);
+        (state.FuryLeft > 0 ? Balance.FuryFactor : 1) * (1 + Balance.SupplyBonus * state.Supply) * Synergy(state) * Help.DamageFactor(state)
+        * (Team.SupportUp(state) ? 1 + Balance.SupportBlessing : 1);
 
     public static double HeroPower(FrontierState state) =>
         BaseDps(state, FighterKind.Hero, state.Level(FighterKind.Hero)) * Buff(state) * (1 + state.Gears[(int)FighterKind.Hero].Damage);
@@ -70,17 +71,25 @@ public static class Economy
 
     public static double PlotGold(FrontierState state, int plot) => PlotGoldAt(state, plot, state.Levels[plot]);
 
-    public static double PlotGoldAt(FrontierState state, int plot, int level)
-    {
-        double portal = 1 + Balance.PortalBonus * state.Level(BuildingKind.Portal);
-        return Plots.Of(plot).Gold * level * Math.Pow(Balance.TierFactor, Tier(level)) * Wealth(state) * portal;
-    }
+    public static double PlotGoldAt(FrontierState state, int plot, int level) =>
+        Plots.Of(plot).Gold * level * Math.Pow(Balance.TierFactor, Tier(level)) * Wealth(state) * Portal(state);
+
+    public static double Portal(FrontierState state) => 1 + Balance.PortalBonus * state.Level(BuildingKind.Portal);
 
     public static double AbsenceCap(FrontierState state) =>
         Math.Min(Balance.AbsenceMaxSeconds, Balance.AbsenceCapSeconds + state.Level(BuildingKind.Mill) * Balance.MillAbsenceSeconds);
 
+    public static double FrontGoldPerSecond(FrontierState state) =>
+        BaseKillGold(state, false) / (MonsterHp(state.Stage) / Math.Max(1e-9, TotalDps(state)) + Balance.RespawnSeconds + Balance.ApproachSeconds);
+
+    public static double AbsenceGoldPerSecond(FrontierState state) =>
+        BaseGoldPerSecond(state) + Balance.AbsenceFrontShare * FrontGoldPerSecond(state);
+
     public static double ChickenPace(FrontierState state) =>
         1 + Math.Min(Balance.FarmChickenMax, Balance.FarmChickenBonus * state.Level(BuildingKind.Farm));
+
+    public static double ConvoyPace(FrontierState state) =>
+        1 + Math.Min(Balance.BakeryMax, Balance.BakeryBonus * state.Level(BuildingKind.Bakery));
 
     public static double BaseGoldPerSecond(FrontierState state)
     {
@@ -124,6 +133,7 @@ public static class Economy
         (MonsterHp(state.Stage) * Balance.KillGoldRatio + Balance.KillGoldFlat)
             * Wealth(state)
             * (1 + Balance.MarketBonus * state.Level(BuildingKind.Market))
+            * Portal(state)
             * (boss ? Balance.BossGoldFactor : 1);
 
     public static double ArmorCost(FrontierState state) =>

@@ -33,9 +33,9 @@ public sealed class PacingTests
     }
 
     [Theory]
-    [InlineData(HeroRole.Tank, 6)]
+    [InlineData(HeroRole.Tank, 7)]
     [InlineData(HeroRole.Archer, 6)]
-    [InlineData(HeroRole.Mage, 6)]
+    [InlineData(HeroRole.Mage, 7)]
     [InlineData(HeroRole.Support, 30)]
     public void EveryRoleReachesTheFirstRetreatInTime(HeroRole role, int firstBossMinutes)
     {

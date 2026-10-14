@@ -48,7 +48,7 @@ public sealed class AllyTests
         FrontierState state = new() { Fighters = [10, 10, 0] };
         Assert.Equal(30, Vitality.ReviveSeconds(state, FighterKind.First));
         state.Allies.Add(Ally(5, HeroRole.Support));
-        Assert.Equal(15, Vitality.ReviveSeconds(state, FighterKind.First));
+        Assert.Equal(30 * Balance.SupportRevive, Vitality.ReviveSeconds(state, FighterKind.First), 6);
     }
 
     [Fact]

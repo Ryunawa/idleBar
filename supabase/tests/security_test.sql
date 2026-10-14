@@ -34,7 +34,7 @@ select pg_temp.expect_denied('select public.send_help(1, ''hero'')');
 select pg_temp.expect_denied('select public.claim_titan()');
 select pg_temp.expect_denied('select public.equip_item(1, ''hero'')');
 select pg_temp.expect_denied('select public.unequip_item(''weapon'', ''hero'')');
-select pg_temp.expect_denied('select public.buy_item(gen_random_uuid(), 0, ''hero'', ''weapon'', ''common'')');
+select pg_temp.expect_denied('select public.buy_offer(gen_random_uuid(), 0, 1)');
 select pg_temp.expect_denied('select public.upgrade_item(gen_random_uuid(), 0, 1, 1)');
 select pg_temp.expect_denied('select public.salvage_item(1)');
 reset role;
@@ -43,6 +43,8 @@ select set_config('request.jwt.claim.sub', '33333333-3333-3333-3333-333333333333
 set role authenticated;
 select pg_temp.expect_denied('select * from private.settings');
 select pg_temp.expect_denied('select * from public.frontiers');
+select pg_temp.expect_denied('select * from public.shop_offers');
+select pg_temp.expect_denied('update public.shop_offers set price = 1');
 select pg_temp.expect_denied('update public.frontiers set souls = 1000000');
 select pg_temp.expect_denied('select * from public.frontier_fighters');
 select pg_temp.expect_denied('select * from public.frontier_plots');

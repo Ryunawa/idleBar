@@ -27,7 +27,7 @@ public sealed class IdlePlayer
         _random = new Random(seed);
         Game = new FrontierGame(new FrontierState { Role = role }, new Random(seed));
         (HeroRole First, HeroRole Second) team = Shopper.Complement(role);
-        Shopper = new Shopper(Game, first ?? team.First, second ?? team.Second);
+        Shopper = new Shopper(Game, first ?? team.First, second ?? team.Second, seed);
     }
 
     public FrontierGame Game { get; }
@@ -87,7 +87,12 @@ public sealed class IdlePlayer
         {
             if (frontierEvent is Fell or Routed or BossFailed)
             {
-                string name = frontierEvent is Fell fell ? $"tombe-{fell.Kind}" : frontierEvent.GetType().Name;
+                string name = frontierEvent switch
+                {
+                    Fell fell => $"tombe-{fell.Kind}",
+                    Routed { Boss: true } => "Routed-boss",
+                    _ => frontierEvent.GetType().Name,
+                };
                 _counts[name] = _counts.GetValueOrDefault(name) + 1;
             }
 
@@ -107,6 +112,7 @@ public sealed class IdlePlayer
         }
 
         Shopper.Recruit();
+        Shopper.Restock(Clock);
         while (Shopper.BuyOne())
         {
         }

@@ -40,6 +40,37 @@ public sealed class SideSystemsTests
     }
 
     [Fact]
+    public void EachDeliveryGoesStaleOnItsOwn()
+    {
+        FrontierState state = new();
+        state.Rations.AddRange([1, 20]);
+        FrontierGame game = new(state, new Random(1));
+        BattleTests.Run(game, 2);
+        Assert.Equal(1, state.Supply);
+    }
+
+    [Fact]
+    public void ASmallBakeryCannotKeepTheFrontFull()
+    {
+        FrontierState state = new();
+        Village.Build(state, BuildingKind.Bakery, 1);
+        FrontierGame game = new(state, new Random(1));
+        BattleTests.Run(game, 120);
+        Assert.InRange(state.Supply, 2, 3);
+    }
+
+    [Fact]
+    public void AGreatBakeryKeepsTheFrontFull()
+    {
+        FrontierState state = new();
+        Village.Build(state, BuildingKind.Bakery, 100);
+        FrontierGame game = new(state, new Random(1));
+        BattleTests.Run(game, 120);
+        Assert.Equal(Balance.SupplyMax, state.Supply);
+        Assert.Equal(2, Economy.ConvoyPace(state), 6);
+    }
+
+    [Fact]
     public void TheFarmBringsTheChickenTwiceAsOften()
     {
         FrontierState state = new();
@@ -51,13 +82,15 @@ public sealed class SideSystemsTests
     }
 
     [Fact]
-    public void ThePortalRaisesTheGoldOfEveryPlot()
+    public void ThePortalRaisesAllTheGold()
     {
-        FrontierState state = new();
+        FrontierState state = new() { Stage = 20 };
         Village.Build(state, BuildingKind.Farm, 10, 0);
-        double before = Economy.PlotGold(state, 0);
-        Village.Build(state, BuildingKind.Portal, 50, 1);
-        Assert.Equal(before * 1.5, Economy.PlotGold(state, 0), 6);
+        double plot = Economy.PlotGold(state, 0);
+        double kill = Economy.BaseKillGold(state, false);
+        Village.Build(state, BuildingKind.Portal, 100, 1);
+        Assert.Equal(plot * 1.5, Economy.PlotGold(state, 0), 6);
+        Assert.Equal(kill * 1.5, Economy.BaseKillGold(state, false), 6);
     }
 
     [Fact]

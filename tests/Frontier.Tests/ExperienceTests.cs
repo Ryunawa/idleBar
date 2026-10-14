@@ -88,8 +88,8 @@ public sealed class ExperienceTests
     {
         FrontierState state = new() { Stage = 31, MaxStage = 31, BestStage = 31 };
         double common = 30 * (Economy.MonsterHp(31) * 0.35 + 2);
-        Assert.Equal(common, GearPrices.Buy(state, 0), 3);
-        Assert.Equal(common * 15, GearPrices.Buy(state, 2), 3);
+        Assert.Equal(common, GearPrices.Offer(state, 31, 0), 3);
+        Assert.Equal(common * 15, GearPrices.Offer(state, 31, 2), 3);
         Assert.Equal(common * 0.5 * (Math.Pow(1.25, 3) - 1) / 0.25, GearPrices.Upgrade(state, 0, 0, 3), 3);
         Assert.Equal(1.6, Items.Upgraded(1, 3), 6);
     }

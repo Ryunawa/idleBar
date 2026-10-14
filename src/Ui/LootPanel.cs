@@ -17,6 +17,7 @@ public partial class LootPanel : VBoxContainer
     private OptionButton _wearer = null!;
     private VBoxContainer _bag = null!;
     private Label _count = null!;
+    private ShopSection _shop = null!;
     private Label _message = null!;
     private bool _busy;
 
@@ -29,7 +30,7 @@ public partial class LootPanel : VBoxContainer
         Name = "Équipement";
         VBoxContainer rows = new();
         rows.AddThemeConstantOverride("separation", 6);
-        rows.AddChild(WindowRows.Muted("Chacun de tes combattants porte une arme de sa classe, une armure et une coiffe. Les boss et le titan laissent du butin ; l'or achète des pièces neuves et les améliore. Le serveur fixe le prix, prend l'or de ta dernière sauvegarde et tire l'objet : ce que l'or achète ou améliore reste lié à toi."));
+        rows.AddChild(WindowRows.Muted("Chacun de tes combattants porte une arme de sa classe, une armure et une coiffe. Les boss et le titan laissent du butin, et la boutique propose quatre objets tirés au hasard, renouvelés toutes les 3 heures. Le serveur fixe les prix et prend l'or de ta dernière sauvegarde ; ce que l'or achète ou améliore reste lié à toi."));
         HBoxContainer choice = new();
         choice.AddThemeConstantOverride("separation", 10);
         choice.AddChild(WindowRows.Heading("Équipement de"));
@@ -42,11 +43,13 @@ public partial class LootPanel : VBoxContainer
             GearSlotRow row = new(slot);
             row.Upgraded += (item, count) => Act(social => social.UpgradeAsync(item, count), $"Objet amélioré : {item.Name}.");
             row.Removed += removed => Act(social => social.UnequipAsync(removed, Chosen), "Objet rangé dans le sac.");
-            row.Bought += (bought, rarity) => Act(social => social.BuyAsync(Chosen, bought, rarity), $"{Items.SlotName(bought)} achetée et équipée.");
             _slots.Add(row);
             rows.AddChild(row);
         }
 
+        _shop = new ShopSection();
+        _shop.Bought += offer => Act(social => social.BuyAsync(offer), "Objet acheté : il t'attend dans le sac.");
+        rows.AddChild(_shop);
         _count = WindowRows.Heading("Sac");
         rows.AddChild(_count);
         _bag = new VBoxContainer();
@@ -91,7 +94,12 @@ public partial class LootPanel : VBoxContainer
         bool idle = !_busy && Game is { Frozen: false } && items is not null;
         foreach (GearSlotRow row in _slots)
         {
-            row.Refresh(Game?.State, idle, room);
+            row.Refresh(Game?.State, idle);
+        }
+
+        if (_social?.Data?.Shop is ShopData shop)
+        {
+            _shop.Refresh(_social.Left(shop.RefreshIn), Game?.State.Gold ?? 0, idle, room);
         }
     }
 
@@ -123,6 +131,7 @@ public partial class LootPanel : VBoxContainer
             _slots[index].Show(items?.Equipped(Chosen, Items.Slots[index]), role);
         }
 
+        _shop.Show(_social?.Data?.Shop);
         Bag(items, role);
         Refresh();
     }

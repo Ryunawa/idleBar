@@ -13,7 +13,8 @@ public sealed record SocialData(
     TitanData? Titan,
     ItemsData? Items = null,
     int? Revision = null,
-    double? Spent = null)
+    double? Spent = null,
+    ShopData? Shop = null)
 {
     public const string Ok = "ok";
     public const string Missing = "missing";
@@ -43,6 +44,8 @@ public sealed record SocialData(
     public const string Elsewhere = "elsewhere";
     public const string Maxed = "maxed";
     public const string Refused = "refused";
+    public const string UnknownOffer = "unknown_offer";
+    public const string Sold = "sold";
 }
 
 public sealed record GuildData(string Name, string Code, bool Leader, IReadOnlyList<MemberData> Members);
