@@ -1,3 +1,4 @@
+using System;
 using IdleBar.Frontier;
 using IdleBar.Scene;
 
@@ -24,6 +25,11 @@ public static class FrontierJournal
         AllyLeft left => $"{left.Name} repart défendre sa propre frontière.",
         Boosted { Source: "titan" } boosted => $"Récompense du titan : +{boosted.Gold} % d'or et de dégâts.",
         Boosted boosted => $"Un convoi de ta guilde arrive : +{boosted.Gold} % d'or.",
+        LootFound found => $"Butin : {found.Name}. Équipe-la dans l'onglet Butin.",
+        Recycled recycled => $"Objet recyclé : +{NumberFormat.Gold(recycled.Gold)}.",
+        TitanAppeared { Fallen: false } appeared => $"Le titan de la semaine, {Titans.Name(appeared.Kind)}, menace toutes les frontières : il lui reste {Math.Ceiling(appeared.Left * 100)} % de ses PV.",
+        TitanWounded wounded => $"{Titans.Name(wounded.Kind)} vacille : plus que {Math.Ceiling(wounded.Left * 100)} % de ses PV.",
+        TitanFell fell => $"Le titan est tombé : {Titans.Name(fell.Kind)} ne menace plus la frontière. Réclame ta récompense dans l'onglet Titan.",
         Returned { Seconds: >= 60 } returned => $"Pendant ton absence ({SceneText.Duration(returned.Seconds).ToLowerInvariant()}) : +{NumberFormat.Gold(returned.Gold)}.",
         _ => null,
     };

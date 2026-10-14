@@ -57,3 +57,15 @@ public sealed record AllyArrived(long Id, string Name, HeroRole Role) : Frontier
 public sealed record AllyLeft(long Id, string Name) : FrontierEvent;
 
 public sealed record Boosted(string Source, int Gold, int Damage) : FrontierEvent;
+
+public sealed record TitanAppeared(int Kind, double Left, bool Fallen) : FrontierEvent;
+
+public sealed record TitanWounded(int Kind, double Left) : FrontierEvent;
+
+public sealed record TitanFell(int Kind) : FrontierEvent;
+
+public sealed record TitanStruck(long Monsters) : FrontierEvent;
+
+public sealed record LootFound(int Rarity, string Name) : FrontierEvent;
+
+public sealed record Recycled(double Gold) : FrontierEvent;

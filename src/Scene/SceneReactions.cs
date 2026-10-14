@@ -74,6 +74,16 @@ public static class SceneReactions
             case Supplied:
                 fx.Float("+5 %", layout.HeroX + 5, 8, Palette.Green, 0.9f);
                 break;
+            case LootFound found:
+                scene.Banners.Add([found.Rarity >= 2 ? "BUTIN RARE !" : "BUTIN !", found.Name]);
+                fx.Burst(layout.HeroX + 5, 6, 8 + found.Rarity * 6, Glitter, random);
+                break;
+            case Recycled recycled:
+                fx.Float("+" + NumberFormat.Amount(recycled.Gold), layout.HeroX + 4, 4, Palette.Yellow, 1.1f, -6);
+                break;
+            case TitanAppeared or TitanWounded or TitanFell or TitanStruck:
+                TitanReactions.Apply(scene, frontierEvent, state, layout, random);
+                break;
             case Struck or Fell or Revived or Routed or Healed or Armored or AllyArrived or Boosted:
                 TeamReactions.Apply(scene, frontierEvent, state, layout, target, random);
                 break;

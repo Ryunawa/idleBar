@@ -44,6 +44,26 @@ public sealed class ArtSprite
         return new ArtSprite(Width, Height, pixels);
     }
 
+    public ArtSprite Map(Func<Rgba, Rgba> map)
+    {
+        Rgba?[] pixels = [.. _pixels.Select(pixel => pixel is Rgba color ? map(color) : (Rgba?)null)];
+        return new ArtSprite(Width, Height, pixels);
+    }
+
+    public ArtSprite Scaled(int factor)
+    {
+        Rgba?[] pixels = new Rgba?[Width * factor * Height * factor];
+        for (int y = 0; y < Height * factor; y++)
+        {
+            for (int x = 0; x < Width * factor; x++)
+            {
+                pixels[y * Width * factor + x] = this[x / factor, y / factor];
+            }
+        }
+
+        return new ArtSprite(Width * factor, Height * factor, pixels);
+    }
+
     public ArtSprite Faded(Rgba toward, float amount)
     {
         Rgba?[] pixels = [.. _pixels.Select(pixel => pixel is Rgba color ? color.Mix(toward, amount) : (Rgba?)null)];

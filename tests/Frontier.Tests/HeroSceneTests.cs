@@ -13,7 +13,7 @@ public sealed class HeroSceneTests
     [Fact]
     public void EveryHeroSymbolHasAColor()
     {
-        Dictionary<char, Rgba> looks = new() { ['S'] = Palette.Skin, ['H'] = Palette.Bark, ['O'] = Palette.Red, ['Q'] = Palette.Wine };
+        Dictionary<char, Rgba> looks = new() { ['S'] = Palette.Skin, ['H'] = Palette.Bark, ['O'] = Palette.Red, ['Q'] = Palette.Wine, ['W'] = Palette.Blue, ['V'] = Palette.Navy, ['X'] = Palette.Silver, ['Y'] = Palette.Slate };
         IEnumerable<IReadOnlyList<string>> grids = HeroGrids.Bodies.Concat(HeroGrids.Hairs).Append(HeroGrids.MageHat);
         Assert.All(grids, grid => Assert.Empty(ArtSprite.UnknownSymbols(grid, looks)));
         Assert.Equal(Roles.All.Count, HeroGrids.Bodies.Count);
@@ -74,6 +74,66 @@ public sealed class HeroSceneTests
         {
             Directory.CreateDirectory(folder);
             PngWriter.Write(frame, Path.Combine(folder, $"renforts-{width}.png"), 4);
+        }
+    }
+
+    [Theory]
+    [InlineData(815, false)]
+    [InlineData(1135, false)]
+    [InlineData(815, true)]
+    public void TheTitanRenders(int width, bool fallen)
+    {
+        FrontierState state = SceneTests.SampleState(47);
+        state.Titan = new TitanView("2026-10-12", width == 1135 ? 1 : 0, 100_000, 38_000, false, 1290);
+        FrontierScene scene = new(new Random(3));
+        FrontierLayout layout = FrontierLayout.For(width, FrontierLayout.Rows);
+        FrontierGame game = new(state, new Random(3));
+        for (int tick = 0; tick < 60; tick++)
+        {
+            game.Advance(1 / 30.0);
+            scene.Update(1 / 30f, state, game.Events.Drain(), layout, false);
+        }
+
+        if (fallen)
+        {
+            game.Sight(state.Titan with { Damage = 100_000, Fallen = true });
+            for (int tick = 0; tick < 30; tick++)
+            {
+                scene.Update(1 / 30f, state, game.Events.Drain(), layout, false);
+            }
+        }
+
+        ArtRaster frame = new ScenePainter().Paint(state, layout, scene, SceneLight.Noon, -1);
+        Assert.Equal(width, frame.Width);
+        if (Environment.GetEnvironmentVariable(SceneTests.SnapshotFolder) is string folder)
+        {
+            Directory.CreateDirectory(folder);
+            PngWriter.Write(frame, Path.Combine(folder, $"titan-{width}{(fallen ? "-chute" : string.Empty)}.png"), 3);
+        }
+    }
+
+    [Fact]
+    public void TheGearSheetRenders()
+    {
+        ArtRaster sheet = new(5 * 5 * 16 + 4, 40);
+        sheet.Fill(0, 0, sheet.Width, sheet.Height, Palette.Sand.Mix(Palette.White, 0.6f));
+        int x = 2;
+        foreach (RoleInfo role in Roles.All)
+        {
+            for (int helm = -1; helm < 4; helm++)
+            {
+                GearLook worn = new(3, 2, helm < 0 ? null : helm, helm < 0 ? 0 : helm);
+                HeroFigure figure = HeroSprites.Of(role.Role, HeroSprites.Default, worn);
+                sheet.Blit(figure.Standing, x, 24 - figure.Standing.Height);
+                sheet.Blit(ItemSprites.Icon(Items.Slots[(x / 16) % 3], helm + 1, helm + 1), x, 28);
+                x += 16;
+            }
+        }
+
+        if (Environment.GetEnvironmentVariable(SceneTests.SnapshotFolder) is string folder)
+        {
+            Directory.CreateDirectory(folder);
+            PngWriter.Write(sheet, Path.Combine(folder, "equipement.png"), 5);
         }
     }
 

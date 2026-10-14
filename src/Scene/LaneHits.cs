@@ -60,6 +60,11 @@ public static class LaneHits
             return new LaneTarget(TargetKind.Crier);
         }
 
+        if (TitanPainter.Contains(state, layout, x, y))
+        {
+            return new LaneTarget(TargetKind.Titan);
+        }
+
         if (layout.FogWidth > 0 && x >= layout.FogX + 8)
         {
             return new LaneTarget(TargetKind.Fog);

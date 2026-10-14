@@ -90,6 +90,29 @@ public sealed class FrontierGame
 
     public void Reinforce(IReadOnlyList<Ally> allies, IReadOnlyList<Boost> boosts) => Help.Sync(State, allies, boosts, Events);
 
+    public void Sight(TitanView titan) => Titans.Sight(State, titan, Events);
+
+    public void Equip(Gear gear, GearLook worn)
+    {
+        State.Gear = gear;
+        State.Worn = worn;
+    }
+
+    public void Discover(int rarity, string name) => Events.Add(new LootFound(rarity, name));
+
+    public double Recycle(int rarity)
+    {
+        if (Frozen)
+        {
+            return 0;
+        }
+
+        double gold = Items.SalvageGold(State, rarity);
+        State.Earn(gold);
+        Events.Add(new Recycled(gold));
+        return gold;
+    }
+
     public void SetIntendant(bool on) => State.IntendantOn = Frozen ? State.IntendantOn : on && State.IntendantUnlocked;
 
     public bool UseSkill(SkillKind kind)

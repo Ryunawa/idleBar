@@ -13,4 +13,5 @@ public enum TargetKind
     Fog,
     BossCall,
     Ally,
+    Titan,
 }

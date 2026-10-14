@@ -13,6 +13,7 @@ public static class LaneHints
         TargetKind.Monster => Monster(state),
         TargetKind.Fighter => Fighter((FighterKind)target.Index, state),
         TargetKind.Ally => Reinforcement(target.Index, state),
+        TargetKind.Titan => Titan(state),
         TargetKind.Building => Plot(target.Index, state),
         TargetKind.Convoy => "Convoi de pain : +5 % de dégâts par livraison, 5 au plus",
         TargetKind.Crier => "Le crieur public et ses nouvelles du royaume",
@@ -61,6 +62,10 @@ public static class LaneHints
         string life = $"{NumberFormat.Amount(Vitality.Hp(state, kind))} / {NumberFormat.Amount(Vitality.MaxHp(state, kind))} PV";
         return $"{name} niv {state.Level(kind)} · {life} · {NumberFormat.Rate(Economy.Dps(state, kind))} dégâts/s · {action}";
     }
+
+    private static string? Titan(FrontierState state) => state.Titan is TitanView titan
+        ? $"{Titans.Name(titan.Kind)}, titan de la semaine : {Math.Ceiling(titan.Left * 100)} % de PV · ta part : {NumberFormat.Exact(titan.Mine)} coups · clique pour le détail"
+        : null;
 
     private static string? Reinforcement(int slot, FrontierState state)
     {

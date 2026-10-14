@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Godot;
@@ -17,6 +18,7 @@ public sealed class SocialSession
     private readonly SocialApi _api;
     private double _sincePoll = PollSeconds;
     private int _generation;
+    private HashSet<long>? _known;
     private bool _busy;
 
     public SocialSession(FrontierSession frontier, SocialApi api)
@@ -55,6 +57,7 @@ public sealed class SocialSession
         _busy = false;
         _sincePoll = PollSeconds;
         Data = null;
+        _known = null;
         Changed?.Invoke();
     }
 
@@ -75,6 +78,21 @@ public sealed class SocialSession
     public Task<string> SendHelpAsync(long member, string kind) => RunAsync(token => _api.SendHelpAsync(token, member, kind));
 
     public Task<string> ClaimTitanAsync() => RunAsync(_api.ClaimTitanAsync);
+
+    public Task<string> EquipAsync(long item) => RunAsync(token => _api.EquipAsync(token, item));
+
+    public Task<string> UnequipAsync(string slot) => RunAsync(token => _api.UnequipAsync(token, slot));
+
+    public async Task<string> SalvageAsync(ItemData item)
+    {
+        string status = await RunAsync(token => _api.SalvageAsync(token, item.Id));
+        if (status == SocialData.Ok)
+        {
+            _frontier.Game?.Recycle(item.Rank);
+        }
+
+        return status;
+    }
 
     private async Task<string> RunAsync(Func<string, Task<SocialData>> call)
     {
@@ -116,6 +134,30 @@ public sealed class SocialSession
             game.Reinforce([.. help.Allies.Select(ally => ally.ToAlly())], [.. help.Boosts.Select(boost => boost.ToBoost())]);
         }
 
+        if (_frontier.Game is FrontierGame watcher && data.Titan is TitanData titan)
+        {
+            watcher.Sight(titan.ToView());
+        }
+
+        if (_frontier.Game is FrontierGame wearer && data.Items is ItemsData items)
+        {
+            wearer.Equip(items.ToGear(), items.ToWorn());
+            Discover(wearer, items);
+        }
+
         Changed?.Invoke();
+    }
+
+    private void Discover(FrontierGame game, ItemsData items)
+    {
+        if (_known is not null)
+        {
+            foreach (ItemData item in items.Bag.Where(item => !_known.Contains(item.Id)))
+            {
+                game.Discover(item.Rank, item.Name);
+            }
+        }
+
+        _known = [.. items.Bag.Select(item => item.Id)];
     }
 }

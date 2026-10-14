@@ -7,8 +7,6 @@ namespace IdleBar.Scene;
 public static class TeamPainter
 {
     private const int BarWidth = 8;
-    private const int ArcherY = 12;
-    private const int MageY = 11;
 
     public static void Paint(ArtRaster r, FrontierState state, FrontierLayout layout, FrontierScene scene)
     {
@@ -25,7 +23,7 @@ public static class TeamPainter
                     Hero(r, state, post.X, scene);
                     break;
                 case { Kind: FighterKind kind }:
-                    Companion(r, state, kind, FrontPainter.Walk(post.X, layout, kind, motion), kind == FighterKind.Mage ? MageY : ArcherY, motion);
+                    Companion(r, state, kind, FrontPainter.Walk(post.X, layout, kind, motion), motion);
                     break;
             }
         }
@@ -54,7 +52,7 @@ public static class TeamPainter
         r.Blit(motion.AllyHurt.ContainsKey(ally.Id) ? figure.Flash : figure.Standing, left, y);
         if (ally.Role == HeroRole.Warrior)
         {
-            Sword(r, left + HeroGrids.HandX, y + HeroGrids.HandY, FrontPainter.SwordAngle(swing, scene.Time));
+            Sword(r, left + HeroGrids.HandX, y + HeroGrids.HandY, FrontPainter.SwordAngle(swing, scene.Time), Palette.Silver);
         }
 
         if (ally.Health < 0.999)
@@ -63,8 +61,9 @@ public static class TeamPainter
         }
     }
 
-    private static void Companion(ArtRaster r, FrontierState state, FighterKind kind, int x, int y, SceneMotion motion)
+    private static void Companion(ArtRaster r, FrontierState state, FighterKind kind, int x, SceneMotion motion)
     {
+        int y = FrontierLayout.Ground - (kind == FighterKind.Mage ? SceneSprites.Mage : SceneSprites.Archer).Height;
         if (state.Level(kind) <= 0)
         {
             return;
@@ -87,7 +86,7 @@ public static class TeamPainter
     private static void Hero(ArtRaster r, FrontierState state, int post, FrontierScene scene)
     {
         SceneMotion motion = scene.Motion;
-        HeroFigure figure = HeroSprites.Of(state.Role, state.Hero);
+        HeroFigure figure = HeroSprites.Of(state.Role, state.Hero, state.Worn);
         int x = post + HeroLean(state.Role, motion);
         int y = FrontierLayout.Ground - figure.Standing.Height;
         if (!Vitality.Up(state, FighterKind.Hero))
@@ -107,13 +106,15 @@ public static class TeamPainter
         r.Blit(motion.Hurt[(int)FighterKind.Hero] > 0 ? figure.Flash : figure.Standing, x, y);
         if (state.Role == HeroRole.Warrior)
         {
-            Sword(r, x + HeroGrids.HandX, y + HeroGrids.HandY, FrontPainter.SwordAngle(motion, scene.Time));
+            Sword(r, x + HeroGrids.HandX, y + HeroGrids.HandY, FrontPainter.SwordAngle(motion, scene.Time), Blade(state.Worn.Weapon));
         }
 
         Health(r, state, FighterKind.Hero, x + 1, y + figure.Top - 2);
     }
 
-    private static void Sword(ArtRaster r, int handX, int handY, float angle)
+    private static Rgba Blade(int? rarity) => rarity is int rank ? ItemSprites.Rarities[System.Math.Clamp(rank, 0, 3)].Main : Palette.Silver;
+
+    private static void Sword(ArtRaster r, int handX, int handY, float angle, Rgba blade)
     {
         float cos = MathF.Cos(angle);
         float sin = MathF.Sin(angle);
@@ -121,7 +122,7 @@ public static class TeamPainter
         {
             int px = (int)MathF.Round(handX + cos * radius);
             int py = (int)MathF.Round(handY + sin * radius);
-            r.Set(px, py, radius <= 1 ? Palette.Bark : radius == 2 ? Palette.Gold : radius == 9 ? Palette.White : Palette.Silver);
+            r.Set(px, py, radius <= 1 ? Palette.Bark : radius == 2 ? Palette.Gold : radius == 9 ? Palette.White : blade);
             if (radius == 2)
             {
                 r.Set((int)MathF.Round(px - sin), (int)MathF.Round(py + cos), Palette.Gold);

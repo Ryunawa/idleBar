@@ -15,7 +15,7 @@ public static class Vitality
     public static double ArmorFactor(int armor) => 1 + Balance.ArmorBonus * armor;
 
     public static double MaxHp(FrontierState state, FighterKind kind) =>
-        BaseHp(state, kind) * (kind == FighterKind.Hero ? Roles.Of(state.Role).Hp : 1);
+        BaseHp(state, kind) * (kind == FighterKind.Hero ? Roles.Of(state.Role).Hp * (1 + state.Gear.Health) : 1);
 
     public static double AllyMaxHp(FrontierState state, Ally ally) =>
         BaseHp(state, FighterKind.Hero) * ally.Ratio * Roles.Of(ally.Role).Hp;

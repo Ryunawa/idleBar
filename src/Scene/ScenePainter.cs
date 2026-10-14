@@ -29,13 +29,16 @@ public sealed class ScenePainter
         LandscapePainter.Paint(_layer, layout);
         VillagePainter.Paint(_layer, state, layout, scene);
         FrontPainter.Paint(_layer, state, layout, scene);
-        _layer.Tint(SkyTones.NightShade, sky.NightTint);
-        _layer.Tint(SkyTones.DuskShade, sky.DuskTint);
+        PicoFilter.Apply(_layer);
+        PicoFilter.Shade(_layer, sky.NightTint, SkyTones.NightRamp);
+        PicoFilter.Shade(_layer, sky.DuskTint, SkyTones.DuskRamp);
         int shake = scene.Motion.Shake > 0 ? ((int)(scene.Time * 40) % 2 == 0 ? 1 : -1) : 0;
         _frame.Over(_layer, shake);
 
         WeatherPainter.Paint(_frame, layout, light, scene.Time);
         FogPainter.Paint(_frame, state, layout, scene.Motion, sky, scene.Time);
+        TitanPainter.Paint(_frame, state, layout, scene);
+        TitanPainter.Gauge(_frame, state, layout);
         OverlayPainter.Locks(_frame, state, layout, sky);
         LightPainter.Paint(_frame, state, layout, scene, sky.Lit);
         EffectsPainter.Projectiles(_frame, scene.Fx);
@@ -50,6 +53,7 @@ public sealed class ScenePainter
         SkillPainter.Paint(_frame, state, layout, hoveredSkill, scene.Time);
         EffectsPainter.Coins(_frame, scene.Fx);
         EffectsPainter.Flash(_frame, scene.Motion, layout);
+        PicoFilter.Apply(_frame);
         return _frame;
     }
 }

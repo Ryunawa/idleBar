@@ -54,7 +54,11 @@ public sealed class FrontierState
 
     public double HealTimer { get; set; }
 
-    public long HeroShots { get; set; }
+    public int CritMeter { get; set; }
+
+    public Gear Gear { get; set; } = Gear.None;
+
+    public GearLook Worn { get; set; } = GearLook.None;
 
     public double FuryLeft { get; set; }
 
@@ -69,6 +73,8 @@ public sealed class FrontierState
     public List<Ally> Allies { get; } = [];
 
     public List<Boost> Boosts { get; } = [];
+
+    public TitanView? Titan { get; set; }
 
     public double ConvoyTimer { get; set; } = 2;
 

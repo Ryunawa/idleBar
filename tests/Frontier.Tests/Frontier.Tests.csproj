@@ -12,7 +12,7 @@
     <Compile Include="../../src/Scene/**/*.cs" Link="Scene/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../../src/Ui/NumberFormat.cs" Link="Ui/NumberFormat.cs" />
     <Compile Include="../../src/Desktop/ScreenFit.cs" Link="Desktop/ScreenFit.cs" />
-    <Compile Include="../../src/Online/FrontierLoader.cs;../../src/Online/LoadPlan.cs;../../src/Online/LocalSave.cs;../../src/Online/FrontierData.cs;../../src/Online/SaveArguments.cs;../../src/Online/SocialData.cs" Link="Online/%(Filename)%(Extension)" />
+    <Compile Include="../../src/Online/FrontierLoader.cs;../../src/Online/LoadPlan.cs;../../src/Online/LocalSave.cs;../../src/Online/FrontierData.cs;../../src/Online/SaveArguments.cs;../../src/Online/SocialData.cs;../../src/Online/ItemData.cs" Link="Online/%(Filename)%(Extension)" />
     <Compile Include="../../src/Cloud/SupabaseJson.cs" Link="Cloud/SupabaseJson.cs" />
   </ItemGroup>
   <ItemGroup>

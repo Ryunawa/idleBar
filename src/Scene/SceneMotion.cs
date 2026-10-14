@@ -22,6 +22,10 @@ public sealed class SceneMotion
 
     public float MonsterLunge { get; set; }
 
+    public float TitanFlash { get; set; }
+
+    public float? TitanFall { get; set; }
+
     public float[] Hurt { get; } = new float[FrontierState.FighterCount];
 
     public Dictionary<long, float> AllyHurt { get; } = [];
@@ -66,6 +70,11 @@ public sealed class SceneMotion
         MonsterFlash = Math.Max(0, MonsterFlash - dt);
         MonsterKick = Math.Max(0, MonsterKick - dt);
         MonsterLunge = Math.Max(0, MonsterLunge - dt);
+        TitanFlash = Math.Max(0, TitanFlash - dt);
+        if (TitanFall is float fall)
+        {
+            TitanFall = fall + dt >= TitanPainter.FallSeconds ? null : fall + dt;
+        }
         for (int index = 0; index < Hurt.Length; index++)
         {
             Hurt[index] = Math.Max(0, Hurt[index] - dt);

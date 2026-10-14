@@ -4,8 +4,8 @@ namespace IdleBar.Scene;
 
 public sealed record SkyTones(IReadOnlyList<Rgba> Bands, Rgba FogLight, Rgba FogDark, float NightTint, float DuskTint, float Stars, bool Lit)
 {
-    public static readonly Rgba NightShade = Rgba.Hex("0e1232");
-    public static readonly Rgba DuskShade = Rgba.Hex("6e2d5a");
+    public static readonly int[] NightRamp = [0, 0, 1, 1, 5, 1, 13, 6, 2, 4, 9, 3, 1, 1, 2, 5];
+    public static readonly int[] DuskRamp = [0, 1, 2, 3, 2, 2, 13, 15, 8, 8, 9, 3, 13, 2, 8, 9];
 
     private static readonly Rgba[] Night = [Rgba.Hex("120f1e"), Rgba.Hex("181a33"), Rgba.Hex("1f2442"), Rgba.Hex("283055")];
     private static readonly Rgba[] Day = [Rgba.Hex("4c9fd8"), Rgba.Hex("69b3e2"), Rgba.Hex("8cc6ea"), Rgba.Hex("b2dbf0")];
@@ -27,7 +27,7 @@ public sealed record SkyTones(IReadOnlyList<Rgba> Bands, Rgba FogLight, Rgba Fog
         Rgba fogLight = Rgba.Hex("5a6589").Mix(Rgba.Hex("e9eef6"), light.Daylight);
         Rgba fogDark = Rgba.Hex("454d6b").Mix(Rgba.Hex("cfd8e6"), light.Daylight);
         float stars = wet ? 0 : (0.5f - light.Daylight) * 2;
-        return new SkyTones(bands, fogLight, fogDark, (1 - light.Daylight) * 0.56f, light.Warmth * 0.28f, stars, light.Night || light.Warmth > 0.5f);
+        return new SkyTones(bands, fogLight, fogDark, (1 - light.Daylight) * 1.15f - 0.15f, light.Warmth * 0.5f, stars, light.Night || light.Warmth > 0.5f);
     }
 
     public Rgba Hill(Rgba day, SceneLight light) =>

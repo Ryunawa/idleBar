@@ -31,10 +31,11 @@ public static class Economy
     public static double Buff(FrontierState state) =>
         (state.FuryLeft > 0 ? Balance.FuryFactor : 1) * (1 + Balance.SupplyBonus * state.Supply) * Synergy(state) * Help.DamageFactor(state);
 
-    public static double HeroPower(FrontierState state) => BaseDps(state, FighterKind.Hero, state.Level(FighterKind.Hero)) * Buff(state);
+    public static double HeroPower(FrontierState state) =>
+        BaseDps(state, FighterKind.Hero, state.Level(FighterKind.Hero)) * Buff(state) * (1 + state.Gear.Damage);
 
     public static double Dps(FrontierState state, FighterKind kind) =>
-        BaseDps(state, kind, state.Level(kind)) * Buff(state) * (kind == FighterKind.Hero ? Roles.Of(state.Role).Dps : 1);
+        BaseDps(state, kind, state.Level(kind)) * Buff(state) * (kind == FighterKind.Hero ? Roles.Of(state.Role).Dps * (1 + state.Gear.Damage) : 1);
 
     public static double AllyDps(FrontierState state, Ally ally) =>
         BaseDps(state, FighterKind.Hero, state.Level(FighterKind.Hero)) * ally.Ratio * Roles.Of(ally.Role).Dps * Buff(state);
@@ -57,7 +58,7 @@ public static class Economy
 
     public static double Interval(FrontierState state, FighterKind kind) =>
         kind == FighterKind.Hero
-            ? Roles.Of(state.Role).Interval / (state.FuryLeft > 0 ? Balance.FuryFactor : 1)
+            ? Roles.Of(state.Role).Interval / (state.FuryLeft > 0 ? Balance.FuryFactor : 1) / (1 + state.Gear.Speed)
             : Fighters.Of(kind).Interval;
 
     public static double ClickDamage(FrontierState state) =>

@@ -72,8 +72,10 @@ Toutes les constantes sont dans `src/Frontier/Balance.cs`.
 - **Renfort** (`Ally`) : une image du héros d'un membre combat 30 min sur le front d'un autre, sans quitter le sien. Le serveur fige au départ le rapport entre la puissance des deux héros (`11 × niveau × 1,5^(niveau/10) × bonus des âmes`), plafonné à 1,2. L'image a le rôle et l'apparence de l'envoyeur ; ses dégâts et ses PV sont ceux du héros qui la reçoit multipliés par ce rapport et par son rôle. Elle est visée, tombe et revient comme un héros (45 s), compte dans la synergie, protège si elle est tank et soigne si elle est soutien. Trois renforts au plus par front.
 - **Convoi** (`Boost`) : +50 % d'or pendant 30 min ; les convois se suivent, 2 h au plus.
 - Chaque aide se recharge en 4 h par joueur et par type. Les bonus ne comptent que quand la barre tourne : l'absence ne les applique pas.
-- **Titan** : un par semaine (du lundi au lundi, UTC), avec 5 000 PV par joueur actif dans les 7 derniers jours (20 000 au moins). Un déclencheur sur `frontiers` lui verse les monstres de chaque sauvegarde, au plus 40 par minute écoulée et au plus la moitié de ses PV par joueur. S'il tombe, chacun réclame (`claim_titan`, jusqu'à la fin de la semaine suivante) : 200 monstres, +25 % d'or et de dégâts pendant 2 h ; 1 000, +50 % pendant 4 h ; 5 000, +100 % pendant 8 h. Les guildes sont classées sur les monstres versés par leurs membres.
-- Mesure : le joueur simulé abat environ 350 monstres par heure jouée, soit 2 800 par journée de 8 h. Un titan à 5 000 par joueur tombe donc en milieu de semaine si chacun joue environ 3 h par jour.
+- **Formation** (`Formation`) : tout le front, renforts compris, se range de l'arrière vers l'avant en soutien, mage, archer, guerrier, tank ; à rôle égal, les personnages du joueur passent devant les renforts. L'équipe habituelle garde ses places, et l'écart se resserre quand le front compte plus de trois personnages. Chaque renfort porte le nom de son joueur au-dessus de la tête (`AllyNames`), raccourci seulement si un autre nom est trop proche.
+- **Titan, l'évènement de la semaine** : un par semaine (du lundi au lundi, UTC), avec 15 000 PV par joueur actif dans les 7 derniers jours (60 000 au moins, script 32). Un déclencheur sur `frontiers` lui verse les coups de chaque sauvegarde : un par monstre, dix par boss, au plus 60 par minute écoulée et au plus la moitié de ses PV par joueur. S'il tombe, chacun réclame (`claim_titan`, jusqu'à la fin de la semaine suivante) selon les paliers de `titan_tiers` : 500 coups, +25 % d'or et de dégâts pendant 4 h ; 3 000, +50 % pendant 8 h ; 10 000, +100 % pendant 12 h. S'il survit, personne ne gagne rien. Les guildes sont classées sur les coups de leurs membres.
+- Le titan se voit dans la barre (`TitanPainter`) : un géant tiré du boss de sa contrée, agrandi et teinté (colosse de pierre, hydre des marais, wyrm de givre, roi des sables), qui se dresse dans le brouillard, avec sa jauge de vie au-dessus. Le moteur suit ses changements (`Titans.Sight`) : une bannière l'annonce à chaque lancement, puis à 75, 50 et 25 % de vie et à sa chute (il s'effondre dans la brume) ; chaque coup du joueur l'illumine. Un clic dessus ouvre l'onglet Titan, qui donne aussi le nombre de héros dans la bataille et le sort du titan de la semaine passée.
+- Mesure : le joueur simulé abat environ 350 monstres par heure jouée, soit 2 800 par journée de 8 h. Un titan à 15 000 par joueur actif demande donc que chacun joue près de 6 h par jour toute la semaine : il peut survivre.
 
 **Biomes.** Tous les 50 niveaux, le front change de contrée : plaine (slime, gobelin), forêt sombre (loup, champignon), désert (scorpion, momie), toundra (yéti, golem de glace). Les boss sont l'ogre et le dragon. Seuls le front et le brouillard changent ; le village reste dans la plaine.
 
@@ -135,6 +137,14 @@ Le joueur choisit le bâtiment de chaque emplacement libre (`Construction`), pui
 
 **Succès.** 30, chacun +2 % d'or et de dégâts.
 
+**Butin (0.7).**
+- Seul le serveur crée les objets (`items`) et seul leur propriétaire les équipe (`hero_equipment`) ou les recycle : identifiant stable et propriétaire unique, pour un futur échange.
+- Un déclencheur sur `bosses_killed` tire un objet pour chaque boss sauvegardé, avec 30 % de chance (`loot_chance`), au plus 2 boss par minute écoulée. Le joueur simulé abat environ 3,5 boss par heure jouée : un objet par heure environ. Chaque récompense du titan donne un objet rare, épique ou légendaire selon son palier.
+- Un objet a un emplacement (arme, armure, coiffe), une rareté (commune 62 %, rare 28 %, épique 8 %, légendaire 2 %), le niveau atteint, une apparence (4 par emplacement) et une ou deux caractéristiques (deux dès la rareté rare, la seconde à 60 %). Valeur = base × rareté (1 ; 1,6 ; 2,5 ; 4) × (1 + niveau / 100, niveau plafonné à 1 000). Bases : dégâts 4 %, PV 6 %, coups critiques 2 %, soins 5 %, vitesse 3 %. L'arme porte dégâts, critiques ou vitesse ; l'armure PV ou soins ; la coiffe tout. Le rôle du héros triple les chances de ses caractéristiques (guerrier : dégâts et vitesse ; tank : PV ; archer : critiques et vitesse ; mage : dégâts et critiques ; soutien : soins et PV).
+- Les caractéristiques équipées ne renforcent que le héros (`Gear`) : dégâts et clics, PV, vitesse de frappe, coups critiques pour tous les rôles (une jauge en centièmes, que l'archer remplit déjà de 20 par tir), soins des victoires et du soutien.
+- Sac de 60 objets (`bag_size`) : plein, il laisse perdre les butins. Recycler rend l'or d'un boss × 2, 5, 12 ou 30 selon la rareté.
+- La coiffe se dessine sur le héros (barbute, couronne, capuche, toque) et remplace le chapeau du mage ; l'épée du guerrier prend la couleur de la rareté de son arme. Les icônes du sac sont des grilles du code (`ItemGrids`), teintées par rareté.
+
 **Absence.**
 - Les emplacements produisent pendant l'absence, 8 h au plus, jusqu'à 24 h avec le moulin ; le combat est en pause.
 - Au retour, la scène rejoue l'absence en accéléré, puis une bannière annonce le gain.
@@ -170,6 +180,8 @@ Les rôles qui tombent le plus (archer, mage : une soixantaine de reculs en 6 h)
   - `29_guilds.sql` crée `guilds`, `guild_members` (avec le chef) et `guild_departures`, un déclencheur qui promeut le plus ancien ou supprime la guilde vide, et `create_guild`, `join_guild`, `leave_guild`, `kick_member`, `rename_guild`, `new_guild_code` et `get_social` ;
   - `30_help.sql` crée `guild_help` (renforts figés et convois, avec leur fin) et `send_help(p_member, p_kind)` ;
   - `31_titan.sql` crée `titans`, `titan_contributions` et `guild_titan`, le déclencheur `frontier_feeds_titan` et `claim_titan`. Les scripts 29 à 31 ne changent rien aux fonctions de la 0.5 : ils s'exécutent quand on veut après le 28.
+  - `32_titan_event.sql` durcit le titan (15 000 PV par joueur actif, 60 000 au moins, un boss vaut dix coups, 60 coups par minute), crée `titan_tiers` et ajoute à la réponse la semaine, le nombre de combattants, les paliers et le titan de la semaine passée.
+  - `33_loot.sql` crée les tables d'objets (`item_slots`, `item_rarities`, `item_stats`, `items`, `hero_equipment`), le tirage `roll_item` et le déclencheur `frontier_drops_loot` ; `34_loot_actions.sql` ajoute le sac à la réponse sociale, `equip_item`, `unequip_item`, `salvage_item`, et l'objet du titan à `claim_titan`.
 - **Le social** : chaque action renvoie la même réponse que `get_social()` : statut, guilde et membres (héros, niveau, record, dernière visite, renforts et convoi reçus), attente avant de rejoindre, recharges, renforts et bonus reçus avec leur durée restante, titan et classement. Les membres sont désignés par un identifiant de guilde, jamais par leur compte. Statuts : `ok`, `missing`, `no_hero`, `already_member`, `cooldown`, `invalid_name`, `banned_name`, `name_taken`, `unknown_code`, `full`, `not_member`, `not_leader`, `unknown_member`, `self`, `front_full`, `convoy_full`, `nothing`, `refused`.
 - **`set_hero(p_session, p_name, p_role, p_skin, p_hair, p_hair_color, p_outfit)`** crée ou modifie le héros. Elle nettoie les espaces du nom, puis répond `invalid_name` (longueur ou caractères), `banned_name` (insulte, même déguisée), `refused` (apparence ou rôle inconnus), `role_locked` (rôle déjà changé depuis le dernier repli enregistré), `elsewhere` ou `ok`. Le client sauvegarde la partie avant un changement de rôle, pour que le serveur connaisse le dernier repli. Le héros du serveur l'emporte toujours sur celui d'une copie locale.
 - **`start_frontier(p_session)`** crée la partie : héros niveau 1, 12 emplacements vides, compétences prêtes.
@@ -201,13 +213,11 @@ Le jeu calcule la partie, et le serveur vérifie qu'elle reste vraisemblable ava
 - Faire calculer la partie par le serveur obligerait à y faire tourner tout le moteur : combat, absence, achats. Il faudrait le porter dans une Edge Function ou un service .NET, garder deux moteurs identiques, rejouer chaque action reçue, et renoncer au jeu hors ligne.
 - Cela ne devient nécessaire que si une partie peut nuire aux autres : classement, échanges, marché. Ce qui passera d'un joueur à l'autre (renforts, convois, titan commun, objets) sera donc calculé et plafonné par le serveur, à partir de valeurs qu'il contrôle. C'est déjà le cas du héros : son nom et son rôle ne s'écrivent que par `set_hero`.
 
-## Publier la 0.5.0
+## Publier la 0.7.0
 
-Publiées : 0.4.1 (scripts 21 à 24), 0.4.2 (12 emplacements), 0.4.3 à 0.4.5 (correctifs, effets des bâtiments), 0.4.6 et 0.4.7 (âmes tirées de l'or, menu de l'icône).
-1. Pousser `main`, puis le tag `v0.5.0`, et attendre que GitHub publie la version.
-2. Dans l'éditeur SQL de Supabase, exécuter `25_more_plots.sql`, `26_review_fixes.sql` et `27_gold_souls.sql` s'ils ne sont pas encore passés, puis `28_heroes.sql`. Le 28 change la signature de `save_frontier` et exige la 0.5.0 : les versions plus anciennes affichent « Mise à jour requise ». Il ne faut donc le lancer qu'une fois la 0.5.0 en ligne.
-
-**La 0.6.0** se publie de la même façon, puis on exécute `29_guilds.sql`, `30_help.sql` et `31_titan.sql`. Ils n'exigent pas de nouvelle version : une 0.5 continue de jouer, sans voir la guilde.
+Publiées : 0.4.1 (scripts 21 à 24), 0.4.2 (12 emplacements), 0.4.3 à 0.4.5 (correctifs, effets des bâtiments), 0.4.6 et 0.4.7 (âmes tirées de l'or, menu de l'icône). La 0.7.0 réunit le héros (0.5), la guilde et le titan (0.6), le butin et le style PICO-8 (0.7) : il n'y a pas eu de 0.5 ni de 0.6 publiées à part.
+1. Le tag `v0.7.0` est poussé le 14 octobre : attendre que GitHub publie la version.
+2. Dans l'éditeur SQL de Supabase, exécuter dans l'ordre `25_more_plots.sql`, `26_review_fixes.sql` et `27_gold_souls.sql` s'ils ne sont pas encore passés, puis `28_heroes.sql` à `34_loot_actions.sql`. Le 28 change la signature de `save_frontier` et exige la 0.5.0 : les versions plus anciennes affichent « Mise à jour requise ». Il ne faut donc le lancer qu'une fois la 0.7.0 en ligne. Les scripts 29 à 34 n'exigent rien de plus.
 
 **Ne jamais rejouer `21_purge.sql`** : il supprime la table `frontiers` et toutes les parties. Les scripts déjà passés ne se rejouent pas ; on n'exécute que les nouveaux numéros.
 
@@ -226,12 +236,11 @@ Publiées : 0.4.1 (scripts 21 à 24), 0.4.2 (12 emplacements), 0.4.3 à 0.4.5 (c
 | 8. 0.4.2 | 12 emplacements et 5 nouveaux bâtiments, compétences à débloquer | Publiée |
 | 9. 0.4.3 à 0.4.5 | Correctifs de la revue, script `26`, texte sur deux lignes, effets des bâtiments | Publiées |
 | 10. 0.4.6 et 0.4.7 | Âmes tirées de l'or total, compteur d'âmes en attente, équilibrage, script `27`, menu de l'icône, déconnexion dans les réglages | Publiées |
-| 11. 0.5.0 « Le héros » | Héros personnalisé et rôles, coups des monstres, personnages qui tombent, recul du front, armure, script `28`, fenêtre de création et onglet Héros | Prête ; voir « Publier la 0.5.0 » |
-| 12. 0.6.0 « Compagnons » | Guildes par code, renforts du héros et convois, titan de la semaine et classement, scripts `29` à `31`, onglets Guilde, Titan et Aide | Prête, après la 0.5.0 |
+| 11. Le héros | Héros personnalisé et rôles, coups des monstres, personnages qui tombent, recul du front, armure, script `28`, fenêtre de création et onglet Héros | Publié dans la 0.7.0 |
+| 12. Compagnons | Guildes par code, renforts du héros et convois, titan de la semaine en évènement, formation par rôle, scripts `29` à `32`, onglets Guilde, Titan et Aide | Publié dans la 0.7.0 |
+| 13. 0.7.0 « Butin » | Objets tenus par le serveur, butin des boss et du titan, onglet Butin, équipement sur le héros, scripts `33` et `34`, tous les dessins en PICO-8 | Tag `v0.7.0` le 14 octobre ; scripts 28 à 34 à exécuter, voir « Publier la 0.7.0 » |
 
-**Ensuite**, validé le 13 octobre :
-- 0.7 « Butin » : des objets tenus par le serveur (arme, armure, coiffe, quatre raretés), tirés par lui sur les boss vaincus, visibles sur le héros. Ils préparent un échange ou un marché (0.8).
-- Plus tard : les fêtes dans le village, les ères, les expéditions, le ciel.
+**Ensuite** : un échange ou un marché d'objets entre joueurs (0.8), puis les fêtes dans le village, les ères, les expéditions, le ciel.
 
 ## Repères dans le code
 
@@ -243,7 +252,7 @@ Publiées : 0.4.1 (scripts 21 à 24), 0.4.2 (12 emplacements), 0.4.3 à 0.4.5 (c
   - `SaveCodec` et `FrontierSave` gèrent la sauvegarde locale versionnée (format 3) en snake_case.
 - **`src/Scene/`** : la barre peinte, en C# pur.
   - `ArtRaster` est le tampon RGBA. Il gère le décalage des rangées du ciel, le découpage pour l'animation de construction, la teinte et la composition.
-  - `ArtSprite` lit des grilles de caractères (`Palette.Symbols`, palette Endesga 32). `ArtFont` est la police 3×5.
+  - `ArtSprite` lit des grilles de caractères (`Palette.Symbols` : les chiffres PICO-8 de `0` à `f`, `.` pour le vide, et des majuscules remplacées par l'apparence ou la rareté). `ArtFont` est la police 3×5.
   - `FrontierLayout` découpe les zones. `FrontierScene` porte l'état visuel (`SceneFx`, `SceneMotion`, `VillageLife`, `Crier`, `BannerQueue`) et réagit aux événements (`SceneReactions`, `CombatReactions`, `SkillReactions`).
   - `ScenePainter` compose les peintres : ciel, sol, bâtiments, paysage, village, front, brouillard, lumières, effets, surimpressions, compétences, météo.
   - `LaneHits` et `LaneHints` disent ce qu'il y a sous la souris. `BossButton` dessine et situe le bouton « BOSS ».
@@ -252,7 +261,7 @@ Publiées : 0.4.1 (scripts 21 à 24), 0.4.2 (12 emplacements), 0.4.3 à 0.4.5 (c
   - `FrontierLane` (et `FrontierLaneInput`) affiche la scène à travers le shader `SharpPixels` et gère la souris.
   - `OfferRow` est une ligne d'achat : bouton, « ×10 », « Max ×N », ou liste des bâtiments pour un emplacement libre.
   - `GameBridge` relie la partie, la session et les fenêtres.
-  - `GameDialogs` ouvre `LoginWindow`, `StartWindow` (création du héros, `HeroForm`) et `FrontierWindow`, avec ses onglets Combattants, Héros (`HeroPanel`), Village, Repli, Guilde (`GuildPanel`, `MemberRow`), Titan (`TitanPanel`), Succès et Aide (`HelpPanel` : journal et FAQ). Un joueur sans héros se le voit demander une fois par chargement.
+  - `GameDialogs` ouvre `LoginWindow`, `StartWindow` (création du héros, `HeroForm`) et `FrontierWindow`, avec ses onglets Combattants, Héros (`HeroPanel`), Butin (`LootPanel`, `ItemRow`), Village, Repli, Guilde (`GuildPanel`, `MemberRow`), Titan (`TitanPanel`), Succès et Aide (`HelpPanel` : journal et FAQ). Un joueur sans héros se le voit demander une fois par chargement.
   - `StatusBuilder` décrit la barre, et `FrontierJournal` traduit les événements en lignes de journal.
 - **`src/Online/`** : `SocialSession` lit `get_social` toutes les minutes et après chaque action (`SocialApi`, `SocialData`), puis donne les renforts et les bonus au moteur (`FrontierGame.Reinforce`). `FrontierSession` (et `FrontierSessionSave`, `FrontierSessionHero`), `FrontierApi`, `FrontierData` (la partie lue dans les tables), `SaveArguments` (les paramètres typés de `save_frontier`), `FrontierLoader`, `LocalCopy`, `SessionAccess` (garde-fou de version).
   - `RealtimeClient` et ses messages sont gardés pour le social v2.
@@ -265,7 +274,13 @@ Publiées : 0.4.1 (scripts 21 à 24), 0.4.2 (12 emplacements), 0.4.3 à 0.4.5 (c
 
 ## Les dessins
 
-- Tout ce qui est dans la barre est dessiné dans le code : grilles de caractères et peintres procéduraux. Chaque symbole d'une grille doit exister dans `Palette.Symbols` ou dans le dictionnaire passé à `ArtSprite.Parse`, ce qu'un test vérifie.
+- Tout ce qui est dans la barre est dessiné dans le code : grilles de caractères et peintres procéduraux. Depuis la 0.7, tout suit le style PICO-8 :
+  - la palette (`Palette`) est celle de PICO-8, 16 couleurs ; les anciens noms (`Ink`, `Silver`…) pointent vers la couleur PICO-8 la plus proche ;
+  - les grilles utilisent les indices PICO-8 : personnages de 8 pixels de large avec un contour noir, sur 16 rangées pour le héros, boss de 16 pixels, icônes de 10 pixels ;
+  - `PicoFilter` ramène chaque image finie aux 16 couleurs, avec un tramage ordonné 4×4 pour les dégradés, la brume et les fondus, comme le `fillp` de PICO-8 ;
+  - la nuit et le crépuscule ne fondent plus les couleurs : le terrain passe à la couleur PICO-8 plus sombre de chaque teinte (`SkyTones.NightRamp`, `DuskRamp`), tramée pendant la transition, comme un `pal()` ;
+  - un test vérifie que chaque pixel d'une image est une couleur PICO-8.
+ Chaque symbole d'une grille doit exister dans `Palette.Symbols` ou dans le dictionnaire passé à `ArtSprite.Parse`, ce qu'un test vérifie.
 - Pour voir la barre sans l'ancrer, on peut :
   - lancer les tests de scène avec `IDLEBAR_SNAPSHOTS` ;
   - ou écrire une scène Godot temporaire (`src/Preview.cs` et `scenes/preview.tscn`, jamais commitées) qui fixe `ContentScaleFactor`, simule des clics avec `PushInput(…, true)` et capture le viewport.

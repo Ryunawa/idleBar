@@ -4,52 +4,53 @@ namespace IdleBar.Scene;
 
 public static class HeroGrids
 {
-    public const int HandX = 8;
+    public const int HandX = 9;
     public const int HandY = 11;
+    public const int Height = 16;
 
     public static IReadOnlyList<IReadOnlyList<string>> Bodies { get; } =
     [
         [
             "", "", "",
-            "...kkkk....", "..kSSSSk...", "..kSSSkSk..", "..kSSSSSk..", "...kSSSk...",
-            "..kaOOak...", ".kaOOOOak..", ".kSOaaOkS..", ".kSOaaOkSS.", "..kyyyyk...",
-            "..kQQQQk...", "..kQkkQk...", "..kQk.kQk..", ".kkk..kkk..",
+            "...0000.....", "..0SSSS0....", "..0SS0S0....", "..0SSSS0....", "..00SS00....",
+            ".0XXOOXX0...", "0SXOOOOXS0..", "0S0OOOO0SS0.", ".0044440000.", "..0QQQQ0....",
+            "..0Q00Q0....", "..0Q00Q0....", ".000..000...",
         ],
         [
             "", "", "",
-            "...kkkk....", "..kSSSSk...", "..kSSSkSk..", "..kSSSSSk..", "...kSSSk...",
-            ".kaaaak.kk.", "kaAOOAakOOk", "kaAOOAakOyOk", "kSAaaAakyyyk", ".kyyyykOyOk",
-            ".kQQQQkOOOk", ".kQkkQ.kOk.", ".kQk.kQ.k..", "kkk..kkk...",
+            "...0000.....", "..0SSSS0....", "..0SS0S0....", "..0SSSS0....", "..00SS00000.",
+            ".0XXXXX0WWV0", "0SXYXXY0WaV0", "0SXXYXX0WWV0", ".0444440WWV0", "..0QQQQ0WWV0",
+            "..0Q00Q00WV0", "..0Q00Q0.00.", ".000..000...",
         ],
         [
             "", "", "",
-            "...kkkk....", "..kSSSSk..b", "..kSSSkSkb.", "..kSSSSSk.b", "...kSSSk..b",
-            "..kOOOOk..b", ".kOOOOOOk.b", ".kSObOOSSSb", ".kQObOOk..b", "..kbbbbk.b.",
-            "..kQQQQkb..", "..kQkkQk...", "..kQk.kQk..", ".kkk..kkk..",
+            "...0000.....", "..0SSSS0.0..", "..0SS0S0.W0.", "..0SSSS0..W0", "..00SS00..W0",
+            ".0OOOOO00.W0", "0SOQQQOSSSW0", "0S0OOOO0..W0", ".0044440..W0", "..0QQQQ0.W0.",
+            "..0Q00Q0.0..", "..0Q00Q0....", ".000..000...",
         ],
         [
             "", "", "",
-            "...kkkk....", "..kSSSSk.c.", "..kSSSkSkcc", "..kSSSSSkb.", "...kSSSk.b.",
-            "..kOOOOk.b.", ".kOOyOOOkb.", ".kSOOOOOSb.", ".kOOOOOOkb.", ".kQOOOOQkb.",
-            ".kQOOOOQkb.", "..kQOOQk.b.", "..kQQQQk.b.", ".kkkkkkk.b.",
+            "...0000..00.", "..0SSSS00WV0", "..0SS0S00WW0", "..0SSSS0.00.", "..00SS00.40.",
+            ".0OOOOOO040.", "0OOQOOOSS40.", "0OOOOOOO040.", "0OQOOOQO040.", "0OOQOOOO040.",
+            "0OOOOQOO040.", ".0QQQQQ0040.", ".00000000...",
         ],
         [
             "", "", "",
-            "...kkkk....", "..kSSSSk.Y.", "..kSSSkSkYyY", "..kSSSSSk.y.", "...kSSSk..y.",
-            "..kwOOwk..y.", ".kwwOOwwk.y.", ".kSwyywwSSy.", ".kwwyywwk.y.", ".kwwwwwwk.y.",
-            ".kQwwwwQk.y.", "..kQwwQk..y.", "..kwwwwk..y.", ".kkkkkkk..y.",
+            "...0000..0..", "..0SSSS00W0.", "..0SS0S0WaW0", "..0SSSS00W0.", "..00SS00.40.",
+            ".0777O770.40", "0S77O7O7S040", "0S0777770S40", ".07779777040", ".0777777O040",
+            ".0O77777O040", "..0777770040", ".0000000.0..",
         ],
     ];
 
     public static IReadOnlyList<IReadOnlyList<string>> Hairs { get; } =
     [
-        ["", "", "", "...HHHH....", "..HHHHHH...", "..HH......."],
-        ["", "", "", "...HHHH....", "..HHHHHH...", ".HHH.......", ".HH........", ".HH........", ".HH........"],
-        ["", "", "", "...HHHH....", "..HHHHHH...", "HHHH.......", "HH.........", "H.........."],
+        ["", "", "", "...HHHH.....", "..HHHHHH....", "..HH........"],
+        ["", "", "", "...HHHH.....", "..HHHHHH....", ".HHH........", ".HH.........", ".HH.........", ".H.........."],
+        ["", "", "", "...HHHH.....", "..HHHHHH....", "HHHH........", "HH..........", "H..........."],
     ];
 
     public static IReadOnlyList<string> MageHat { get; } =
     [
-        ".....kk....", "....kOOk...", "....kOOOk..", "...kOOyOOk.", "..kkkkkkkkk",
+        "....00......", "...0OO0.....", "...0OQO0....", "..0OOaOO0...", ".000000000..",
     ];
 }

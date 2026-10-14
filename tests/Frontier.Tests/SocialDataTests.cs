@@ -33,6 +33,14 @@ public sealed class SocialDataTests
             "kind": 2, "hp": 120000, "damage": 45000, "fallen": false, "ends_in": 300000, "mine": 1290,
             "claimable": { "percent": 50, "hours": 4 },
             "ranking": [ { "rank": 1, "name": "Les Épées", "monsters": 1290, "mine": true } ]
+          },
+          "items": {
+            "max": 60,
+            "bag": [
+              { "id": 7, "slot": "weapon", "rarity": "epic", "level": 45, "stat_a": "damage", "value_a": 15.5, "stat_b": "speed", "value_b": 4.2, "look": 1, "source": "boss", "equipped": true },
+              { "id": 8, "slot": "helm", "rarity": "rare", "level": 30, "stat_a": "health", "value_a": 12, "stat_b": null, "value_b": null, "look": 2, "source": "titan", "equipped": true },
+              { "id": 9, "slot": "armor", "rarity": "common", "level": 12, "stat_a": "healing", "value_a": 5, "stat_b": null, "value_b": null, "look": 0, "source": "boss", "equipped": false }
+            ]
           }
         }
         """;
@@ -55,6 +63,12 @@ public sealed class SocialDataTests
         Assert.Equal(new HeroLook("Brune", 1, 1, 1, 1), ally.Look);
         Assert.Equal(1500.75, ally.Left);
         Assert.Equal(50, data.Help.Boosts[0].ToBoost().Gold);
+
+        ItemsData items = data.Items!;
+        Assert.Equal("Hache épique", items.Bag[0].Name);
+        Assert.Equal(new Gear(0.155, 0.12, 0, 0, 0.042), items.ToGear());
+        Assert.Equal(new GearLook(2, null, 2, 1), items.ToWorn());
+        Assert.Null(items.Equipped(Items.Armor));
     }
 
     [Fact]

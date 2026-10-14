@@ -62,6 +62,22 @@ public sealed class SceneTests
         }
     }
 
+    [Theory]
+    [InlineData("milieu-jour-1920")]
+    [InlineData("milieu-nuit-1920")]
+    [InlineData("desert-pluie")]
+    public void EveryPixelIsAPico8Color(string name)
+    {
+        object[] scene = Scenes().First(entry => (string)entry[0] == name);
+        ArtRaster frame = Render((int)scene[1], (int)scene[2], (int)scene[3], (SceneLight)scene[4]);
+        HashSet<Rgba> pico = [.. Palette.Pico];
+        for (int index = 0; index < frame.Data.Length; index += 4)
+        {
+            Rgba color = new(frame.Data[index], frame.Data[index + 1], frame.Data[index + 2], frame.Data[index + 3]);
+            Assert.True(color.A == 0 || pico.Contains(color), $"{color} n'est pas une couleur PICO-8");
+        }
+    }
+
     [Fact]
     public void TheBestiarySheetRenders()
     {

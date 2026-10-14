@@ -15,7 +15,7 @@ public partial class HeroForm : HBoxContainer
     private static readonly string[] SkinNames = ["Claire", "Dorée", "Mate", "Foncée"];
     private static readonly string[] HairNames = ["Courts", "Longs", "En queue"];
     private static readonly string[] HairColorNames = ["Noirs", "Bruns", "Roux", "Blonds", "Blancs", "Roses"];
-    private static readonly string[] OutfitNames = ["Rouge", "Bleue", "Verte", "Violette", "Orange", "Jaune", "Turquoise", "Noire"];
+    private static readonly string[] OutfitNames = ["Rouge", "Bleue", "Verte", "Rose", "Orange", "Jaune", "Lavande", "Noire"];
     private static readonly CultureInfo French = CultureInfo.GetCultureInfo("fr-FR");
 
     private TextureRect _preview = null!;

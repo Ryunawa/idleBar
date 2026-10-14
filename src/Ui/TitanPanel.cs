@@ -1,22 +1,21 @@
+using System.Collections.Generic;
+using System.Linq;
 using Godot;
+using IdleBar.Frontier;
 using IdleBar.Online;
 
 namespace IdleBar.Ui;
 
 public partial class TitanPanel : VBoxContainer
 {
-    private static readonly string[] Names = ["Colosse de pierre", "Hydre des marais", "Wyrm de givre", "Roi des sables"];
-    private static readonly (long Monsters, string Reward)[] Tiers =
-    [
-        (200, "+25 % d'or et de dégâts pendant 2 h"), (1_000, "+50 % pendant 4 h"), (5_000, "+100 % pendant 8 h"),
-    ];
-
     private SocialSession? _social;
     private Label _title = null!;
     private ProgressBar _life = null!;
     private Label _status = null!;
     private Label _share = null!;
+    private Label _tiers = null!;
     private Button _claim = null!;
+    private Label _last = null!;
     private VBoxContainer _ranking = null!;
     private Label _message = null!;
     private bool _busy;
@@ -26,7 +25,7 @@ public partial class TitanPanel : VBoxContainer
         Name = "Titan";
         VBoxContainer rows = new();
         rows.AddThemeConstantOverride("separation", 8);
-        rows.AddChild(WindowRows.Muted("Chaque semaine, un titan menace toutes les frontières. Chaque monstre que tu vaincs le frappe, 40 par minute au plus, et chaque joueur peut lui retirer au plus la moitié de ses PV. S'il tombe avant lundi, chacun reçoit une récompense selon sa propre part."));
+        rows.AddChild(WindowRows.Muted("Chaque lundi, un titan se dresse dans le brouillard de toutes les frontières. Il faut tous les joueurs pour l'abattre avant le lundi suivant : chaque monstre vaincu lui porte un coup, chaque boss dix. Personne ne peut lui retirer plus de la moitié de ses PV, ni plus de 60 coups par minute."));
         _title = new Label();
         _title.AddThemeColorOverride("font_color", BarPalette.Gold);
         rows.AddChild(_title);
@@ -36,9 +35,13 @@ public partial class TitanPanel : VBoxContainer
         rows.AddChild(_status);
         _share = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         rows.AddChild(_share);
+        _tiers = WindowRows.Muted(string.Empty);
+        rows.AddChild(_tiers);
         _claim = new Button { SizeFlagsHorizontal = SizeFlags.ShrinkBegin };
         _claim.Pressed += Claim;
         rows.AddChild(_claim);
+        _last = WindowRows.Muted(string.Empty);
+        rows.AddChild(_last);
         rows.AddChild(WindowRows.Heading("Classement des guildes"));
         _ranking = new VBoxContainer();
         rows.AddChild(_ranking);
@@ -59,8 +62,8 @@ public partial class TitanPanel : VBoxContainer
     {
         if (_social?.Data?.Titan is TitanData titan)
         {
-            string left = titan.Fallen ? "Abattu ! Rendez-vous lundi pour le suivant." : $"Il reste {GuildMessages.Wait(_social.Left(titan.EndsIn))} pour l'abattre.";
-            _status.Text = $"{NumberFormat.Exact(titan.Damage)} / {NumberFormat.Exact(titan.Hp)} monstres · {left}";
+            string left = titan.Fallen ? "Abattu ! Le prochain se dresse lundi." : $"Il reste {GuildMessages.Wait(_social.Left(titan.EndsIn))} pour l'abattre.";
+            _status.Text = $"{NumberFormat.Exact(titan.Damage)} / {NumberFormat.Exact(titan.Hp)} coups · {titan.Fighters} héros dans la bataille · {left}";
         }
     }
 
@@ -74,16 +77,22 @@ public partial class TitanPanel : VBoxContainer
         WindowRows.Clear(_ranking);
         if (_social?.Data?.Titan is not TitanData titan)
         {
-            _title.Text = "Le titan se cherche…";
+            _title.Text = "Le titan se cherche dans le brouillard…";
             _claim.Visible = false;
             return;
         }
 
-        _title.Text = Names[titan.Kind % Names.Length];
-        _life.Value = titan.Hp > 0 ? (double)titan.Damage / titan.Hp : 0;
-        _share.Text = Share(titan);
+        IReadOnlyList<TitanTier> tiers = titan.Tiers ?? [];
+        _title.Text = $"{Titans.Name(titan.Kind)} · titan de la semaine";
+        _life.Value = titan.Hp > 0 ? 1 - (double)titan.Damage / titan.Hp : 0;
+        _share.Text = Share(titan, tiers);
+        _tiers.Text = "Paliers, si le titan tombe : " + string.Join(" ; ", tiers.Select(tier =>
+            $"{NumberFormat.Exact(tier.Points)} coups, +{tier.Percent} % d'or et de dégâts pendant {tier.Hours} h")) + ".";
         _claim.Visible = titan.Claimable is not null;
         _claim.Text = titan.Claimable is TitanReward reward ? $"Réclamer : +{reward.Percent} % d'or et de dégâts pendant {reward.Hours} h" : string.Empty;
+        _last.Text = titan.Last is LastTitan last
+            ? $"La semaine dernière, le titan {Titans.Name(last.Kind)} {(last.Fallen ? "est tombé" : "a survécu")} ; ta part : {NumberFormat.Exact(last.Mine)} coups."
+            : string.Empty;
         if (titan.Ranking.Count == 0)
         {
             _ranking.AddChild(WindowRows.Muted("Aucune guilde n'a encore frappé cette semaine."));
@@ -91,7 +100,7 @@ public partial class TitanPanel : VBoxContainer
 
         foreach (RankData rank in titan.Ranking)
         {
-            Label line = new() { Text = $"{rank.Rank}. {rank.Name} · {NumberFormat.Exact(rank.Monsters)} monstres" };
+            Label line = new() { Text = $"{rank.Rank}. {rank.Name} · {NumberFormat.Exact(rank.Monsters)} coups" };
             if (rank.Mine)
             {
                 line.AddThemeColorOverride("font_color", BarPalette.Gold);
@@ -103,23 +112,13 @@ public partial class TitanPanel : VBoxContainer
         Refresh();
     }
 
-    private static string Share(TitanData titan)
+    private static string Share(TitanData titan, IReadOnlyList<TitanTier> tiers)
     {
-        string reached = "aucune récompense pour l'instant";
-        string next = string.Empty;
-        foreach ((long monsters, string reward) in Tiers)
-        {
-            if (titan.Mine >= monsters)
-            {
-                reached = reward;
-            }
-            else if (next.Length == 0)
-            {
-                next = $" Prochain palier à {NumberFormat.Exact(monsters)} monstres.";
-            }
-        }
-
-        return $"Ta part : {NumberFormat.Exact(titan.Mine)} monstres, soit {reached} s'il tombe.{next}";
+        TitanTier? reached = tiers.LastOrDefault(tier => titan.Mine >= tier.Points);
+        TitanTier? next = tiers.FirstOrDefault(tier => titan.Mine < tier.Points);
+        string reward = reached is null ? "pas encore de récompense" : $"+{reached.Percent} % pendant {reached.Hours} h s'il tombe";
+        string ahead = next is null ? string.Empty : $" Prochain palier à {NumberFormat.Exact(next.Points)} coups.";
+        return $"Ta part : {NumberFormat.Exact(titan.Mine)} coups, {reward}.{ahead}";
     }
 
     private async void Claim()

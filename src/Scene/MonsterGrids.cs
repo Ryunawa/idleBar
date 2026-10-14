@@ -6,63 +6,59 @@ public static class MonsterGrids
 {
     public static IReadOnlyList<string> Goblin { get; } =
     [
-        "g........g", "gg.gggg.gg", ".gggggggg.", ".gkYgkYgg.", ".gggggggg.", "..gwkwkg..",
-        "...gggg...", "..bbbbbb..", ".gbbBbbbg.", ".g.bbbb.g.", "...g..g...", "..ll..ll..",
+        "00........00", "0b000000000b", ".0bbbbbbbb0.", "..0bbbbbb0..", "..0a0bb0a0..", "..0bbbbbb0..",
+        "..0b7070b0..", "...0bbbb0...", "..04444440..", ".0b444444b0.", "..04400440..", "..000..000..",
     ];
 
     public static IReadOnlyList<string> Wolf { get; } =
     [
-        "..k..k.........", "..lAkl.........", ".kllAll........", "klAdANAkk......", ".lldAdAAdlll...", "..lllAAddddAk..",
-        "...lAAAAddddAk.", "...lAAAANlAdkN.", "....kkAl.lkdall", "....kAll..lldlk", "....kdbk..kaNl.", ".....lla.llANb.",
+        "..0.0...........", ".060600.........", "0666660.........", "0806666000000...", "066666666666600.",
+        ".0076666666666d0", "..0066666666dd0.", "...0d666d666d0..", "...0dd00d6dd0...", "...0d0..0dd0....", "...00....00.....",
     ];
 
     public static IReadOnlyList<string> Mushroom { get; } =
     [
-        "...rrrr...", ".rrwrrrrr.", "rrrrrrwrrr", "rwrrrrrrRr", "..tttttt..", "..tkttkt..",
-        "..tttttt..", "..ttRRtt..", "...tttt...", "...t..t...", "..tt..tt..",
+        "...000000....", "..08878870...", ".0878888780..", "0888887888800", "0888888888780", ".00000000000.",
+        "..0ffffff0...", "..0f0ff0f0...", "..0ffffff0...", "..0ff22ff0...", "...0ffff0....", "..0ff00ff0...", "..000..000...",
     ];
 
     public static IReadOnlyList<string> Scorpion { get; } =
     [
-        ".......ee....", "......eoee...", ".....ee..Ee..", ".....ee...ye.", ".....B....ee.", ".........eye.", "......e.eyb..",
-        "....eeeeyyb..", ".yo.Ryyyyybt.", "eoeeyyyyeeTe.", ".e.ebyebyeewy", ".....eyye..e.", "...eyyee.e.y.", "....ee...e...",
+        "..........000.", ".........0a990", "........099.0.", "........090...", ".........090..", "..........090.",
+        "...00000..090.", "000999990090..", "0a09a9a99900..", "0090999999990.", ".00909090909.0", "..0.0.0.0.0...",
     ];
 
     public static IReadOnlyList<string> Mummy { get; } =
     [
-        ".....bddd..", "....bwttwd.", "....bbbbdb.", "....bsbwbb.", "....bww..b.", ".bdbbAb.bw.", "bwtlwwbbA..",
-        ".BT.bbwdwb.", "...mdwbb.l.", "...t.d.twl.", ".....sbbwtw", ".....b.wbb.", "....ab..dwb", "...aab...mb",
+        "...0000...", "..0f6f60..", "..0a6a60..", "..06f6f0..", ".0006f600.", "0f6f6f6f60", "0f06f6f0f0",
+        "..0f6f60..", "..06f6f0..", "..0f6f60..", "..0600f60.", "..0f0.0f0.", ".000..000.",
     ];
 
     public static IReadOnlyList<string> Yeti { get; } =
     [
-        "...wwwww....", "..wwwwwwwa..", "..AkAAkAwa..", "..AAAAAAwa..", "..AwkkwAwa..",
-        "..wAAAAwwa..", ".wwwwwwwwwa.", "wwwwwwwwwwwa", "ww.wwwwwww.a", "ww.wwwwwwwa.",
-        "...wwwwwww..", "...ww..ww...", "..aaa..aaa..",
+        "...00000.....", "..0777770....", ".077777770...", ".07c0cc0c70..", ".07cccccc70..", ".07c0000c70..",
+        "0777777777770", "0770777770770", "0770777770770", "0770777770770", ".00777777700.",
+        "...0770770...", "...0770770...", "..00000000...",
     ];
 
     public static IReadOnlyList<string> IceGolem { get; } =
     [
-        "...uuuuu....", "..ucccccu...", "..cYccYcu...", "..ccccccu...", ".uuuuuuuuu..",
-        "ucccwcccccu.", "ucccccccccu.", "cc.ccccccc.c", "cc.ccwcccc.c", "uu.cccccccuu",
-        "...uuuuuuu..", "...cc...cc..", "...cc...cc..", "..uuu..uuu..",
+        "...00000....", "..0c7cc70...", "..0a0cca0...", "..0cccccc0..", ".00cccccc00.", "0c7cc7ccc7c0",
+        "0cc0cccc0cc0", "0c10c7cc01c0", "0c10cccc01c0", ".0.0cccc0.0.", "...0c00c0...", "...0c00c0...", "..000..000..",
     ];
 
     public static IReadOnlyList<string> Ogre { get; } =
     [
-        ".....y.y.y......", ".....yyyyy......", "....mmmmmmm.....", "...mmmmmmmmm....",
-        "...mkYmmkYmm....", "...mmmmmmmmm....", "...mwmmmmwmm....", "....mmmmmmm.....",
-        "..mmmmmmmmmmm...", ".mmmmmmmmmmmmm..", ".mmmmmmmmmmmmmm.", "mm.mmmmmmmmmm.mm",
-        "mm.mmmmmmmmmm.mm", "mm.bbbbbbbbbb.mm", "...bbbBbbBbbb...", "....mmm..mmm....",
-        "....mmm..mmm....", "....mmm..mmm....", "...llll.llll....",
+        "....0a0a0a0.....", "....0aaaaa0.....", "...033333330....", "..03333333330...", "..03a033a0330...", "..033333333300..",
+        "..03707707330...", "...0333333300...", ".0033333333300..", "033033333330330.", "0330333333303300", "033044444440330.",
+        ".0004494494000..", "...044444440....", "...03300330.....", "..000000000.....",
     ];
 
     public static IReadOnlyList<string> Dragon { get; } =
     [
-        "........y.y.y.........", "........yyyyy.........", ".......rrrrrr.....R...", "......rkYrrrrr...RR...",
-        "rrrrrrrrrrrrrr..RRR...", "wrwrrrrrrrrrrrRRRRR...", "..rrrrrrRRRRRRRRRR....", "....rrrrrrrrrRRRRR....",
-        "...rrrrrrrrrrrrRR.....", "..rrryyyyyyrrrrrr.....", "..rryyyyyyyyrrrrrrr...", "...ryyyyyyyrrrrrrrrr..",
-        "....rrrrrrrrr....rrrr.", "....rr..rr........rrr.", "....rR..rR..........r.", "...RRR.RRR............",
+        "..........0..0....", ".........020020...", "..0a0a..0222220...", ".088880.02222220..", "08a88880.0222220..",
+        "0888888800222200..", "07788888888220....", ".00008888888880...", "....08aa8888880...", "....08aaa88888800.",
+        "....08aaa888888880", ".....08aa8800.0880", ".....0880880...00.", ".....080.080......", "....000.000.......",
     ];
 
     public static IReadOnlyList<IReadOnlyList<string>?> Templates { get; } = [null, Goblin, Wolf, Mushroom, Scorpion, Mummy, Yeti, IceGolem];

@@ -95,8 +95,10 @@ public static class Battle
             return;
         }
 
-        state.HeroShots++;
-        Blow(state, state.Role, state.HeroShots, monster, amount, HitSource.Hero, 0, events);
+        state.CritMeter += (state.Role == HeroRole.Archer ? 100 / Balance.CriticalEvery : 0) + (int)Math.Round(state.Gear.Critical * 100);
+        bool critical = state.CritMeter >= 100;
+        state.CritMeter = critical ? state.CritMeter - 100 : state.CritMeter;
+        Blow(state, state.Role, critical, monster, amount, HitSource.Hero, 0, events);
     }
 
     private static void Assist(FrontierState state, Ally ally, Monster monster, double dt, EventLog events)
@@ -112,13 +114,13 @@ public static class Battle
         {
             ally.Timer -= interval;
             ally.Shots++;
-            Blow(state, ally.Role, ally.Shots, monster, Economy.AllyDps(state, ally) * interval, HitSource.Ally, ally.Id, events);
+            bool critical = ally.Role == HeroRole.Archer && ally.Shots % Balance.CriticalEvery == 0;
+            Blow(state, ally.Role, critical, monster, Economy.AllyDps(state, ally) * interval, HitSource.Ally, ally.Id, events);
         }
     }
 
-    private static void Blow(FrontierState state, HeroRole role, long shots, Monster monster, double amount, HitSource source, long ally, EventLog events)
+    private static void Blow(FrontierState state, HeroRole role, bool critical, Monster monster, double amount, HitSource source, long ally, EventLog events)
     {
-        bool critical = role == HeroRole.Archer && shots % Balance.CriticalEvery == 0;
         double factor = (critical ? Balance.CriticalFactor : 1) * (role == HeroRole.Mage && monster.Boss ? Balance.MageBossFactor : 1);
         if (role == HeroRole.Warrior)
         {

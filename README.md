@@ -5,6 +5,7 @@ La Frontière : un petit jeu idle en pixel art qui vit dans une barre en bas de 
 - chaque boss vaincu fait reculer le brouillard et libère un terrain pour ton village ;
 - tu choisis quoi bâtir sur chaque terrain : la ferme, le moulin, la boulangerie, la forge… Chaque terrain produit de l'or, même quand le jeu est fermé, et chaque bâtiment y apporte son effet ;
 - en guilde, tu envoies ton héros ou un convoi chez tes amis, et vous abattez ensemble le titan de la semaine ;
+- les boss laissent du butin : arme, armure et coiffe, de commune à légendaire, à équiper sur ton héros ;
 - tu te replies quand tu veux repartir plus fort, et la frontière avance de contrée en contrée.
 
 ## Télécharger

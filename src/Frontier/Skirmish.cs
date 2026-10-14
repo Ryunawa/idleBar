@@ -42,7 +42,7 @@ public static class Skirmish
 
     public static void Stun(Monster monster) => monster.StrikeIn += Balance.StunSeconds;
 
-    public static void Rest(FrontierState state) => Mend(state, Balance.KillHeal);
+    public static void Rest(FrontierState state) => Mend(state, Balance.KillHeal * (1 + state.Gear.Healing));
 
     public static void Restore(FrontierState state)
     {
@@ -93,7 +93,7 @@ public static class Skirmish
         if (state.HealTimer >= Balance.HealSeconds)
         {
             state.HealTimer -= Balance.HealSeconds;
-            Mend(state, Balance.HealShare);
+            Mend(state, Balance.HealShare * (1 + state.Gear.Healing));
             events.Add(new Healed());
         }
     }

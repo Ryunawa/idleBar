@@ -81,6 +81,9 @@ public partial class FrontierLane
             case TargetKind.Ally:
                 ManageRequested?.Invoke(WindowTab.Guild);
                 break;
+            case TargetKind.Titan:
+                ManageRequested?.Invoke(WindowTab.Titan);
+                break;
             case TargetKind.BossCall:
                 game.CallBoss();
                 break;

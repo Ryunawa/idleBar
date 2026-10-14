@@ -6,45 +6,45 @@ public static class FighterGrids
 {
     public static IReadOnlyList<string> Archer { get; } =
     [
-        "..GGG...", ".GGGGG..", ".GGsssb.", ".GGsks.b", "..Gsss.b", ".gGGGgsb",
-        ".ggggg.b", ".ggGgg.b", "..bbb.b.", "..g.g...", "..g.g...", ".ll.ll..",
+        "...0000.....", "..033330.0..", ".0333333040.", ".033ff0f0040", ".03ffff0..40", "..00ff00..40", ".0bbbbbb0.40",
+        "0fb3bb3bff40", "0f0bbbbb0.40", ".00444400.40", "..0bbbb0.040", "..0b00b0.00.", "..0b00b0....", ".000..000...",
     ];
 
     public static IReadOnlyList<string> Mage { get; } =
     [
-        "...p....", "...pp...", "..ppPY..", ".ppPPPp.", "pppppppp", "..sss..c", "..ssk..b",
-        ".ppppp.b", "pppppPsb", ".ppppp.b", ".ppPpp.b", ".ppppp.b", "..l.l..b",
+        "....00......", "...0220..0..", "...022e0.0c0", "..022a220.0.", ".0000000004.", "..0ffff0..4.", "..0ff0f0..4.",
+        "..00ff00..4.", ".0e2222e0.4.", "0f2222222ff.", "0f0222220.4.", ".02e22e20.4.", ".0222222204.", ".022e2e2204.", ".0000000000.",
     ];
 
     public static IReadOnlyList<string> ChickenUp { get; } =
     [
-        ".r.......", "rr...yy..", "oYY.yYYy.", "YkYYYYy..", ".YYYYYYYy", "..YYYYYYy", "...yYYYy.", "....o.o..",
+        ".8.......", "88...99..", "9aa.9aa9.", "a0aaaa9..", ".aaaaaaa9", "..aaaaaa9", "...9aaa9.", "....9.9..",
     ];
 
     public static IReadOnlyList<string> ChickenDown { get; } =
     [
-        ".r.......", "rr.......", "oYY......", "YkYYYYYy.", ".YYyyyYYy", "..YyYYyYy", "...yyYYy.", "....o.o..",
+        ".8.......", "88.......", "9aa......", "a0aaaaa9.", ".aa999aa9", "..a9aa9a9", "...99aa9.", "....9.9..",
     ];
 
-    public static IReadOnlyList<string> Lock { get; } = [".aaa.", "a...a", "yyyyy", "yykyy", "yykyy", "yyyyy"];
+    public static IReadOnlyList<string> Lock { get; } = [".666.", "6...6", "99999", "99099", "99099", "99999"];
 
-    public static IReadOnlyList<string> Bread { get; } = [".TTT.", "TETET", ".TTT."];
+    public static IReadOnlyList<string> Bread { get; } = [".fff.", "f9f9f", ".fff."];
 
     public static IReadOnlyList<string> Bolt { get; } =
     [
-        "......Yy...", ".....YYy...", "....YYy....", "...YYy.....", "..YYYYYYy..", "......YYy..",
-        ".....YYy...", "....YYy....", "...YYy.....", "...Yy......", "..Yy.......",
+        "......a9...", ".....aa9...", "....aa9....", "...aa9.....", "..aaaaaa9..", "......aa9..",
+        ".....aa9...", "....aa9....", "...aa9.....", "...a9......", "..a9.......",
     ];
 
     public static IReadOnlyList<string> Flame { get; } =
     [
-        ".....r.....", "....rr.....", "....rrr..r.", "...rrorr.r.", "..rrooorrr.", "..roooooor.",
-        ".rrooYYoorr", ".rooYYYYoor", ".roYYwwYYor", "..roYwwYor.", "...rrrrrr..",
+        ".....8.....", "....88.....", "....888..8.", "...88988.8.", "..88999888.", "..89999998.",
+        ".8899aa9988", ".899aaaa998", ".89aa77aa98", "..89a77a98.", "...888888..",
     ];
 
     public static IReadOnlyList<string> Coins { get; } =
     [
-        "..y.....y..", "...........", "....yyy....", "...yYYYy...", "...yYwYy.y.", "y..yYYYy...",
-        "....yyy....", ".yyy...yyy.", "yYYYy.yYYYy", "yYwYy.yYwYy", ".yyy...yyy.",
+        "..9.....9..", "...........", "....999....", "...9aaa9...", "...9a7a9.9.", "9..9aaa9...",
+        "....999....", ".999...999.", "9aaa9.9aaa9", "9a7a9.9a7a9", ".999...999.",
     ];
 }
