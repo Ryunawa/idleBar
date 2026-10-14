@@ -88,7 +88,7 @@ public static class Shop
     }
 
     private static double Growth(Purchase purchase) =>
-        purchase is ArmorPurchase ? Balance.FighterCostGrowth : Balance.BuildingCostGrowth;
+        purchase is ArmorPurchase ? Balance.ArmorCostGrowth : Balance.BuildingCostGrowth;
 
     private static void Raise(FrontierState state, int plot, EventLog events)
     {

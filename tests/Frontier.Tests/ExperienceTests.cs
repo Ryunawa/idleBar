@@ -95,5 +95,5 @@ public sealed class ExperienceTests
     }
 
     private static FrontierState Steady(HeroRole role) =>
-        new() { Role = role, Fighters = [400, 0, 0], Stage = 211, MaxStage = 211, Armor = int.MaxValue / 2 };
+        new() { Role = role, Fighters = [139, 0, 0], Stage = 211, MaxStage = 211, Armor = int.MaxValue / 2 };
 }

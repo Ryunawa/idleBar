@@ -6,7 +6,7 @@ namespace IdleBar.Online;
 public static class FrontierLoader
 {
     public static LoadPlan Plan(FrontierData data, LocalSave? local, DateTimeOffset now) =>
-        local is { Unsent: true } && (local.Revision == data.Revision || SavedLater(data, local))
+        local is { Unsent: true, Save.Version: >= SaveCodec.LevelCurveVersion } && (local.Revision == data.Revision || SavedLater(data, local))
             ? new LoadPlan(SaveCodec.Restore(data.WithHero(local.Save)), Since(local, now), true)
             : new LoadPlan(SaveCodec.Restore(data.ToSave()), Math.Max(0, data.AwaySeconds), false);
 

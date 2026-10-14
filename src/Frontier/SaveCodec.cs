@@ -7,8 +7,9 @@ namespace IdleBar.Frontier;
 
 public static class SaveCodec
 {
-    public const int CurrentVersion = 3;
+    public const int CurrentVersion = 4;
     public const int OldestVersion = 2;
+    public const int LevelCurveVersion = 4;
 
     public static JsonSerializerOptions Options { get; } = new() { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
 
@@ -55,7 +56,7 @@ public static class SaveCodec
             BestStage = Math.Max(maxStage, save.BestStage),
             Kills = Math.Clamp(save.Kills, 0, Balance.MonstersPerStage - 1),
             BossHeld = save.BossHeld && !Economy.IsBossStage(stage),
-            Fighters = Fit(save.Fighters, FrontierState.FighterCount),
+            Fighters = FighterLevels(save),
             Cooldowns = Fit(save.Cooldowns, FrontierState.SkillCount),
             MonstersKilled = save.MonstersKilled,
             BossesKilled = save.BossesKilled,
@@ -67,7 +68,7 @@ public static class SaveCodec
             Armor = Math.Max(0, save.Armor),
             Hero = save.Hero is HeroLook hero && hero.IsValid() ? hero : null,
             Companions = [.. Enumerable.Range(0, FrontierState.FighterCount - 1).Select(index => Roles.Parse(save.Companions?.ElementAtOrDefault(index)))],
-            Xp = Fit(save.Xp ?? [], FrontierState.FighterCount),
+            Xp = save.Version >= LevelCurveVersion ? Fit(save.Xp ?? [], FrontierState.FighterCount) : new double[FrontierState.FighterCount],
         };
         state.Fighters[(int)FighterKind.Hero] = Math.Max(1, state.Fighters[(int)FighterKind.Hero]);
         PlaceBuildings(state, save);
@@ -88,6 +89,14 @@ public static class SaveCodec
 
     public static bool Complete(FrontierSave? save) =>
         save is { Version: >= OldestVersion and <= CurrentVersion, Fighters: not null, Plots: not null, Levels: not null, Cooldowns: not null, Achievements: not null };
+
+    private static int[] FighterLevels(FrontierSave save)
+    {
+        int[] levels = Fit(save.Fighters, FrontierState.FighterCount);
+        return save.Version >= LevelCurveVersion
+            ? levels
+            : [.. levels.Select(level => level > 0 ? Math.Max(1, (int)Math.Round(level / Balance.OldLevelsPerLevel)) : 0)];
+    }
 
     private static void PlaceBuildings(FrontierState state, FrontierSave save)
     {

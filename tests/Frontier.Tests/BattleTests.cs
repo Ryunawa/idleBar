@@ -56,7 +56,7 @@ public sealed class BattleTests
     [Fact]
     public void AStrikeNeedsAMonsterInFront()
     {
-        FrontierGame game = new(new FrontierState(), new Random(1));
+        FrontierGame game = new(new FrontierState { Stage = 6, MaxStage = 6 }, new Random(1));
         Assert.False(game.Strike());
         Run(game, 1.5);
         Assert.True(game.Strike());
@@ -75,7 +75,7 @@ public sealed class BattleTests
 
     internal static FrontierGame Strong(FrontierState state)
     {
-        state.Fighters[(int)FighterKind.Hero] = 200;
+        state.Fighters[(int)FighterKind.Hero] = 70;
         return new FrontierGame(state, new Random(1));
     }
 

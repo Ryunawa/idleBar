@@ -29,7 +29,7 @@ public sealed class EconomyTests
         FrontierState state = new();
         double first = Experience.ToNext(state, FighterKind.Hero);
         state.Fighters[(int)FighterKind.Hero]++;
-        Assert.Equal(first * Balance.FighterCostGrowth, Experience.ToNext(state, FighterKind.Hero), 6);
+        Assert.Equal(first * Balance.XpGrowth, Experience.ToNext(state, FighterKind.Hero), 6);
     }
 
     [Fact]

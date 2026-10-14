@@ -106,6 +106,18 @@ public sealed class SaveTests
     }
 
     [Fact]
+    public void ASaveFromBeforeTheSteeperLevelsIsRescaled()
+    {
+        FrontierState state = new() { Stage = 80, MaxStage = 80, Fighters = [300, 150, 0] };
+        state.Xp[0] = 5e9;
+        FrontierState restored = SaveCodec.Restore(SaveCodec.Capture(state) with { Version = 3 });
+
+        Assert.Equal(new[] { 104, 52, 0 }, restored.Fighters);
+        Assert.All(restored.Xp, xp => Assert.Equal(0, xp));
+        Assert.Equal(new[] { 300, 150, 0 }, SaveCodec.Restore(SaveCodec.Capture(state)).Fighters);
+    }
+
+    [Fact]
     public void ASaveFromTheJsonEraIsIgnored()
     {
         Assert.Null(SaveCodec.Deserialize("{\"version\":1,\"fighters\":[1,0,0],\"buildings\":[1,0,0,0,0,0,0],\"cooldowns\":[0,0,0],\"achievements\":[]}"));

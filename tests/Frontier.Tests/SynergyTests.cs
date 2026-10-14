@@ -8,7 +8,9 @@ namespace IdleBar.Tests;
 
 public sealed class SynergyTests
 {
-    private const double Hours = 6 * 3600;
+    private const int Days = 4;
+    private const double Played = 8 * 3600;
+    private const double Away = 16 * 3600;
 
     private readonly ITestOutputHelper _output;
 
@@ -40,7 +42,12 @@ public sealed class SynergyTests
     private IdlePlayer Run(HeroRole hero, HeroRole first, HeroRole second)
     {
         IdlePlayer player = new(5, hero, first, second);
-        player.Play(Hours);
+        for (int day = 0; day < Days; day++)
+        {
+            player.Play(Played);
+            player.Away(Away);
+        }
+
         FrontierState state = player.Game.State;
         _output.WriteLine($"{hero}/{first}/{second} : niveau {state.BestStage}, {state.Souls} âmes, {Falls(player)} chutes, {player.Counts.GetValueOrDefault(nameof(Routed))} reculs, {player.Counts.GetValueOrDefault(nameof(BossFailed))} boss ratés");
         return player;

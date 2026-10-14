@@ -9,7 +9,7 @@ public static class Experience
     public static double Unit(FrontierState state, int stage) => (Economy.MonsterHp(stage) * Balance.XpRatio + Balance.XpFlat) * Economy.Wealth(state);
 
     public static double ToNext(FrontierState state, FighterKind kind) =>
-        Fighters.Of(kind).Cost * Math.Pow(Balance.FighterCostGrowth, state.Level(kind));
+        Fighters.Of(kind).Cost * Math.Pow(Balance.XpGrowth, state.Level(kind));
 
     public static double Share(FrontierState state, FighterKind kind) =>
         state.Level(kind) <= 0 ? 0 : Math.Clamp(state.Xp[(int)kind] / ToNext(state, kind), 0, 1);

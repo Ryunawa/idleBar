@@ -160,7 +160,7 @@ public sealed class SkirmishTests
     private static FrontierState Team(HeroRole role) => new() { Role = role, Fighters = [10, 10, 10] };
 
     private static FrontierState Sturdy(HeroRole role, int stage) =>
-        new() { Role = role, Fighters = [400, 400, 400], Stage = stage + Deep, MaxStage = stage + Deep, Armor = int.MaxValue / 2 };
+        new() { Role = role, Fighters = [139, 139, 139], Stage = stage + Deep, MaxStage = stage + Deep, Armor = int.MaxValue / 2 };
 
     private static List<FighterKind> Targets(FrontierState state)
     {

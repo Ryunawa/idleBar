@@ -44,6 +44,17 @@ public sealed class LoaderTests
     }
 
     [Fact]
+    public void AnUnsentCopyFromBeforeTheSteeperLevelsLosesToTheServer()
+    {
+        FrontierState converted = new() { Stage = 80, MaxStage = 80, Fighters = [104, 52, 0] };
+        LocalSave local = new("player", 6, true, Now.AddMinutes(-5), SaveCodec.Capture(converted) with { Version = 3 });
+        LoadPlan plan = FrontierLoader.Plan(Data(converted, 6, 300), local, Now);
+        Assert.Equal(104, plan.State.Level(FighterKind.Hero));
+        Assert.Equal(52, plan.State.Level(FighterKind.First));
+        Assert.False(plan.Unsent);
+    }
+
+    [Fact]
     public void AStaleLocalCopyLosesToANewerServerSave()
     {
         LocalSave local = new("player", 3, true, Now.AddMinutes(-30), SaveCodec.Capture(new FrontierState { Stage = 26, MaxStage = 26 }));

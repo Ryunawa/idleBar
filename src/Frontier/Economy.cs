@@ -137,7 +137,7 @@ public static class Economy
             * (boss ? Balance.BossGoldFactor : 1);
 
     public static double ArmorCost(FrontierState state) =>
-        Balance.ArmorCost * Math.Pow(Balance.FighterCostGrowth, state.Armor) * Discount(state);
+        Balance.ArmorCost * Math.Pow(Balance.ArmorCostGrowth, state.Armor) * Discount(state);
 
     public static double Discount(FrontierState state) =>
         1 - Math.Min(Balance.WorkshopMax, Balance.WorkshopDiscount * state.Level(BuildingKind.Workshop));

@@ -20,7 +20,7 @@ public partial class FightersPanel : VBoxContainer
         Name = "Combattants";
         VBoxContainer rows = new();
         rows.AddThemeConstantOverride("separation", 6);
-        rows.AddChild(WindowRows.Muted("Tes combattants gagnent de l'xp au combat, chacun par l'action de sa classe ; leurs autres coups en rapportent très peu. Chaque niveau augmente les dégâts et les PV, et tous les 10 niveaux ils sont multipliés par 1,5. L'or sert au village, à l'armure et à l'équipement. Un repli remet l'xp à zéro."));
+        rows.AddChild(WindowRows.Muted($"Tes combattants gagnent de l'xp au combat, chacun par l'action de sa classe ; leurs autres coups en rapportent très peu. Chaque niveau demande plus d'xp que le précédent et augmente les dégâts et les PV ; tous les 10 niveaux, ils sont multipliés par {NumberFormat.Factor(Balance.MilestoneFactor)}. L'or sert au village, à l'armure et à l'équipement. Un repli remet l'xp à zéro."));
         foreach (FighterInfo fighter in Fighters.All)
         {
             OfferRow row = new();

@@ -19,10 +19,12 @@ public static class Balance
     public const double BossRetrySeconds = 1.5;
     public const double ChargeShare = 0.9;
 
-    public const double FighterCostGrowth = 1.11;
+    public const double ArmorCostGrowth = 1.11;
+    public const double XpGrowth = 1.35;
+    public const double OldLevelsPerLevel = 2.876;
     public const double BuildingCostGrowth = 1.17;
     public const double TierFactor = 2;
-    public const double MilestoneFactor = 1.5;
+    public const double MilestoneFactor = 3.2;
     public const int MilestoneLevels = 10;
     public const double ClickShare = 0.35;
 
@@ -75,9 +77,9 @@ public static class Balance
     public const double BelfrySeconds = 0.5;
     public const double BelfryMax = 30;
 
-    public const double MonsterHit = 0.3;
+    public const double MonsterHit = 0.12;
     public const double MonsterStrikeSeconds = 1.5;
-    public const double BossHit = 3;
+    public const double BossHit = 1.2;
     public const double BossStrikeSeconds = 2;
     public const double HitRampStages = 40;
     public const double HitRampFloor = 0.15;
