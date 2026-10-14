@@ -34,9 +34,9 @@ public sealed class Shopper
 
     public static (HeroRole First, HeroRole Second) Complement(HeroRole hero) => hero switch
     {
-        HeroRole.Tank => (HeroRole.Support, HeroRole.Mage),
-        HeroRole.Support => (HeroRole.Mage, HeroRole.Archer),
-        _ => (HeroRole.Support, HeroRole.Tank),
+        HeroRole.Archer => (HeroRole.Tank, HeroRole.Mage),
+        HeroRole.Mage => (HeroRole.Warrior, HeroRole.Archer),
+        _ => (HeroRole.Mage, HeroRole.Archer),
     };
 
     public void Restock(double clock) => Gear.Restock(_game.State, clock);

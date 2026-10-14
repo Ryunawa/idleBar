@@ -87,7 +87,7 @@ public static class SceneReactions
             case TitanAppeared or TitanWounded or TitanFell or TitanStruck:
                 TitanReactions.Apply(scene, frontierEvent, state, layout, random);
                 break;
-            case Struck or Fell or Revived or Routed or Healed or Armored or AllyArrived or Boosted:
+            case Struck or Fell or Revived or Routed or ActiveUsed or Armored or AllyArrived or Boosted:
                 TeamReactions.Apply(scene, frontierEvent, state, layout, target, random);
                 break;
             default:

@@ -43,7 +43,7 @@ public sealed class CompanionTests
         RoleInfo mage = Roles.Of(HeroRole.Mage);
         Assert.Equal(tank.Dps / mage.Dps, Economy.Dps(state, FighterKind.Second) / damage, 6);
         Assert.Equal(tank.Hp / mage.Hp, Vitality.MaxHp(state, FighterKind.Second) / health, 6);
-        Assert.Equal(tank.Interval, Economy.Interval(state, FighterKind.Second));
+        Assert.Equal(tank.Interval / Talents.Speed(state), Economy.Interval(state, FighterKind.Second), 6);
         Assert.False(Vitality.Ranged(state, FighterKind.Second));
     }
 
@@ -60,49 +60,16 @@ public sealed class CompanionTests
     }
 
     [Fact]
-    public void ATankCompanionDrawsTheBlows()
+    public void ATankCompanionDrawsTheEvenBlows()
     {
         FrontierState state = new() { Fighters = [10, 10, 10] };
         state.Companions[1] = HeroRole.Tank;
         Monster monster = new(1, 0, false, 5, 100, 0);
         for (int strike = 0; strike < 20; strike++)
         {
-            monster.Strikes++;
+            monster.Strikes += 2;
             Assert.Equal(FighterKind.Second, Skirmish.Target(state, monster)?.Kind);
         }
-    }
-
-    [Fact]
-    public void ASupportCompanionHastensTheFallen()
-    {
-        FrontierState state = new() { Fighters = [10, 10, 0] };
-        Assert.Equal(45, Vitality.ReviveSeconds(state, FighterKind.Hero));
-        state.Companions[0] = HeroRole.Support;
-        Assert.Equal(45 * Balance.SupportRevive, Vitality.ReviveSeconds(state, FighterKind.Hero), 6);
-    }
-
-    [Fact]
-    public void AnArcherCompanionLandsEveryFifthShotAsACritical()
-    {
-        FrontierState state = new() { Fighters = [1, 1, 0], Stage = 61, MaxStage = 61, Armor = int.MaxValue / 2 };
-        FrontierGame game = new(state, new Random(1));
-        BattleTests.Run(game, 20);
-        Hit[] shots = [.. game.Events.Drain().OfType<Hit>().Where(hit => hit.Source == HitSource.First)];
-        Assert.True(shots.Length >= 10);
-        Assert.Equal(shots.Length / Balance.CriticalEvery, shots.Count(hit => hit.Critical));
-    }
-
-    [Fact]
-    public void WarriorsCannotStunAMonsterForever()
-    {
-        Monster monster = new(1, 0, false, 5, 100, 0);
-        double before = monster.StrikeIn;
-        for (int blow = 0; blow < 50; blow++)
-        {
-            Skirmish.Stun(monster);
-        }
-
-        Assert.Equal(Balance.MonsterStrikeSeconds * Balance.StunMax, monster.StrikeIn - before, 6);
     }
 
     [Fact]

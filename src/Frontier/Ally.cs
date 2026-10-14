@@ -26,6 +26,4 @@ public sealed class Ally
     public double Downed { get; set; }
 
     public double Timer { get; set; }
-
-    public long Shots { get; set; }
 }

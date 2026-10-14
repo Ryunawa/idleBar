@@ -22,6 +22,7 @@ public static class TeamPainter
     public static void Bars(ArtRaster r, FrontierState state, FrontierLayout layout, FrontierScene scene)
     {
         IReadOnlyList<Post> posts = Formation.Posts(state, layout);
+        List<(int X, int Top)> breads = [];
         foreach (Post post in posts)
         {
             Stance stance = Of(state, layout, post, scene.Motion);
@@ -30,14 +31,28 @@ public static class TeamPainter
             {
                 Bar(r, stance.X + 1, FrontierLayout.Ground - figure.Down.Height - 2, stance.Revival, Palette.Cyan);
             }
-            else if (stance.Health < 0.999)
+            else
             {
-                Rgba fill = stance.Health > 0.5 ? Palette.Green : stance.Health > 0.25 ? Palette.Gold : Palette.Red;
-                Bar(r, stance.X + 1, FrontierLayout.Ground - figure.Standing.Height + figure.Top - 2, stance.Health, fill);
+                int top = FrontierLayout.Ground - figure.Standing.Height + figure.Top;
+                if (stance.Health < 0.999)
+                {
+                    Rgba fill = stance.Health > 0.5 ? Palette.Green : stance.Health > 0.25 ? Palette.Gold : Palette.Red;
+                    Bar(r, stance.X + 1, top - 2, stance.Health, fill);
+                }
+
+                if (post.Member.Ally is null)
+                {
+                    breads.Add((stance.X, top));
+                    Bar(r, stance.X + 1, FrontierLayout.Ground + 1, Actives.Charge(state, post.Member.Kind), Palette.Yellow);
+                }
             }
         }
 
         AllyNames.Paint(r, posts);
+        foreach ((int x, int top) in breads)
+        {
+            Bread(r, state.Supply, x, top);
+        }
     }
 
     public static int HeroLean(HeroRole role, SceneMotion motion) => Lean(role, motion.HeroSwing);
@@ -49,7 +64,7 @@ public static class TeamPainter
         if (post.Member.Ally is Ally ally)
         {
             float swing = motion.AllySwing.GetValueOrDefault(ally.Id);
-            double total = Fighters.Of(FighterKind.Hero).Revive * (Team.SupportUp(state) ? Balance.SupportRevive : 1);
+            double total = Fighters.Of(FighterKind.Hero).Revive;
             return new Stance(ally.Role, HeroSprites.Of(ally.Role, ally.Look), post.X + Lean(ally.Role, swing), swing,
                 motion.AllyHurt.ContainsKey(ally.Id), ally.Downed > 0, ally.Health, 1 - ally.Downed / total);
         }
@@ -74,8 +89,7 @@ public static class TeamPainter
         }
 
         int y = FrontierLayout.Ground - figure.Standing.Height;
-        bool hero = post.Member is { Ally: null, Kind: FighterKind.Hero };
-        if (hero && state.FuryLeft > 0 && (int)(time * 10) % 2 == 0)
+        if (state.FuryLeft > 0 && (int)(time * 10) % 2 == 0)
         {
             r.Blit(figure.Rage, stance.X - 1, y);
             r.Blit(figure.Rage, stance.X + 1, y);
@@ -108,6 +122,20 @@ public static class TeamPainter
                 r.Set((int)MathF.Round(px - sin), (int)MathF.Round(py + cos), Palette.Gold);
                 r.Set((int)MathF.Round(px + sin), (int)MathF.Round(py - cos), Palette.Gold);
             }
+        }
+    }
+
+    private static void Bread(ArtRaster r, int stacks, int x, int top)
+    {
+        if (stacks <= 0)
+        {
+            return;
+        }
+
+        r.Blit(SceneSprites.Bread, x + 3, top - 7);
+        for (int stack = 0; stack < stacks; stack++)
+        {
+            r.Set(x + 1 + stack * 2, top - 4, Palette.Yellow);
         }
     }
 

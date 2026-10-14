@@ -6,6 +6,8 @@ namespace IdleBar.Scene;
 
 public static class CombatReactions
 {
+    private const float CriticalPause = 0.25f;
+
     private static readonly Rgba[] Spark = [Palette.Yellow, Palette.White];
     private static readonly Rgba[] Daze = [Palette.Yellow, Palette.Gold];
 
@@ -14,8 +16,9 @@ public static class CombatReactions
         SceneFx fx = scene.Fx;
         SceneMotion motion = scene.Motion;
         string amount = NumberFormat.Amount(hit.Amount);
-        if (hit.Critical)
+        if (hit.Critical && scene.Time - scene.CriticalShown > CriticalPause)
         {
+            scene.CriticalShown = scene.Time;
             fx.Float("CRITIQUE", target.CenterX, target.Y - 9, Palette.Gold, 0.9f);
         }
 

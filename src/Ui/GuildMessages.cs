@@ -40,6 +40,9 @@ public static class GuildMessages
         _ => "Le serveur ne répond pas. Réessaie dans un instant.",
     };
 
+    public static string Explain(string status, string? failure, string success, bool help = false) =>
+        status == SocialSession.Unavailable && failure is not null ? failure : For(status, success, help);
+
     public static string Wait(double seconds)
     {
         int minutes = (int)System.Math.Ceiling(seconds / 60);

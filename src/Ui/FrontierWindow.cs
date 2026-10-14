@@ -15,6 +15,7 @@ public partial class FrontierWindow : Window
     private FightersPanel _fighters = null!;
     private HeroPanel _hero = null!;
     private LootPanel _loot = null!;
+    private MarketPanel _market = null!;
     private VillagePanel _village = null!;
     private RetreatPanel _retreat = null!;
     private AchievementsPanel _achievements = null!;
@@ -54,6 +55,7 @@ public partial class FrontierWindow : Window
         _fighters = new FightersPanel();
         _hero = new HeroPanel();
         _loot = new LootPanel();
+        _market = new MarketPanel();
         _village = new VillagePanel();
         _retreat = new RetreatPanel();
         _achievements = new AchievementsPanel();
@@ -63,6 +65,7 @@ public partial class FrontierWindow : Window
         _tabs.AddChild(_fighters);
         _tabs.AddChild(_hero);
         _tabs.AddChild(_loot);
+        _tabs.AddChild(_market);
         _tabs.AddChild(_village);
         _tabs.AddChild(_retreat);
         _tabs.AddChild(_guild);
@@ -77,6 +80,7 @@ public partial class FrontierWindow : Window
     {
         _guild.Connect(social);
         _loot.Connect(social);
+        _market.Connect(social);
         _titan.Connect(social);
     }
 
@@ -108,6 +112,7 @@ public partial class FrontierWindow : Window
         _fighters.Game = _game;
         _hero.Game = _game;
         _loot.Game = _game;
+        _market.Game = _game;
         _village.Game = _game;
         _retreat.Game = _game;
         _achievements.Game = _game;
@@ -124,6 +129,7 @@ public partial class FrontierWindow : Window
         _wealth.Text = $"{NumberFormat.Gold(state.Gold)} · +{NumberFormat.Rate(Economy.GoldPerSecond(state))}/s · niveau {state.Stage}";
         _fighters.Refresh();
         _loot.Refresh();
+        _market.Refresh();
         _hero.Refresh();
         _village.Refresh();
         _retreat.Refresh();

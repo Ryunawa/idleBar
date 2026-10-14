@@ -131,7 +131,7 @@ public partial class TitanPanel : VBoxContainer
         _busy = true;
         try
         {
-            _message.Text = GuildMessages.For(await social.ClaimTitanAsync(), "Récompense reçue : elle commence maintenant.");
+            _message.Text = GuildMessages.Explain(await social.ClaimTitanAsync(), social.Failure, "Récompense reçue : elle commence maintenant.");
         }
         finally
         {

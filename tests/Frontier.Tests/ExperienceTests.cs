@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using IdleBar.Frontier;
 using Xunit;
@@ -11,28 +12,30 @@ public sealed class ExperienceTests
     [InlineData(HeroRole.Warrior)]
     [InlineData(HeroRole.Archer)]
     [InlineData(HeroRole.Mage)]
-    public void TheClassActionPaysFarMoreThanAPlainBlow(HeroRole role)
+    public void AnActivePaysFarMoreThanAPlainBlow(HeroRole role)
     {
         FrontierState state = Steady(role);
         FrontierGame game = new(state, new Random(1));
         double plain = 0;
-        double signature = 0;
+        double active = 0;
         for (int step = 0; step < 400; step++)
         {
             double before = state.Xp[0];
             game.Advance(Balance.Step);
-            Hit? hit = game.Events.Drain().OfType<Hit>().FirstOrDefault(hit => hit.Source == HitSource.Hero);
-            if (hit is not null)
+            IReadOnlyList<FrontierEvent> events = game.Events.Drain();
+            double gained = state.Xp[0] - before;
+            if (events.Any(frontierEvent => frontierEvent is ActiveUsed { Kind: FighterKind.Hero }))
             {
-                bool action = role == HeroRole.Archer ? hit.Critical : hit.Big;
-                double gained = state.Xp[0] - before;
-                plain = action ? plain : Math.Max(plain, gained);
-                signature = action ? Math.Max(signature, gained) : signature;
+                active = Math.Max(active, gained);
+            }
+            else if (events.Any(frontierEvent => frontierEvent is Hit { Source: HitSource.Hero }))
+            {
+                plain = Math.Max(plain, gained);
             }
         }
 
         Assert.True(plain > 0);
-        Assert.Equal(Experience.Signature(role) / Balance.XpSmall, signature / plain, 6);
+        Assert.True(active > 20 * plain, $"{active} contre {plain}");
     }
 
     [Fact]
@@ -48,14 +51,16 @@ public sealed class ExperienceTests
     }
 
     [Fact]
-    public void ASupportLearnsMostlyByRaisingTheFallen()
+    public void AClericLearnsByRaisingTheFallen()
     {
         FrontierState state = Steady(HeroRole.Support);
-        state.Fighters[(int)FighterKind.First] = 400;
-        state.Downed[(int)FighterKind.First] = 0.01;
+        state.Fighters[(int)FighterKind.First] = 139;
+        state.Downed[(int)FighterKind.First] = 20;
+        Monster monster = new(1, 0, false, state.Stage, 1e300, 0);
+        state.Monster = monster;
         double before = state.Xp[0];
-        Skirmish.Recover(state, 0.02, new EventLog());
-        Assert.Equal(Experience.Unit(state, state.Stage) * Balance.XpRevive, state.Xp[0] - before, 3);
+        Actives.Update(state, monster, 0.01, new EventLog());
+        Assert.Equal(Experience.Unit(state, state.Stage) * (Balance.XpActive * Balance.RaiseCooldown + Balance.XpRevive), state.Xp[0] - before, 3);
     }
 
     [Fact]

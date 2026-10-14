@@ -35,6 +35,7 @@ public sealed partial class SocialSession
     private async Task<string> SpendAsync(Func<string, Guid, int, Task<SocialData>> call)
     {
         int generation = _generation;
+        Failure = null;
         int ticket = 0;
         SocialData? data = await _frontier.SpendAsync((token, session, revision) =>
         {
@@ -43,6 +44,7 @@ public sealed partial class SocialSession
         });
         if (data is null || generation != _generation)
         {
+            Failure = _frontier.SpendFailure;
             return _frontier.Game is { Frozen: true } ? SocialData.Paused : Unavailable;
         }
 

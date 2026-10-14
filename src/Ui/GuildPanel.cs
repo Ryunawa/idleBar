@@ -162,7 +162,7 @@ public partial class GuildPanel : VBoxContainer
             _busy = false;
         }
 
-        _message.Text = GuildMessages.For(status, success, help);
+        _message.Text = GuildMessages.Explain(status, social.Failure, success, help);
         if (status == SocialData.Ok)
         {
             _name.Text = string.Empty;

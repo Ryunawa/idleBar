@@ -10,8 +10,6 @@ public static class Vitality
 
     public static bool Ranged(FrontierState state, FighterKind kind) => Roles.Of(state.ClassOf(kind)).Ranged;
 
-    public static bool SupportUp(FrontierState state) => Team.SupportUp(state);
-
     public static double ArmorFactor(int armor) => 1 + Balance.ArmorBonus * armor;
 
     public static double MaxHp(FrontierState state, FighterKind kind) =>
@@ -28,7 +26,7 @@ public static class Vitality
         Economy.MonsterHp(stage) * (boss ? Balance.BossHit : Balance.MonsterHit) * Math.Clamp(stage / Balance.HitRampStages, Balance.HitRampFloor, 1);
 
     public static double ReviveSeconds(FrontierState state, FighterKind kind) =>
-        Fighters.Of(kind).Revive * (SupportUp(state) ? Balance.SupportRevive : 1);
+        Fighters.Of(kind).Revive;
 
     private static double BaseHp(FrontierState state, FighterKind kind)
     {

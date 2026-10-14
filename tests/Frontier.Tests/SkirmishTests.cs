@@ -51,15 +51,6 @@ public sealed class SkirmishTests
     }
 
     [Fact]
-    public void ASupportBringsTheFallenBackSooner()
-    {
-        FrontierState state = Team(HeroRole.Support);
-        Assert.Equal(30 * Balance.SupportRevive, Vitality.ReviveSeconds(state, FighterKind.First), 6);
-        state.Downed[(int)FighterKind.Hero] = 10;
-        Assert.Equal(30, Vitality.ReviveSeconds(state, FighterKind.First));
-    }
-
-    [Fact]
     public void EveryoneDownSendsTheFrontBackOneStage()
     {
         FrontierState state = new() { Stage = 15, MaxStage = 15 };
@@ -92,7 +83,7 @@ public sealed class SkirmishTests
     [Fact]
     public void FallingToABossHoldsIt()
     {
-        FrontierState state = new() { Stage = 20, MaxStage = 20 };
+        FrontierState state = new() { Role = HeroRole.Mage, Stage = 20, MaxStage = 20 };
         FrontierGame game = new(state, new Random(1));
         BattleTests.Run(game, 5);
         Assert.Contains(game.Events.Drain(), frontierEvent => frontierEvent is Routed { Stage: 19, Boss: true });
@@ -106,34 +97,11 @@ public sealed class SkirmishTests
     }
 
     [Fact]
-    public void AnArcherHeroLandsACriticalEveryFifthShot()
-    {
-        FrontierState state = Sturdy(HeroRole.Archer, 60);
-        FrontierGame game = new(state, new Random(1));
-        BattleTests.Run(game, 10);
-        List<Hit> shots = [.. game.Events.Drain().OfType<Hit>().Where(hit => hit.Source == HitSource.Hero)];
-        Assert.True(shots.Count >= 10);
-        Assert.Equal(shots.Count / Balance.CriticalEvery, shots.Count(hit => hit.Critical));
-        Assert.Equal(Balance.CriticalFactor, shots.First(hit => hit.Critical).Amount / shots.First().Amount, 6);
-    }
-
-    [Fact]
-    public void AMageHeroHitsBossesHarder()
+    public void BossesTakeMoreDamageWithAMageOnTheFront()
     {
         double regular = HeroBlow(HeroRole.Mage, 61);
         double boss = HeroBlow(HeroRole.Mage, 60);
-        Assert.Equal(Balance.MageBossFactor, boss / regular, 6);
-    }
-
-    [Fact]
-    public void TheSupportHealsTheTeam()
-    {
-        FrontierState state = Sturdy(HeroRole.Support, 61);
-        Array.Fill(state.Health, 0.5);
-        FrontierGame game = new(state, new Random(1));
-        BattleTests.Run(game, 5);
-        Assert.Contains(game.Events.Drain(), frontierEvent => frontierEvent is Healed);
-        Assert.All(state.Health, health => Assert.True(health >= 0.5 + Balance.HealShare - 0.01));
+        Assert.Equal(1 + Balance.MageBossBonus, boss / regular, 6);
     }
 
     [Fact]

@@ -33,7 +33,6 @@ public static class RetreatRules
         state.BossHeld = false;
         state.Fighters = [1, 0, 0];
         state.Companions = new HeroRole?[FrontierState.FighterCount - 1];
-        Array.Clear(state.Strikes);
         Array.Clear(state.CritMeters);
         state.Xp = new double[FrontierState.FighterCount];
         state.Armor = 0;
@@ -45,6 +44,8 @@ public static class RetreatRules
         Skirmish.Restore(state);
         state.FuryLeft = 0;
         state.FrenzyLeft = 0;
+        Actives.Stagger(state);
+        Array.Clear(state.Guards);
         Convoys.Clear(state);
         events.Add(new Retreated(souls, Economy.SoulMultiplier(state.Souls)));
         return souls;

@@ -6,6 +6,8 @@ namespace IdleBar.Online;
 
 public sealed record ItemsData(int Max, IReadOnlyList<ItemData> Bag)
 {
+    public int Carried => Bag.Count(item => !item.Equipped);
+
     public Gear ToGear(FighterKind kind) => Gear.Of(Bag.Where(item => item.Wearer == kind).SelectMany(item => item.Stats));
 
     public GearLook ToWorn(FighterKind kind)

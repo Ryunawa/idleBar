@@ -25,36 +25,27 @@ public static class Skirmish
             {
                 Team.SetHealth(state, member, 1);
                 events.Add(new Revived(member.Kind, member.AllyId));
-                Experience.Rescue(state, member, events);
             }
         }
     }
 
     public static void Update(FrontierState state, Monster monster, double dt, EventLog events)
     {
-        Heal(state, dt, events);
         monster.StrikeIn -= dt;
         while (monster.StrikeIn <= 0 && state.Monster == monster)
         {
-            monster.StrikeIn += Vitality.StrikeSeconds(monster.Boss);
+            monster.StrikeIn += Vitality.StrikeSeconds(monster.Boss) / (1 - Talents.Intimidation(state));
             Strike(state, monster, events);
         }
     }
 
-    public static bool Stun(Monster monster)
-    {
-        double stun = Math.Min(Balance.StunSeconds, Vitality.StrikeSeconds(monster.Boss) * Balance.StunMax - monster.Dazed);
-        if (stun <= 0)
-        {
-            return false;
-        }
-
-        monster.StrikeIn += stun;
-        monster.Dazed += stun;
-        return true;
-    }
-
     public static void Rest(FrontierState state) => Mend(state, member => Balance.KillHeal * (1 + Team.Gear(state, member).Healing));
+
+    public static void Pray(FrontierState state, FighterKind healer)
+    {
+        double amount = Balance.PrayerHeal * Vitality.MaxHp(state, healer) * (1 + state.Gears[(int)healer].Healing);
+        Mend(state, member => amount / Team.MaxHp(state, member));
+    }
 
     public static void Restore(FrontierState state)
     {
@@ -65,15 +56,13 @@ public static class Skirmish
             ally.Health = 1;
             ally.Downed = 0;
         }
-
-        state.HealTimer = 0;
     }
 
     public static Combatant? Target(FrontierState state, Monster monster)
     {
-        if (Team.Tank(state) is Combatant tank)
+        if (Talents.Guardian(state, monster) is Combatant guardian)
         {
-            return tank;
+            return guardian;
         }
 
         List<Combatant> members = [.. Team.Members(state).Where(member => Team.Up(state, member))];
@@ -92,27 +81,6 @@ public static class Skirmish
 
     private static double Weight(FrontierState state, Combatant member) =>
         Team.Ranged(state, member) ? Balance.RangedWeight : Balance.MeleeWeight;
-
-    private static void Heal(FrontierState state, double dt, EventLog events)
-    {
-        if (!Team.SupportUp(state))
-        {
-            state.HealTimer = 0;
-            return;
-        }
-
-        state.HealTimer += dt;
-        if (state.HealTimer >= Balance.HealSeconds)
-        {
-            state.HealTimer -= Balance.HealSeconds;
-            double bonus = Team.Members(state)
-                .Where(member => Team.Role(state, member) == HeroRole.Support && Team.Up(state, member))
-                .Max(member => Team.Gear(state, member).Healing);
-            double restored = Mend(state, _ => Balance.HealShare * (1 + bonus));
-            events.Add(new Healed());
-            Experience.Mended(state, restored, events);
-        }
-    }
 
     private static double Mend(FrontierState state, Func<Combatant, double> share)
     {
@@ -134,13 +102,12 @@ public static class Skirmish
     private static void Strike(FrontierState state, Monster monster, EventLog events)
     {
         monster.Strikes++;
-        monster.Dazed = 0;
         if (Target(state, monster) is not Combatant target)
         {
             return;
         }
 
-        double damage = Vitality.MonsterHit(monster.Stage, monster.Boss) * (Team.Role(state, target) == HeroRole.Tank ? Balance.TankGuard : 1);
+        double damage = Vitality.MonsterHit(monster.Stage, monster.Boss) * (target.Ally is null && state.Guards[(int)target.Kind] > 0 ? Balance.GuardShare : 1);
         double health = Team.Health(state, target) - damage / Team.MaxHp(state, target);
         Team.SetHealth(state, target, Math.Max(0, health));
         events.Add(new Struck(target.Kind, damage, monster.Boss, target.AllyId));
@@ -154,7 +121,6 @@ public static class Skirmish
             return;
         }
 
-        Team.Down(state, target, Fighters.Of(target.Kind).Revive);
         double seconds = Team.ReviveSeconds(state, target);
         Team.Down(state, target, seconds);
         events.Add(new Fell(target.Kind, seconds, target.AllyId));

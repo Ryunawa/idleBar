@@ -71,7 +71,7 @@ public partial class GearSlotRow : PanelContainer
         _upgrade.Visible = _max.Visible = _remove.Visible = item is not null;
     }
 
-    public void Refresh(FrontierState? state, bool idle)
+    public void Refresh(FrontierState? state, bool idle, bool room)
     {
         if (_item is not ItemData item || state is null)
         {
@@ -84,7 +84,7 @@ public partial class GearSlotRow : PanelContainer
         _upgrade.Disabled = !idle || full || _most < 1;
         _max.Text = $"Max ×{_most}";
         _max.Disabled = !idle || _most < 1;
-        _remove.Disabled = !idle;
+        _remove.Disabled = !idle || !room;
     }
 
     private static Button Make(Action pressed)

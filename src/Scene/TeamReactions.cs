@@ -8,7 +8,6 @@ public static class TeamReactions
     private static readonly Rgba[] Blood = [Palette.Red, Palette.Wine];
     private static readonly Rgba[] Dust = [Palette.Sand, Palette.Gray, Palette.Wood];
     private static readonly Rgba[] Glitter = [Palette.Yellow, Palette.White, Palette.Cyan];
-    private static readonly Rgba[] Mend = [Palette.Green, Palette.White];
 
     public static void Apply(FrontierScene scene, FrontierEvent frontierEvent, FrontierState state, FrontierLayout layout, MonsterBox target, Random random)
     {
@@ -32,15 +31,8 @@ public static class TeamReactions
                 motion.FleeTime = 0;
                 fx.Float("L'ÉQUIPE RECULE", layout.HeroX + 6, 1, Palette.Red, 2.2f, 0);
                 break;
-            case Healed:
-                foreach (Combatant member in Team.Members(state))
-                {
-                    if (Team.Up(state, member))
-                    {
-                        fx.Burst(Center(state, layout, member.Kind, member.AllyId, motion), 15, 2, Mend, random);
-                    }
-                }
-
+            case ActiveUsed used:
+                fx.Float(Shout(used), Center(state, layout, used.Kind, 0, motion), 4, used.Role == HeroRole.Tank ? Palette.Cyan : Palette.Gold, 0.9f);
                 break;
             case Armored:
                 fx.Float("+1", layout.HeroX + 4, 7, Palette.Yellow, 0.7f);
@@ -57,6 +49,15 @@ public static class TeamReactions
                 break;
         }
     }
+
+    private static string Shout(ActiveUsed used) => used.Role switch
+    {
+        HeroRole.Warrior => "ÉTOURDI !",
+        HeroRole.Tank => "REMPART",
+        HeroRole.Archer => "VOLÉE",
+        HeroRole.Mage => "DÉFLAGRATION",
+        _ => used.Raised > 0 ? "RÉSURRECTION" : "PRIÈRE",
+    };
 
     private static void Hurt(SceneMotion motion, FighterKind kind, long ally)
     {

@@ -8,8 +8,11 @@ public sealed partial class FrontierSession
 {
     private const int SaveWaitMilliseconds = 50;
 
+    public string? SpendFailure { get; private set; }
+
     public async Task<SocialData?> SpendAsync(Func<string, Guid, int, Task<SocialData>> call)
     {
+        SpendFailure = null;
         if (Game is not FrontierGame game || game.Frozen || Status != SessionStatus.Ready)
         {
             return null;
@@ -48,6 +51,7 @@ public sealed partial class FrontierSession
         }
         catch (Exception exception) when (Stale(generation) || Fails(exception))
         {
+            SpendFailure = ServerFailure.Reason(exception);
             return null;
         }
         finally

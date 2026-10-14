@@ -51,6 +51,11 @@ public static class Battle
 
         if (state.Monster == monster)
         {
+            Actives.Update(state, monster, dt, events);
+        }
+
+        if (state.Monster == monster)
+        {
             Skirmish.Update(state, monster, dt, events);
         }
     }
@@ -62,6 +67,7 @@ public static class Battle
             return;
         }
 
+        amount *= monster.Boss ? 1 + Talents.BossDamage(state) : 1;
         monster.Hp -= amount;
         events.Add(new Hit(source, amount, critical, ally, big));
         if (monster.Hp <= 0)
@@ -94,12 +100,12 @@ public static class Battle
             return;
         }
 
-        double interval = Roles.Of(ally.Role).Interval;
+        double interval = Roles.Of(ally.Role).Interval / Talents.Speed(state);
         ally.Timer += dt;
         while (ally.Timer >= interval && state.Monster == monster)
         {
             ally.Timer -= interval;
-            Blows.Assist(state, ally, monster, Economy.AllyDps(state, ally) * interval, events);
+            Blows.Assist(state, ally, Economy.AllyDps(state, ally) * interval, events);
         }
     }
 
@@ -149,7 +155,7 @@ public static class Battle
 
         foreach (Ally ally in state.Allies)
         {
-            ally.Timer = Math.Min(ally.Timer + dt, Roles.Of(ally.Role).Interval * Balance.ChargeShare);
+            ally.Timer = Math.Min(ally.Timer + dt, Roles.Of(ally.Role).Interval / Talents.Speed(state) * Balance.ChargeShare);
         }
     }
 }

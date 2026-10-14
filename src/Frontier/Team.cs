@@ -61,11 +61,9 @@ public static class Team
         member.Ally is Ally ally ? Vitality.AllyMaxHp(state, ally) : Vitality.MaxHp(state, member.Kind);
 
     public static double ReviveSeconds(FrontierState state, Combatant member) =>
-        Fighters.Of(member.Kind).Revive * (SupportUp(state) ? Balance.SupportRevive : 1);
+        Fighters.Of(member.Kind).Revive;
 
     public static bool AnyUp(FrontierState state) => Members(state).Any(member => Up(state, member));
-
-    public static bool SupportUp(FrontierState state) => Members(state).Any(member => Role(state, member) == HeroRole.Support && Up(state, member));
 
     public static Combatant? Tank(FrontierState state)
     {

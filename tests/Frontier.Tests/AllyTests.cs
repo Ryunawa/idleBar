@@ -30,29 +30,29 @@ public sealed class AllyTests
     }
 
     [Fact]
-    public void ATankAllyDrawsTheBlows()
+    public void ATankAllyDrawsTheEvenBlows()
     {
         FrontierState state = new() { Fighters = [10, 10, 10] };
         state.Allies.Add(Ally(4, HeroRole.Tank));
         Monster monster = new(1, 0, false, 5, 100, 0);
         for (int strike = 0; strike < 20; strike++)
         {
-            monster.Strikes++;
+            monster.Strikes += 2;
             Assert.Equal(4, Skirmish.Target(state, monster)?.AllyId);
         }
     }
 
     [Fact]
-    public void ASupportAllyHastensTheFallen()
+    public void ASupportAllyBlessesAtHalfStrength()
     {
         FrontierState state = new() { Fighters = [10, 10, 0] };
-        Assert.Equal(30, Vitality.ReviveSeconds(state, FighterKind.First));
+        Assert.Equal(0, Talents.Blessing(state), 6);
         state.Allies.Add(Ally(5, HeroRole.Support));
-        Assert.Equal(30 * Balance.SupportRevive, Vitality.ReviveSeconds(state, FighterKind.First), 6);
+        Assert.Equal(Balance.SupportBlessing * Balance.CompanionShare, Talents.Blessing(state), 6);
     }
 
     [Fact]
-    public void AFallingSupportDoesNotHastenItself()
+    public void AFallenSupportHeroWaitsFortyFiveSeconds()
     {
         FrontierState state = new() { Role = HeroRole.Support, Stage = 25, MaxStage = 25 };
         FrontierGame game = new(state, new Random(1));

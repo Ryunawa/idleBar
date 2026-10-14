@@ -5,6 +5,7 @@ public enum WindowTab
     Fighters,
     Hero,
     Loot,
+    Market,
     Village,
     Retreat,
     Guild,

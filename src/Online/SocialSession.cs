@@ -36,6 +36,8 @@ public sealed partial class SocialSession
 
     public DateTimeOffset ReceivedAt { get; private set; }
 
+    public string? Failure { get; private set; }
+
     public double Left(double seconds) => Math.Max(0, seconds - (DateTimeOffset.UtcNow - ReceivedAt).TotalSeconds);
 
     public void Tick(double delta)
@@ -48,7 +50,7 @@ public sealed partial class SocialSession
         _sincePoll += delta;
         if (!_busy && _sincePoll >= PollSeconds)
         {
-            _ = RefreshAsync();
+            _ = RunAsync(_api.GetAsync, false);
         }
     }
 
@@ -82,11 +84,12 @@ public sealed partial class SocialSession
 
     public Task<string> ClaimTitanAsync() => RunAsync(_api.ClaimTitanAsync);
 
-    private async Task<string> RunAsync(Func<string, Task<SocialData>> call)
+    private async Task<string> RunAsync(Func<string, Task<SocialData>> call, bool report = true)
     {
         int generation = _generation;
         int ticket = ++_sent;
         _busy = true;
+        Failure = report ? null : Failure;
         try
         {
             SocialData data = await call(await _frontier.TokenAsync());
@@ -107,6 +110,7 @@ public sealed partial class SocialSession
             || TransportFailure.Matches(exception))
         {
             GD.PushWarning($"Guilde injoignable : {exception.Message}");
+            Failure = report ? ServerFailure.Reason(exception) : Failure;
             return Unavailable;
         }
         finally

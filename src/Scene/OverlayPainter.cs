@@ -25,15 +25,6 @@ public static class OverlayPainter
         {
             r.Fill(x, y + 3, (int)Math.Round(width * Math.Clamp(monster.BossLeft / Math.Max(1, monster.BossTotal), 0, 1)), 1, Palette.Yellow);
         }
-
-        if (state.Supply > 0)
-        {
-            r.Blit(SceneSprites.Bread, layout.HeroX, 4);
-            for (int stack = 0; stack < state.Supply; stack++)
-            {
-                r.Set(layout.HeroX + 6 + stack * 2, 5, Palette.Yellow);
-            }
-        }
     }
 
     public static void Chicken(ArtRaster r, FrontierState state, FrontierLayout layout, FrontierScene scene)

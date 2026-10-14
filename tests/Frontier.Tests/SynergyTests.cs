@@ -19,7 +19,7 @@ public sealed class SynergyTests
     [Fact]
     public void ABalancedTeamOutpacesEveryMonoClassTeam()
     {
-        IdlePlayer balanced = Run(HeroRole.Warrior, HeroRole.Support, HeroRole.Tank);
+        IdlePlayer balanced = Run(HeroRole.Support, HeroRole.Warrior, HeroRole.Archer);
         foreach (HeroRole role in Roles.All.Select(info => info.Role))
         {
             IdlePlayer mono = Run(role, role, role);
@@ -28,11 +28,11 @@ public sealed class SynergyTests
     }
 
     [Fact]
-    public void DamageDealersAloneFallFarMoreThanABalancedTeam()
+    public void DamageDealersAloneFallFarMoreThanAGuardedTeam()
     {
-        IdlePlayer balanced = Run(HeroRole.Warrior, HeroRole.Support, HeroRole.Tank);
+        IdlePlayer guarded = Run(HeroRole.Warrior, HeroRole.Tank, HeroRole.Support);
         IdlePlayer fragile = Run(HeroRole.Warrior, HeroRole.Archer, HeroRole.Mage);
-        Assert.True(Falls(fragile) > Falls(balanced) * 3, $"{Falls(fragile)} chutes contre {Falls(balanced)}");
+        Assert.True(Falls(fragile) > Falls(guarded) * 3, $"{Falls(fragile)} chutes contre {Falls(guarded)}");
     }
 
     private static int Score(IdlePlayer player) => player.Game.State.BestStage * 1000 + player.Game.State.Souls;

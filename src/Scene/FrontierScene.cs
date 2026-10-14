@@ -21,6 +21,8 @@ public sealed class FrontierScene
 
     public float Time { get; private set; }
 
+    public float CriticalShown { get; set; } = -1;
+
     public SceneFx Fx { get; } = new();
 
     public SceneMotion Motion { get; } = new();

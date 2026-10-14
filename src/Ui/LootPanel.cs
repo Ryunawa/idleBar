@@ -17,7 +17,6 @@ public partial class LootPanel : VBoxContainer
     private OptionButton _wearer = null!;
     private VBoxContainer _bag = null!;
     private Label _count = null!;
-    private ShopSection _shop = null!;
     private Label _message = null!;
     private bool _busy;
 
@@ -30,7 +29,7 @@ public partial class LootPanel : VBoxContainer
         Name = "Équipement";
         VBoxContainer rows = new();
         rows.AddThemeConstantOverride("separation", 6);
-        rows.AddChild(WindowRows.Muted("Chacun de tes combattants porte une arme de sa classe, une armure et une coiffe. Les boss et le titan laissent du butin, et la boutique propose quatre objets tirés au hasard, renouvelés toutes les 3 heures. Le serveur fixe les prix et prend l'or de ta dernière sauvegarde ; ce que l'or achète ou améliore reste lié à toi."));
+        rows.AddChild(WindowRows.Muted("Chacun de tes combattants porte une arme de sa classe, une armure et une coiffe. Les boss et le titan laissent du butin, et l'onglet Marché vend des objets. L'or améliore aussi les objets portés ; le serveur fixe les prix et prend l'or de ta dernière sauvegarde, et ce que l'or achète ou améliore reste lié à toi."));
         HBoxContainer choice = new();
         choice.AddThemeConstantOverride("separation", 10);
         choice.AddChild(WindowRows.Heading("Équipement de"));
@@ -47,9 +46,6 @@ public partial class LootPanel : VBoxContainer
             rows.AddChild(row);
         }
 
-        _shop = new ShopSection();
-        _shop.Bought += offer => Act(social => social.BuyAsync(offer), "Objet acheté : il t'attend dans le sac.");
-        rows.AddChild(_shop);
         _count = WindowRows.Heading("Sac");
         rows.AddChild(_count);
         _bag = new VBoxContainer();
@@ -90,16 +86,11 @@ public partial class LootPanel : VBoxContainer
         }
 
         ItemsData? items = _social?.Data?.Items;
-        bool room = items is not null && items.Bag.Count < items.Max;
+        bool room = items is not null && items.Carried < items.Max;
         bool idle = !_busy && Game is { Frozen: false } && items is not null;
         foreach (GearSlotRow row in _slots)
         {
-            row.Refresh(Game?.State, idle);
-        }
-
-        if (_social?.Data?.Shop is ShopData shop)
-        {
-            _shop.Refresh(_social.Left(shop.RefreshIn), Game?.State.Gold ?? 0, idle, room);
+            row.Refresh(Game?.State, idle, room);
         }
     }
 
@@ -131,7 +122,6 @@ public partial class LootPanel : VBoxContainer
             _slots[index].Show(items?.Equipped(Chosen, Items.Slots[index]), role);
         }
 
-        _shop.Show(_social?.Data?.Shop);
         Bag(items, role);
         Refresh();
     }
@@ -147,8 +137,8 @@ public partial class LootPanel : VBoxContainer
         }
 
         ItemData[] bag = [.. items.Bag.Where(item => !item.Equipped)];
-        _count.Text = $"Sac · {items.Bag.Count} / {items.Max}";
-        if (items.Bag.Count >= items.Max)
+        _count.Text = $"Sac · {items.Carried} / {items.Max}";
+        if (items.Carried >= items.Max)
         {
             _bag.AddChild(WindowRows.Muted("Sac plein : le prochain butin sera perdu et la boutique attend. Recycle des objets pour faire de la place."));
         }
@@ -186,7 +176,7 @@ public partial class LootPanel : VBoxContainer
         _message.Text = "…";
         try
         {
-            _message.Text = GuildMessages.For(await action(social), success);
+            _message.Text = GuildMessages.Explain(await action(social), social.Failure, success);
         }
         finally
         {
