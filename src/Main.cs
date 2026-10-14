@@ -1,5 +1,7 @@
+using System;
 using System.Threading.Tasks;
 using Godot;
+using IdleBar.Cloud;
 using IdleBar.Desktop;
 using IdleBar.Ui;
 
@@ -12,6 +14,7 @@ public partial class Main : Control
     private const string PreferencesPath = "user://preferences.cfg";
     private const string InstancePath = "user://instance.pid";
     private const int FlushTimeoutMilliseconds = 2000;
+    private const double UpdateCleanUpSeconds = 5;
 
     private SingleInstance _instance = null!;
     private BarPlacement _placement = null!;
@@ -24,6 +27,9 @@ public partial class Main : Control
     private UpdateNotice _updates = null!;
     private double _sinceTrayRefresh = TrayRefreshIntervalSeconds;
     private double _sinceInterfaceRefresh;
+    private Task _installation = Task.CompletedTask;
+    private bool _installing;
+    private bool _quitting;
 
     public override void _Ready()
     {
@@ -45,6 +51,7 @@ public partial class Main : Control
 
         _game.Start();
         RefreshInterface();
+        GetTree().CreateTimer(UpdateCleanUpSeconds).Timeout += () => SelfInstaller.ForThisBuild()?.CleanUpAsync();
     }
 
     public override void _Process(double delta)
@@ -94,8 +101,8 @@ public partial class Main : Control
         _expanded.ToggleRequested += () => _placement.ToggleCollapsed();
         _expanded.QuitRequested += Quit;
         _expanded.SettingsRequested += OpenSettings;
-        _expanded.UpdateRequested += OpenDownloadPage;
-        _expanded.MenuRequested += () => _game.OpenMenu(_placement.DialogScale);
+        _expanded.UpdateRequested += InstallUpdate;
+        _expanded.MenuRequested += OpenMenu;
 
         _collapsedBar = new CollapsedBar();
         AddChild(_collapsedBar);
@@ -115,7 +122,7 @@ public partial class Main : Control
         AddChild(_updates);
         _updates.Found += release =>
         {
-            _expanded.ShowUpdate(release.Name);
+            _expanded.ShowUpdate(release.Name, SelfInstaller.ForThisBuild() is not null && release.WindowsPackage is not null);
             _game.Announce($"Nouvelle version {release.Name} disponible : clique sur « Mise à jour »");
         };
 
@@ -147,6 +154,52 @@ public partial class Main : Control
         _tray.SetCollapsed(collapsed);
     }
 
+    private void OpenMenu()
+    {
+        if (_game.UpdateRequired && _updates.Latest is not null)
+        {
+            InstallUpdate();
+            return;
+        }
+
+        _game.OpenMenu(_placement.DialogScale);
+    }
+
+    private async void InstallUpdate()
+    {
+        if (_installing || _updates.Latest is not ReleaseInfo release)
+        {
+            return;
+        }
+
+        SelfInstaller? installer = SelfInstaller.ForThisBuild();
+        if (installer is null || release.WindowsPackage is not ReleaseAsset package)
+        {
+            OpenDownloadPage();
+            return;
+        }
+
+        _installing = true;
+        try
+        {
+            _game.Announce($"Téléchargement de la version {release.Name}…");
+            await installer.PrepareAsync(package, new Progress<double>(share =>
+                _expanded.ShowUpdateStep(release.Name, share < 1 ? $"téléchargement {(int)(share * 100)} %" : "installation…")));
+            _installation = installer.InstallAsync();
+            await _installation;
+            _game.Announce($"Version {release.Name} installée : IdleBar redémarre.");
+            Shutdown(installer);
+        }
+        catch (Exception exception) when (UpdateFailure.Matches(exception))
+        {
+            GD.PushWarning($"Mise à jour automatique impossible : {exception.Message}");
+            _installing = false;
+            _expanded.ShowUpdate(release.Name, automatic: true);
+            _game.Announce("La mise à jour automatique a échoué : la page de téléchargement s'ouvre.");
+            OpenDownloadPage();
+        }
+    }
+
     private void OpenDownloadPage()
     {
         if (_updates.Latest is { HasSafePage: true } release)
@@ -158,13 +211,23 @@ public partial class Main : Control
     private void OpenSettings() =>
         _settings.Open(_placement.DialogScale, _placement.ScreenDevice, _placement.DetectScreens(), _game.SignedIn);
 
-    private async void Quit()
+    private void Quit() => Shutdown(null);
+
+    private async void Shutdown(SelfInstaller? relaunchFrom)
     {
+        if (_quitting)
+        {
+            return;
+        }
+
+        _quitting = true;
         _expanded.Visible = false;
         _collapsedBar.Visible = false;
         await Task.WhenAny(_game.FlushAsync(), Task.Delay(FlushTimeoutMilliseconds));
+        await Task.WhenAny(_installation);
         _placement.Dispose();
         _tray.Dismiss();
+        relaunchFrom?.Relaunch();
         GetTree().Quit();
     }
 }

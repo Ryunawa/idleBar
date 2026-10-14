@@ -67,6 +67,8 @@ public sealed class GameBridge : IDisposable
 
     public bool SignedIn => _session?.Status is not (null or SessionStatus.SignedOut);
 
+    public bool UpdateRequired => _session?.Status == SessionStatus.UpdateRequired;
+
     public void Start() => _session?.Start();
 
     public void Tick(double delta)
@@ -93,7 +95,7 @@ public sealed class GameBridge : IDisposable
 
     public void OpenMenu(float scale)
     {
-        if (_session?.Status == SessionStatus.UpdateRequired)
+        if (UpdateRequired)
         {
             if (GameVersion.DownloadUrl.StartsWith("https://github.com/", StringComparison.Ordinal))
             {

@@ -102,14 +102,26 @@ public partial class ExpandedBar : MarginContainer
 
     public void Glow() => _glow = 1;
 
-    public void ShowUpdate(string version)
+    public void ShowUpdate(string version, bool automatic)
     {
+        string action = automatic
+            ? "Clique pour l'installer : IdleBar la télécharge, se remplace et redémarre tout seul."
+            : "Clique pour ouvrir la page de téléchargement, puis remplace ton jeu actuel.";
         _update.Refresh(new SlotContent(
             "Mise à jour",
             $"version {version}",
             BarPalette.Gold,
-            $"La version {version} d'IdleBar est disponible. Clique pour ouvrir la page de téléchargement, puis remplace ton jeu actuel : ta partie est gardée sur le serveur."));
+            $"La version {version} d'IdleBar est disponible. {action} Ta partie est gardée sur le serveur."));
         _update.Button.Visible = true;
+    }
+
+    public void ShowUpdateStep(string version, string step)
+    {
+        _update.Refresh(new SlotContent(
+            "Mise à jour",
+            step,
+            BarPalette.Gold,
+            $"La version {version} d'IdleBar s'installe : le jeu redémarrera tout seul."));
     }
 
     public void Refresh(BarStatus status)

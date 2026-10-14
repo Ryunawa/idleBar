@@ -50,10 +50,14 @@ public partial class UpdateNotice : Node
         try
         {
             ReleaseInfo? release = await feed.FetchLatestAsync();
-            if (release is { Version: Version version, HasSafePage: true } && version > _current && release != Latest)
+            if (release is { Version: Version version, HasSafePage: true } && version > _current)
             {
+                bool isNew = version != Latest?.Version;
                 Latest = release;
-                Found?.Invoke(release);
+                if (isNew)
+                {
+                    Found?.Invoke(release);
+                }
             }
         }
         catch (Exception exception) when (TransportFailure.Matches(exception))

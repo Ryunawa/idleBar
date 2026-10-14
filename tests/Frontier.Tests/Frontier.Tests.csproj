@@ -14,6 +14,8 @@
     <Compile Include="../../src/Desktop/ScreenFit.cs" Link="Desktop/ScreenFit.cs" />
     <Compile Include="../../src/Online/FrontierLoader.cs;../../src/Online/LoadPlan.cs;../../src/Online/LocalSave.cs;../../src/Online/FrontierData.cs;../../src/Online/SaveArguments.cs;../../src/Online/SocialData.cs;../../src/Online/ItemData.cs;../../src/Online/ShopData.cs" Link="Online/%(Filename)%(Extension)" />
     <Compile Include="../../src/Cloud/SupabaseJson.cs" Link="Cloud/SupabaseJson.cs" />
+    <Compile Include="../../src/Cloud/ReleaseInfo.cs;../../src/Cloud/ReleaseAsset.cs" Link="Cloud/%(Filename)%(Extension)" />
+    <Compile Include="../../src/Desktop/PackageSwap.cs" Link="Desktop/PackageSwap.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />

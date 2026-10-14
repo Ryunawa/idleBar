@@ -20,6 +20,8 @@ Les versions sont sur la page [Releases](https://github.com/Ryunawa/idleBar/rele
 
 Le jeu n'est pas signé : au premier lancement, Windows affiche « Windows a protégé votre ordinateur ». Clique sur « Informations complémentaires », puis sur « Exécuter quand même ».
 
+Ensuite, quand une nouvelle version sort, clique sur « Mise à jour » dans la barre : le jeu la télécharge, se remplace dans son dossier et redémarre tout seul.
+
 ### macOS
 
 1. Télécharge `IdleBar-…-macos.zip`.
