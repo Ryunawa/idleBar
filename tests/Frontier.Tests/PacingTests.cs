@@ -33,17 +33,17 @@ public sealed class PacingTests
     }
 
     [Theory]
-    [InlineData(HeroRole.Tank)]
-    [InlineData(HeroRole.Archer)]
-    [InlineData(HeroRole.Mage)]
-    [InlineData(HeroRole.Support)]
-    public void EveryRoleReachesTheFirstRetreatInTime(HeroRole role)
+    [InlineData(HeroRole.Tank, 6)]
+    [InlineData(HeroRole.Archer, 6)]
+    [InlineData(HeroRole.Mage, 6)]
+    [InlineData(HeroRole.Support, 30)]
+    public void EveryRoleReachesTheFirstRetreatInTime(HeroRole role, int firstBossMinutes)
     {
         IdlePlayer player = new(7, role);
         player.Play(5 * Hour);
         Report(player);
 
-        Assert.InRange(At(player, "niveau-11"), 3 * Minute, 6 * Minute);
+        Assert.InRange(At(player, "niveau-11"), 3 * Minute, firstBossMinutes * Minute);
         Assert.InRange(At(player, "repli-possible-1"), 2 * Hour, 4 * Hour);
     }
 

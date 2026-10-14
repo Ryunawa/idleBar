@@ -10,11 +10,10 @@ public sealed class SaveTests
     {
         FrontierState state = new() { Gold = 1234.5, LifetimeGold = 99_999, Souls = 31, Retreats = 1, Stage = 47, MaxStage = 52, BestStage = 61, Kills = 3 };
         Village.Build(state, BuildingKind.Market, 8);
-        state.Fighters[(int)FighterKind.Mage] = 18;
+        state.Fighters[(int)FighterKind.Second] = 18;
         state.Cooldowns[(int)SkillKind.Fury] = 120;
         state.Achievements.Add("boss-1");
-        state.IntendantUnlocked = true;
-        state.IntendantOn = true;
+        state.Companions[1] = HeroRole.Support;
         state.MonstersKilled = 400;
 
         FrontierSave? save = SaveCodec.Deserialize(SaveCodec.Serialize(SaveCodec.Capture(state)));
@@ -29,10 +28,11 @@ public sealed class SaveTests
         Assert.Equal(3, restored.Kills);
         Assert.Equal(8, restored.Level(BuildingKind.Market));
         Assert.Equal(BuildingKind.Market, restored.Built[0]);
-        Assert.Equal(18, restored.Level(FighterKind.Mage));
+        Assert.Equal(18, restored.Level(FighterKind.Second));
         Assert.Equal(120, restored.Cooldowns[(int)SkillKind.Fury]);
         Assert.Contains("boss-1", restored.Achievements);
-        Assert.True(restored.IntendantOn);
+        Assert.Equal(HeroRole.Support, restored.ClassOf(FighterKind.Second));
+        Assert.Equal(HeroRole.Archer, restored.ClassOf(FighterKind.First));
         Assert.Equal(400, restored.MonstersKilled);
     }
 

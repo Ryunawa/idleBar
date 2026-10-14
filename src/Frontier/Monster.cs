@@ -41,5 +41,7 @@ public sealed class Monster
 
     public long Strikes { get; set; }
 
+    public double Dazed { get; set; }
+
     public string Name => Biomes.NameOf(this);
 }

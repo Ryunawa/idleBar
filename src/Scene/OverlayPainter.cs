@@ -52,7 +52,8 @@ public static class OverlayPainter
             return;
         }
 
-        Rgba ink = sky.FogDark.Mix(Palette.Ink, 0.75f);
+        Rgba fog = sky.FogDark;
+        Rgba ink = fog.R * 299 + fog.G * 587 + fog.B * 114 < 128_000 ? Palette.PicoWhite : fog.Mix(Palette.Ink, 0.75f);
         foreach (PlotInfo plot in Plots.All.Where(plot => !Economy.Unlocked(state, plot.Index)))
         {
             int cx = layout.SlotCenter(plot.Index);

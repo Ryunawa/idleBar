@@ -38,6 +38,8 @@ public sealed class FrontierState
 
     public int[] Fighters { get; set; } = [1, 0, 0];
 
+    public HeroRole?[] Companions { get; set; } = new HeroRole?[FighterCount - 1];
+
     public int Armor { get; set; }
 
     public BuildingKind?[] Built { get; set; } = new BuildingKind?[PlotCount];
@@ -52,13 +54,17 @@ public sealed class FrontierState
 
     public double[] Downed { get; } = new double[FighterCount];
 
+    public long[] Strikes { get; } = new long[FighterCount];
+
     public double HealTimer { get; set; }
 
-    public int CritMeter { get; set; }
+    public int[] CritMeters { get; } = new int[FighterCount];
 
-    public Gear Gear { get; set; } = Gear.None;
+    public double[] Xp { get; set; } = new double[FighterCount];
 
-    public GearLook Worn { get; set; } = GearLook.None;
+    public Gear[] Gears { get; } = [Gear.None, Gear.None, Gear.None];
+
+    public GearLook[] Worn { get; } = [GearLook.None, GearLook.None, GearLook.None];
 
     public double FuryLeft { get; set; }
 
@@ -90,10 +96,6 @@ public sealed class FrontierState
 
     public double RespawnIn { get; set; } = 0.2;
 
-    public bool IntendantUnlocked { get; set; }
-
-    public bool IntendantOn { get; set; }
-
     public HashSet<string> Achievements { get; } = [];
 
     public long MonstersKilled { get; set; }
@@ -107,6 +109,9 @@ public sealed class FrontierState
     public long SkillsUsed { get; set; }
 
     public int Level(FighterKind kind) => Fighters[(int)kind];
+
+    public HeroRole ClassOf(FighterKind kind) =>
+        kind == FighterKind.Hero ? Role : Companions[(int)kind - 1] ?? Frontier.Fighters.Of(kind).Class;
 
     public int Level(BuildingKind kind) => PlotOf(kind) is int plot ? Levels[plot] : 0;
 

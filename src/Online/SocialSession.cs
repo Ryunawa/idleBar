@@ -8,7 +8,7 @@ using IdleBar.Frontier;
 
 namespace IdleBar.Online;
 
-public sealed class SocialSession
+public sealed partial class SocialSession
 {
     public const string Unavailable = "unavailable";
 
@@ -20,6 +20,9 @@ public sealed class SocialSession
     private int _generation;
     private HashSet<long>? _known;
     private bool _busy;
+    private int _sent;
+    private int _accepted;
+    private FrontierGame? _seen;
 
     public SocialSession(FrontierSession frontier, SocialApi api)
     {
@@ -79,24 +82,10 @@ public sealed class SocialSession
 
     public Task<string> ClaimTitanAsync() => RunAsync(_api.ClaimTitanAsync);
 
-    public Task<string> EquipAsync(long item) => RunAsync(token => _api.EquipAsync(token, item));
-
-    public Task<string> UnequipAsync(string slot) => RunAsync(token => _api.UnequipAsync(token, slot));
-
-    public async Task<string> SalvageAsync(ItemData item)
-    {
-        string status = await RunAsync(token => _api.SalvageAsync(token, item.Id));
-        if (status == SocialData.Ok)
-        {
-            _frontier.Game?.Recycle(item.Rank);
-        }
-
-        return status;
-    }
-
     private async Task<string> RunAsync(Func<string, Task<SocialData>> call)
     {
         int generation = _generation;
+        int ticket = ++_sent;
         _busy = true;
         try
         {
@@ -106,7 +95,12 @@ public sealed class SocialSession
                 return Unavailable;
             }
 
-            Accept(data);
+            if (ticket > _accepted)
+            {
+                _accepted = ticket;
+                Accept(data);
+            }
+
             return data.Status;
         }
         catch (Exception exception) when (exception is ActionRefusedException or CloudAuthException or OutdatedClientException
@@ -129,19 +123,25 @@ public sealed class SocialSession
     {
         Data = data;
         ReceivedAt = DateTimeOffset.UtcNow;
+        bool quiet = _seen is not null && _seen != _frontier.Game;
+        _seen = _frontier.Game ?? _seen;
         if (_frontier.Game is FrontierGame game && data.Help is HelpData help)
         {
-            game.Reinforce([.. help.Allies.Select(ally => ally.ToAlly())], [.. help.Boosts.Select(boost => boost.ToBoost())]);
+            game.Reinforce([.. help.Allies.Select(ally => ally.ToAlly())], [.. help.Boosts.Select(boost => boost.ToBoost())], !quiet);
         }
 
         if (_frontier.Game is FrontierGame watcher && data.Titan is TitanData titan)
         {
-            watcher.Sight(titan.ToView());
+            watcher.Sight(titan.ToView(), !quiet);
         }
 
         if (_frontier.Game is FrontierGame wearer && data.Items is ItemsData items)
         {
-            wearer.Equip(items.ToGear(), items.ToWorn());
+            foreach (FighterInfo fighter in Fighters.All)
+            {
+                wearer.Equip(fighter.Kind, items.ToGear(fighter.Kind), items.ToWorn(fighter.Kind));
+            }
+
             Discover(wearer, items);
         }
 
@@ -152,7 +152,7 @@ public sealed class SocialSession
     {
         if (_known is not null)
         {
-            foreach (ItemData item in items.Bag.Where(item => !_known.Contains(item.Id)))
+            foreach (ItemData item in items.Bag.Where(item => item.Source != Items.ShopSource && !_known.Contains(item.Id)))
             {
                 game.Discover(item.Rank, item.Name);
             }

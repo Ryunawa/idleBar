@@ -12,7 +12,6 @@ public partial class FrontierWindow : Window
 
     private TabContainer _tabs = null!;
     private Label _wealth = null!;
-    private CheckButton _intendant = null!;
     private FightersPanel _fighters = null!;
     private HeroPanel _hero = null!;
     private LootPanel _loot = null!;
@@ -49,10 +48,7 @@ public partial class FrontierWindow : Window
         header.AddThemeConstantOverride("separation", 12);
         _wealth = BarLabels.Create(16, BarPalette.Gold);
         _wealth.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-        _intendant = new CheckButton { Text = "Intendant", TooltipText = "L'Intendant achète tout seul ce qui rapporte le plus. Il se débloque au premier repli." };
-        _intendant.Toggled += on => _game?.SetIntendant(on);
         header.AddChild(_wealth);
-        header.AddChild(_intendant);
         content.AddChild(header);
         _tabs = new TabContainer { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
         _fighters = new FightersPanel();
@@ -126,9 +122,8 @@ public partial class FrontierWindow : Window
 
         FrontierState state = game.State;
         _wealth.Text = $"{NumberFormat.Gold(state.Gold)} · +{NumberFormat.Rate(Economy.GoldPerSecond(state))}/s · niveau {state.Stage}";
-        _intendant.Visible = state.IntendantUnlocked;
-        _intendant.SetPressedNoSignal(state.IntendantOn);
         _fighters.Refresh();
+        _loot.Refresh();
         _hero.Refresh();
         _village.Refresh();
         _retreat.Refresh();

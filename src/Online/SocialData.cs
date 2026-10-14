@@ -11,7 +11,9 @@ public sealed record SocialData(
     double RejoinIn,
     HelpData? Help,
     TitanData? Titan,
-    ItemsData? Items = null)
+    ItemsData? Items = null,
+    int? Revision = null,
+    double? Spent = null)
 {
     public const string Ok = "ok";
     public const string Missing = "missing";
@@ -31,6 +33,16 @@ public sealed record SocialData(
     public const string ConvoyFull = "convoy_full";
     public const string Nothing = "nothing";
     public const string UnknownItem = "unknown_item";
+    public const string WrongClass = "wrong_class";
+    public const string BagFull = "bag_full";
+    public const string TooManyTries = "too_many_tries";
+    public const string Paused = "paused";
+    public const string TooPoor = "too_poor";
+    public const string UnknownFighter = "unknown_fighter";
+    public const string Conflict = "conflict";
+    public const string Elsewhere = "elsewhere";
+    public const string Maxed = "maxed";
+    public const string Refused = "refused";
 }
 
 public sealed record GuildData(string Name, string Code, bool Leader, IReadOnlyList<MemberData> Members);
@@ -82,7 +94,7 @@ public sealed record TitanData(
     IReadOnlyList<TitanTier>? Tiers = null,
     LastTitan? Last = null)
 {
-    public TitanView ToView() => new(Week, Kind, Hp, Damage, Fallen, Mine);
+    public TitanView ToView() => new(Week, Kind, Hp, Damage, Fallen, Mine, Claimable is not null);
 }
 
 public sealed record TitanTier(long Points, int Percent, int Hours);

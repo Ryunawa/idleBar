@@ -25,12 +25,22 @@ language sql
 as $$
   select public.save_frontier(p_revision, '00000000-0000-0000-0000-000000000008', 100, 1e10, 0, 0, 12, 12, 12, 0, false,
     '{5,1,0}', '{forge,bakery,null,null,null,null,null,null,null,null,null,null}', '{3,1,0,0,0,0,0,0,0,0,0,0}',
-    '{0,0,0}', false, false, '{}', 1000, 0, 0, 0, 0, p_armor) ->> 'status';
+    '{0,0,0}', '{}', 1000, 0, 0, 0, 0, p_armor) ->> 'status';
 $$;
 
 grant execute on function pg_temp.check(boolean, text) to authenticated;
 grant execute on function pg_temp.hero(text, text, integer, integer, uuid) to authenticated;
+create function pg_temp.squad(p_companions text[]) returns jsonb
+language sql
+as $$
+  select public.save_frontier((public.claim_frontier('00000000-0000-0000-0000-000000000008') #>> '{frontier,revision}')::integer,
+    '00000000-0000-0000-0000-000000000008', 100, 1e10, 0, 0, 12, 12, 12, 0, false,
+    '{5,1,0}', '{forge,bakery,null,null,null,null,null,null,null,null,null,null}', '{3,1,0,0,0,0,0,0,0,0,0,0}',
+    '{0,0,0}', '{}', 1000, 0, 0, 0, 0, 12, p_companions);
+$$;
+
 grant execute on function pg_temp.save(integer, integer) to authenticated;
+grant execute on function pg_temp.squad(text[]) to authenticated;
 
 select set_config('request.jwt.claim.sub', '88888888-8888-8888-8888-888888888888', false);
 set role authenticated;
@@ -58,6 +68,10 @@ select pg_temp.check(pg_temp.save(0, -1) = 'refused', 'armure négative refusée
 select pg_temp.check(pg_temp.save(0, 12) = 'ok', 'armure sauvegardée');
 select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000008') #>> '{frontier,armor}' = '12', 'armure relue');
 select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000008') #>> '{frontier,hero_role}' = 'tank', 'la sauvegarde garde le rôle');
+select pg_temp.check(pg_temp.squad('{support,warrior}') #> '{frontier,companions}' = '["support", null]'::jsonb, 'classe du compagnon recruté gardée');
+select pg_temp.check(pg_temp.squad('{dragon,null}') ->> 'status' = 'refused', 'classe inconnue refusée');
+select pg_temp.check(pg_temp.squad(null) #> '{frontier,companions}' = '[null, null]'::jsonb, 'sans classe, le compagnon garde la sienne par défaut');
+select pg_temp.check(not (pg_temp.squad('{tank}') -> 'frontier' ? 'intendant_on'), 'plus d''intendant');
 reset role;
 
 update public.frontiers set retreats = 1 where player_id = '88888888-8888-8888-8888-888888888888';

@@ -22,13 +22,17 @@ public sealed class IdlePlayer
     private double _lastProgress;
     private int _lastMaxStage;
 
-    public IdlePlayer(int seed, HeroRole role = HeroRole.Warrior)
+    public IdlePlayer(int seed, HeroRole role = HeroRole.Warrior, HeroRole? first = null, HeroRole? second = null)
     {
         _random = new Random(seed);
         Game = new FrontierGame(new FrontierState { Role = role }, new Random(seed));
+        (HeroRole First, HeroRole Second) team = Shopper.Complement(role);
+        Shopper = new Shopper(Game, first ?? team.First, second ?? team.Second);
     }
 
     public FrontierGame Game { get; }
+
+    public Shopper Shopper { get; }
 
     public double Clock { get; private set; }
 
@@ -102,16 +106,12 @@ public sealed class IdlePlayer
             Game.UseSkill(skill.Kind);
         }
 
-        while (Intendant.Choose(state) is Purchase purchase && Game.Buy(purchase))
+        Shopper.Recruit();
+        while (Shopper.BuyOne())
         {
         }
 
         Game.CallBoss();
-
-        if (state.IntendantUnlocked && !state.IntendantOn)
-        {
-            Game.SetIntendant(true);
-        }
 
         int souls = RetreatRules.Pending(state);
         bool stalled = Clock - _lastProgress >= StallSeconds;
@@ -162,7 +162,7 @@ public sealed class IdlePlayer
         if (_milestones.TryAdd(milestone, Clock))
         {
             FrontierState state = Game.State;
-            _notes.Add($"{milestone}: fighters {string.Join('/', state.Fighters)} armor {state.Armor} routs {_counts.GetValueOrDefault(nameof(Routed))} falls {_counts.Where(pair => pair.Key.StartsWith("tombe")).Sum(pair => pair.Value)} buildings {string.Join('/', state.Built.Select(kind => kind?.ToString() ?? "-"))} levels {string.Join('/', state.Levels)} gps {Economy.BaseGoldPerSecond(state):0} dps {Economy.TotalDps(state):0} souls {state.Souls} lifetime {state.LifetimeGold:0.00e0} stage {state.MaxStage}");
+            _notes.Add($"{milestone}: fighters {string.Join('/', state.Fighters)} armor {state.Armor} gear {Shopper.Gear.Count} hero+{state.Gears[0].Damage:0.00} routs {_counts.GetValueOrDefault(nameof(Routed))} falls {_counts.Where(pair => pair.Key.StartsWith("tombe")).Sum(pair => pair.Value)} buildings {string.Join('/', state.Built.Select(kind => kind?.ToString() ?? "-"))} levels {string.Join('/', state.Levels)} gps {Economy.BaseGoldPerSecond(state):0} dps {Economy.TotalDps(state):0} souls {state.Souls} lifetime {state.LifetimeGold:0.00e0} stage {state.MaxStage}");
         }
     }
 }

@@ -32,9 +32,7 @@ public sealed partial class FrontierSession
 
             if (reply.Status == FrontierReply.Ok && reply.Frontier is FrontierData data && data.Hero is HeroLook kept)
             {
-                game.State.Hero = kept;
-                game.State.Role = Roles.Parse(data.HeroRole) ?? role;
-                game.State.RoleRetreats = data.RoleRetreats;
+                game.Adopt(kept, Roles.Parse(data.HeroRole) ?? role, data.RoleRetreats);
                 Remember();
             }
 

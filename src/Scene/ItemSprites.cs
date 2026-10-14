@@ -11,11 +11,12 @@ public static class ItemSprites
         (Palette.LightGrey, Palette.DarkGrey), (Palette.PicoBlue, Palette.DarkBlue), (Palette.PicoPink, Palette.DarkPurple), (Palette.PicoYellow, Palette.PicoOrange),
     ];
 
-    private static readonly ConcurrentDictionary<(string Slot, int Look, int Rarity), ArtSprite> Icons = new();
+    private static readonly ConcurrentDictionary<(string Slot, int Look, int Rarity, int Role), ArtSprite> Icons = new();
     private static readonly ConcurrentDictionary<(int Look, int Rarity), ArtSprite> Helms = new();
 
-    public static ArtSprite Icon(string slot, int look, int rarity) =>
-        Icons.GetOrAdd((slot, look & 3, Rank(rarity)), key => ArtSprite.Parse(Grids(key.Slot)[key.Look], Colors(key.Rarity)));
+    public static ArtSprite Icon(string slot, int look, int rarity, HeroRole? role = null) =>
+        Icons.GetOrAdd((slot, look & 3, Rank(rarity), slot == Items.Weapon && role is HeroRole owner && ItemGrids.ClassWeapons.ContainsKey(owner) ? (int)owner : -1),
+            key => ArtSprite.Parse(key.Role >= 0 ? ItemGrids.ClassWeapons[(HeroRole)key.Role] : Grids(key.Slot)[key.Look], Colors(key.Rarity)));
 
     public static ArtSprite Helm(int look, int rarity) =>
         Helms.GetOrAdd((look & 3, Rank(rarity)), key => ArtSprite.Parse(ItemGrids.Worn[key.Look], Colors(key.Rarity)));

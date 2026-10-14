@@ -71,6 +71,11 @@ public sealed partial class FrontierSession
     {
         if (Game is not null && (data.Revision == _revision || FrontierLoader.SavedBy(data, _session, _revision)))
         {
+            if (data.Hero is HeroLook hero)
+            {
+                Game.Adopt(hero, Roles.Parse(data.HeroRole) ?? Game.State.Role, data.RoleRetreats);
+            }
+
             _revision = data.Revision;
             _saveSoon = true;
             SetStatus(SessionStatus.Ready);

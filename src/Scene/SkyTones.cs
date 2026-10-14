@@ -11,8 +11,6 @@ public sealed record SkyTones(IReadOnlyList<Rgba> Bands, Rgba FogLight, Rgba Fog
     private static readonly Rgba[] Day = [Rgba.Hex("4c9fd8"), Rgba.Hex("69b3e2"), Rgba.Hex("8cc6ea"), Rgba.Hex("b2dbf0")];
     private static readonly Rgba[] Dusk = [Rgba.Hex("2c3054"), Rgba.Hex("5a3a6e"), Rgba.Hex("a2507f"), Rgba.Hex("e8787c")];
     private static readonly Rgba Overcast = Rgba.Hex("7d8799");
-    private static readonly Rgba NightHill = Rgba.Hex("232a46");
-    private static readonly Rgba DuskHill = Rgba.Hex("6a4a72");
 
     public static SkyTones For(SceneLight light)
     {
@@ -21,7 +19,7 @@ public sealed record SkyTones(IReadOnlyList<Rgba> Bands, Rgba FogLight, Rgba Fog
         for (int band = 0; band < bands.Length; band++)
         {
             Rgba color = Night[band].Mix(Day[band], light.Daylight).Mix(Dusk[band], light.Warmth * 0.8f);
-            bands[band] = wet ? color.Mix(Overcast.Mix(Night[band], 1 - light.Daylight), 0.45f) : color;
+            bands[band] = PicoFilter.Nearest(wet ? color.Mix(Overcast.Mix(Night[band], 1 - light.Daylight), 0.45f) : color);
         }
 
         Rgba fogLight = Rgba.Hex("5a6589").Mix(Rgba.Hex("e9eef6"), light.Daylight);
@@ -31,5 +29,5 @@ public sealed record SkyTones(IReadOnlyList<Rgba> Bands, Rgba FogLight, Rgba Fog
     }
 
     public Rgba Hill(Rgba day, SceneLight light) =>
-        day.Mix(NightHill, (1 - light.Daylight) * 0.75f).Mix(DuskHill, light.Warmth * 0.45f);
+        light.Daylight < 0.45f ? PicoFilter.Ramp(day, NightRamp) : light.Warmth > 0.5f ? PicoFilter.Ramp(day, DuskRamp) : day;
 }

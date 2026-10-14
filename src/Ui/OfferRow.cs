@@ -10,7 +10,7 @@ public partial class OfferRow : PanelContainer
 {
     private const int Many = 10;
 
-    private readonly List<BuildingKind> _options = [];
+    private readonly List<OfferChoice> _options = [];
     private Label _title = null!;
     private Label _detail = null!;
     private OptionButton _choice = null!;
@@ -22,7 +22,7 @@ public partial class OfferRow : PanelContainer
 
     public event Action<int>? Bought;
 
-    public event Action<BuildingKind>? Chosen;
+    public event Action<int>? Chosen;
 
     public override void _Ready()
     {
@@ -65,28 +65,34 @@ public partial class OfferRow : PanelContainer
             : "Pas assez d'or pour un niveau";
     }
 
-    public void ShowChoice(string title, string plotDetail, string action, IReadOnlyList<BuildingKind> options, bool affordable)
+    public void ShowChoice(string title, string plotDetail, string action, IReadOnlyList<OfferChoice> options, bool affordable, int? preferred = null)
     {
         _plotDetail = plotDetail;
         if (!_options.SequenceEqual(options))
         {
-            BuildingKind? chosen = _choice.Selected >= 0 ? (BuildingKind)_choice.GetSelectedId() : null;
+            int? chosen = _choice.Selected >= 0 ? _choice.GetSelectedId() : null;
             _options.Clear();
             _options.AddRange(options);
             _choice.Clear();
-            foreach (BuildingKind kind in options)
+            foreach (OfferChoice option in options)
             {
-                _choice.AddItem(Buildings.Of(kind).Name, (int)kind);
+                _choice.AddItem(option.Name, option.Id);
             }
 
             if (_options.Count > 0)
             {
-                _choice.Select(chosen is BuildingKind kept && _options.Contains(kept) ? _options.IndexOf(kept) : 0);
+                _choice.Select(Math.Max(0, _options.FindIndex(option => option.Id == (chosen ?? preferred))));
             }
         }
 
         Fill(title, ChoiceDetail(), action, false, true);
         _buy.Disabled = !affordable || _options.Count == 0;
+    }
+
+    public void ShowInfo(string title, string detail)
+    {
+        Fill(title, detail, string.Empty, false, false);
+        _buy.Visible = false;
     }
 
     public void ShowLocked(string title, string detail, string action)
@@ -97,6 +103,7 @@ public partial class OfferRow : PanelContainer
 
     private void Fill(string title, string detail, string action, bool open, bool choosing)
     {
+        _buy.Visible = true;
         _title.Text = title;
         _detail.Text = detail;
         _buy.Text = action;
@@ -106,13 +113,13 @@ public partial class OfferRow : PanelContainer
     }
 
     private string ChoiceDetail() =>
-        _choice.Selected >= 0 ? $"{_plotDetail} {Buildings.Of((BuildingKind)_choice.GetSelectedId()).Effect}" : _plotDetail;
+        _choice.Selected >= 0 ? $"{_plotDetail} {_options[_choice.Selected].Effect}" : _plotDetail;
 
     private void Press()
     {
         if (_choice.Visible && _choice.Selected >= 0)
         {
-            Chosen?.Invoke((BuildingKind)_choice.GetSelectedId());
+            Chosen?.Invoke(_choice.GetSelectedId());
             return;
         }
 

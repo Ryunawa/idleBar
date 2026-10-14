@@ -36,7 +36,7 @@ public static class ArtFont
         ['\''] = ["1", "1", "0", "0", "0"], ['-'] = ["000", "000", "111", "000", "000"], ['+'] = ["000", "010", "111", "010", "000"],
         ['/'] = ["001", "001", "010", "100", "100"], ['%'] = ["101", "001", "010", "100", "101"], ['×'] = ["000", "101", "010", "101", "000"],
         ['('] = ["01", "10", "10", "10", "01"], [')'] = ["10", "01", "01", "01", "10"], ['>'] = ["100", "010", "001", "010", "100"],
-        ['«'] = ["0000", "0101", "1010", "0101", "0000"], ['»'] = ["0000", "1010", "0101", "1010", "0000"],
+        ['«'] = ["0000", "0101", "1010", "0101", "0000"], ['»'] = ["0000", "1010", "0101", "1010", "0000"], ['_'] = ["000", "000", "000", "000", "111"],
     };
 
     public static string Normalize(string text)
@@ -53,6 +53,8 @@ public static class ArtFont
 
         return Plain[text] = Strip(text);
     }
+
+    public static bool Covers(string text) => Normalize(text).All(Glyphs.ContainsKey);
 
     public static int Width(string text)
     {
@@ -100,7 +102,8 @@ public static class ArtFont
     private static string Strip(string text)
     {
         StringBuilder plain = new();
-        foreach (char symbol in text.Replace('’', '\'').Replace("œ", "oe").Replace("Œ", "OE").Normalize(NormalizationForm.FormD))
+        foreach (char symbol in text.Replace('’', '\'').Replace("œ", "oe").Replace("Œ", "OE").Replace("æ", "ae").Replace("Æ", "AE").Replace("ß", "ss")
+            .Replace('ø', 'o').Replace('Ø', 'O').Replace('ð', 'd').Replace('Ð', 'D').Replace("þ", "th").Replace("Þ", "TH").Normalize(NormalizationForm.FormD))
         {
             if (CharUnicodeInfo.GetUnicodeCategory(symbol) != UnicodeCategory.NonSpacingMark)
             {

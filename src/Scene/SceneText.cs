@@ -7,6 +7,9 @@ public static class SceneText
 {
     public static string Hero(FrontierState state) => $"{state.Hero?.Name ?? "Héros"} ({Roles.Of(state.Role).Name})";
 
+    public static string Fighter(FrontierState state, FighterKind kind) =>
+        kind == FighterKind.Hero ? Hero(state) : Roles.Of(state.ClassOf(kind)).Name;
+
     public static string Duration(double seconds)
     {
         if (seconds >= 3600)

@@ -16,6 +16,8 @@ public sealed class SceneMotion
 
     public float HeroSwing { get; set; }
 
+    public float[] CompanionSwing { get; } = new float[FrontierState.FighterCount];
+
     public float MonsterFlash { get; set; }
 
     public float MonsterKick { get; set; }
@@ -33,8 +35,6 @@ public sealed class SceneMotion
     public Dictionary<long, float> AllySwing { get; } = [];
 
     public int MonsterShift => MonsterLunge > 0 ? -3 : MonsterKick > 0 ? 1 : 0;
-
-    public float MageGlow { get; set; }
 
     public float Lightning { get; set; }
 
@@ -78,12 +78,12 @@ public sealed class SceneMotion
         for (int index = 0; index < Hurt.Length; index++)
         {
             Hurt[index] = Math.Max(0, Hurt[index] - dt);
+            CompanionSwing[index] = Math.Max(0, CompanionSwing[index] - dt / SwingSeconds);
         }
 
         Decay(AllyHurt, dt);
         Decay(AllySwing, dt / SwingSeconds);
 
-        MageGlow = Math.Max(0, MageGlow - dt);
         Lightning = Math.Max(0, Lightning - dt);
         Shake = Math.Max(0, Shake - dt);
         Flash = Math.Max(0, Flash - dt);

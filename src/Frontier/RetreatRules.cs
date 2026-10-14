@@ -26,13 +26,16 @@ public static class RetreatRules
 
         state.Souls += souls;
         state.Retreats++;
-        state.IntendantUnlocked = true;
         state.Gold = 0;
         state.Stage = 1;
         state.MaxStage = 1;
         state.Kills = 0;
         state.BossHeld = false;
         state.Fighters = [1, 0, 0];
+        state.Companions = new HeroRole?[FrontierState.FighterCount - 1];
+        Array.Clear(state.Strikes);
+        Array.Clear(state.CritMeters);
+        state.Xp = new double[FrontierState.FighterCount];
         state.Armor = 0;
         state.Built = new BuildingKind?[FrontierState.PlotCount];
         state.Levels = new int[FrontierState.PlotCount];

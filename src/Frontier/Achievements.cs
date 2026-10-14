@@ -28,7 +28,7 @@ public static class Achievements
         new("batiment-100", "Bâtisseur", "Monter un bâtiment au niveau 100.", state => state.Levels.Max() >= 100),
         new("village-complet", "Village complet", "Construire les 12 bâtiments.", state => state.Built.All(kind => kind is not null)),
         new("heros-100", "Vétéran", "Monter le héros au niveau 100.", state => state.Level(FighterKind.Hero) >= 100),
-        new("compagnie", "Compagnie", "Recruter l'archère et la mage.", state => state.Level(FighterKind.Archer) > 0 && state.Level(FighterKind.Mage) > 0),
+        new("compagnie", "Compagnie", "Recruter tes deux compagnons.", state => state.Level(FighterKind.First) > 0 && state.Level(FighterKind.Second) > 0),
         new("poule-1", "Poule aux œufs d'or", "Attraper une poule dorée.", state => state.Chickens >= 1),
         new("poule-10", "Éleveur de poules", "Attraper 10 poules dorées.", state => state.Chickens >= 10),
         new("poule-50", "Basse-cour dorée", "Attraper 50 poules dorées.", state => state.Chickens >= 50),

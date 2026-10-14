@@ -54,7 +54,7 @@ public sealed class ShopTests
     {
         FrontierState state = new() { Gold = 1 };
         FrontierGame game = new(state, new Random(1));
-        Assert.False(game.Buy(new FighterPurchase(FighterKind.Archer)));
+        Assert.False(game.Buy(new ArmorPurchase()));
         Assert.Equal(1, state.Gold);
     }
 
@@ -83,11 +83,11 @@ public sealed class ShopTests
     [Fact]
     public void RecruitingACompanionMakesHerFight()
     {
-        FrontierState state = new() { Gold = 1e6 };
+        FrontierState state = new() { Stage = 11, MaxStage = 11 };
         FrontierGame game = new(state, new Random(1));
-        Assert.Equal(0, Economy.Dps(state, FighterKind.Archer));
-        game.Buy(new FighterPurchase(FighterKind.Archer));
-        Assert.True(Economy.Dps(state, FighterKind.Archer) > 0);
+        Assert.Equal(0, Economy.Dps(state, FighterKind.First));
+        Assert.True(game.Buy(new Recruitment(FighterKind.First, HeroRole.Archer)));
+        Assert.True(Economy.Dps(state, FighterKind.First) > 0);
     }
 
     [Theory]
@@ -110,16 +110,16 @@ public sealed class ShopTests
     {
         FrontierState state = new() { Gold = 1e12 };
         FrontierGame game = new(state, new Random(1));
-        FighterPurchase hero = new(FighterKind.Hero);
-        double expected = Shop.CostOf(state, hero, 10);
-        game.BuyMany(hero, 10);
+        ArmorPurchase armor = new();
+        double expected = Shop.CostOf(state, armor, 10);
+        game.BuyMany(armor, 10);
         Assert.Equal(1e12 - expected, state.Gold, 3);
     }
 
     [Fact]
     public void MaxCountIsZeroWhenNothingCanBeBought()
     {
-        Assert.Equal(0, Shop.MaxCount(new FrontierState { Gold = 1 }, new FighterPurchase(FighterKind.Mage)));
+        Assert.Equal(0, Shop.MaxCount(new FrontierState { Gold = 1 }, new ArmorPurchase()));
         Assert.Equal(0, Shop.MaxCount(new FrontierState { Gold = 1e30 }, new PlotPurchase(0)));
         Assert.Equal(0, Shop.MaxCount(new FrontierState { Gold = 1e30 }, new Construction(6, BuildingKind.Portal)));
     }

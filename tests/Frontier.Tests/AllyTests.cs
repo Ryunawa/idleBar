@@ -46,9 +46,9 @@ public sealed class AllyTests
     public void ASupportAllyHastensTheFallen()
     {
         FrontierState state = new() { Fighters = [10, 10, 0] };
-        Assert.Equal(30, Vitality.ReviveSeconds(state, FighterKind.Archer));
+        Assert.Equal(30, Vitality.ReviveSeconds(state, FighterKind.First));
         state.Allies.Add(Ally(5, HeroRole.Support));
-        Assert.Equal(15, Vitality.ReviveSeconds(state, FighterKind.Archer));
+        Assert.Equal(15, Vitality.ReviveSeconds(state, FighterKind.First));
     }
 
     [Fact]
@@ -65,9 +65,9 @@ public sealed class AllyTests
     public void TheSynergyCountsEveryRoleOnTheFront()
     {
         FrontierState state = new() { Role = HeroRole.Warrior };
-        Assert.Equal(1.05, Economy.Synergy(state), 6);
+        Assert.Equal(1 + Balance.SynergyBonus, Economy.Synergy(state), 6);
         state.Allies.AddRange([Ally(1, HeroRole.Tank), Ally(2, HeroRole.Mage), Ally(3, HeroRole.Warrior)]);
-        Assert.Equal(1.15, Economy.Synergy(state), 6);
+        Assert.Equal(1 + 3 * Balance.SynergyBonus, Economy.Synergy(state), 6);
     }
 
     [Fact]

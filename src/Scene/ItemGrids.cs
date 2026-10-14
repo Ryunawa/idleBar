@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using IdleBar.Frontier;
 
 namespace IdleBar.Scene;
 
@@ -11,6 +12,14 @@ public static class ItemGrids
         ["....000...", "...0JJJ0..", "..0JZJZJ0.", "..0JJJJJ0.", "...0JJJ0..", "....040...", "....040...", "....040...", "....040...", "....000..."],
         [".......00.", "......0J0.", "......0JZ0", ".....0400.", "....040...", "...040....", "..040.....", ".040......", "040.......", "00........"],
     ];
+
+    public static IReadOnlyDictionary<HeroRole, IReadOnlyList<string>> ClassWeapons { get; } = new Dictionary<HeroRole, IReadOnlyList<string>>
+    {
+        [HeroRole.Tank] = ["..000000..", ".0JJJJJJ0.", "0JJJZZJJJ0", "0JJZaaZJJ0", "0JJZaaZJJ0", "0JJJZZJJJ0", ".0JJJJJJ0.", ".0JJJJJJ0.", "..0JJJJ0..", "...0000..."],
+        [HeroRole.Archer] = ["..000.....", "..0J40....", "..7.0J0...", "..7..0J0..", "..7..0J0..", "..7..0J0..", "..7..0J0..", "..7.0J0...", "..0J40....", "..000....."],
+        [HeroRole.Mage] = [".....000..", "....0JJJ0.", "....0JaJ0.", "....0JJJ0.", ".....040..", "....040...", "...040....", "..040.....", ".040......", ".00......."],
+        [HeroRole.Support] = ["....00....", "...0JJ0...", "..0JaaJ0..", "...0JJ0...", "....0a0...", "....040...", "....040...", "....040...", "....0a0...", "....000..."],
+    };
 
     public static IReadOnlyList<IReadOnlyList<string>> Armors { get; } =
     [

@@ -1,5 +1,6 @@
 using System;
 using Godot;
+using IdleBar.Frontier;
 using IdleBar.Online;
 using IdleBar.Scene;
 
@@ -9,14 +10,14 @@ public partial class ItemRow : PanelContainer
 {
     private const int IconScale = 3;
 
-    public static ItemRow Create(ItemData item, params (string Text, Action Pressed)[] actions)
+    public static ItemRow Create(ItemData item, params (string Text, Action? Pressed)[] actions)
     {
         ItemRow row = new() { ThemeTypeVariation = WindowSkin.Card };
         HBoxContainer line = new();
         line.AddThemeConstantOverride("separation", 10);
         line.AddChild(new TextureRect
         {
-            Texture = SpriteTexture.From(ItemSprites.Icon(item.Slot, item.Look, item.Rank)),
+            Texture = SpriteTexture.From(ItemSprites.Icon(item.Slot, item.Look, item.Rank, item.Class)),
             TextureFilter = TextureFilterEnum.Nearest,
             ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
             StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
@@ -30,12 +31,17 @@ public partial class ItemRow : PanelContainer
         name.AddThemeColorOverride("font_color", new Color(color.R / 255f, color.G / 255f, color.B / 255f));
         text.AddChild(name);
         string source = item.Source == "titan" ? " · tombé du titan" : string.Empty;
-        text.AddChild(WindowRows.Muted($"Niveau {item.Level} · {item.Describe()}{source}"));
+        string owner = item.Class is HeroRole role ? $" · pour les {Roles.Of(role).Name.ToLowerInvariant()}s" : string.Empty;
+        text.AddChild(WindowRows.Muted($"Niveau {item.Level} · {item.Describe()}{owner}{source}"));
         line.AddChild(text);
-        foreach ((string label, Action pressed) in actions)
+        foreach ((string label, Action? pressed) in actions)
         {
-            Button button = new() { Text = label, SizeFlagsVertical = SizeFlags.ShrinkCenter };
-            button.Pressed += pressed;
+            Button button = new() { Text = label, SizeFlagsVertical = SizeFlags.ShrinkCenter, Disabled = pressed is null };
+            if (pressed is not null)
+            {
+                button.Pressed += pressed;
+            }
+
             line.AddChild(button);
         }
 

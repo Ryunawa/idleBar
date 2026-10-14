@@ -8,14 +8,14 @@ public static class Vitality
 
     public static bool AnyUp(FrontierState state) => Team.AnyUp(state);
 
-    public static bool Ranged(FrontierState state, FighterKind kind) => kind != FighterKind.Hero || Roles.Of(state.Role).Ranged;
+    public static bool Ranged(FrontierState state, FighterKind kind) => Roles.Of(state.ClassOf(kind)).Ranged;
 
     public static bool SupportUp(FrontierState state) => Team.SupportUp(state);
 
     public static double ArmorFactor(int armor) => 1 + Balance.ArmorBonus * armor;
 
     public static double MaxHp(FrontierState state, FighterKind kind) =>
-        BaseHp(state, kind) * (kind == FighterKind.Hero ? Roles.Of(state.Role).Hp * (1 + state.Gear.Health) : 1);
+        BaseHp(state, kind) * Roles.Of(state.ClassOf(kind)).Hp * (1 + state.Gears[(int)kind].Health);
 
     public static double AllyMaxHp(FrontierState state, Ally ally) =>
         BaseHp(state, FighterKind.Hero) * ally.Ratio * Roles.Of(ally.Role).Hp;

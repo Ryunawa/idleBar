@@ -60,7 +60,8 @@ public sealed class RetreatTests
     {
         FrontierState state = new() { Stage = 62, MaxStage = 62, BestStage = 62, Gold = 1e6, LifetimeGold = 5e6 };
         Village.Build(state, BuildingKind.Farm, 40);
-        state.Fighters[(int)FighterKind.Archer] = 12;
+        state.Fighters[(int)FighterKind.First] = 12;
+        state.Companions[0] = HeroRole.Tank;
         state.Achievements.Add("boss-1");
         FrontierGame game = new(state, new Random(1));
         int souls = game.Retreat();
@@ -70,23 +71,11 @@ public sealed class RetreatTests
         Assert.Equal(1, state.Stage);
         Assert.Equal(0, state.Gold);
         Assert.Equal(0, state.Level(BuildingKind.Farm));
-        Assert.Equal(0, state.Level(FighterKind.Archer));
+        Assert.Equal(0, state.Level(FighterKind.First));
         Assert.Equal(1, state.Level(FighterKind.Hero));
         Assert.Equal(62, state.BestStage);
         Assert.Equal(5e6, state.LifetimeGold);
         Assert.Contains("boss-1", state.Achievements);
-        Assert.True(state.IntendantUnlocked);
-    }
-
-    [Fact]
-    public void TheIntendantStaysOffUntilTheFirstRetreat()
-    {
-        FrontierState state = new();
-        FrontierGame game = new(state, new Random(1));
-        game.SetIntendant(true);
-        Assert.False(state.IntendantOn);
-        state.IntendantUnlocked = true;
-        game.SetIntendant(true);
-        Assert.True(state.IntendantOn);
+        Assert.All(state.Companions, role => Assert.Null(role));
     }
 }

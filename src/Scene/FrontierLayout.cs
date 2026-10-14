@@ -66,8 +66,8 @@ public sealed record FrontierLayout(int Width, int Top, int VillageX, int SlotWi
 
     public int FighterX(FighterKind kind) => kind switch
     {
-        FighterKind.Archer => ArcherX,
-        FighterKind.Mage => MageX,
+        FighterKind.First => ArcherX,
+        FighterKind.Second => MageX,
         _ => HeroX,
     };
 

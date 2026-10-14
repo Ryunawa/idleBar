@@ -14,6 +14,8 @@ public static class NumberFormat
 
     public static string Exact(double value) => Math.Floor(value).ToString("#,0", French);
 
+    public static string Factor(double value) => value.ToString("0.##", French);
+
     public static string Rate(double value) =>
         value < 1000 ? value.ToString("0.#", French) : WithSuffix(value);
 

@@ -2,7 +2,7 @@ namespace IdleBar.Frontier;
 
 public abstract record Purchase;
 
-public sealed record FighterPurchase(FighterKind Kind) : Purchase;
+public sealed record Recruitment(FighterKind Kind, HeroRole Class) : Purchase;
 
 public sealed record Construction(int Plot, BuildingKind Kind) : Purchase;
 

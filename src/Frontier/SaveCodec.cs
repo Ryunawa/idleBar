@@ -27,8 +27,6 @@ public static class SaveCodec
         [.. state.Built.Select(kind => kind is BuildingKind built ? Buildings.Of(built).Id : null)],
         [.. state.Levels],
         [.. state.Cooldowns],
-        state.IntendantUnlocked,
-        state.IntendantOn,
         [.. state.Achievements.Order(StringComparer.Ordinal)],
         state.MonstersKilled,
         state.BossesKilled,
@@ -38,7 +36,9 @@ public static class SaveCodec
         Roles.Of(state.Role).Id,
         state.RoleRetreats,
         state.Armor,
-        state.Hero);
+        state.Hero,
+        [.. state.Companions.Select(role => role is HeroRole picked ? Roles.Of(picked).Id : null)],
+        [.. state.Xp]);
 
     public static FrontierState Restore(FrontierSave save)
     {
@@ -54,11 +54,9 @@ public static class SaveCodec
             MaxStage = maxStage,
             BestStage = Math.Max(maxStage, save.BestStage),
             Kills = Math.Clamp(save.Kills, 0, Balance.MonstersPerStage - 1),
-            BossHeld = save.BossHeld && Economy.IsBossStage(stage + 1),
+            BossHeld = save.BossHeld && !Economy.IsBossStage(stage),
             Fighters = Fit(save.Fighters, FrontierState.FighterCount),
             Cooldowns = Fit(save.Cooldowns, FrontierState.SkillCount),
-            IntendantUnlocked = save.IntendantUnlocked,
-            IntendantOn = save.IntendantOn && save.IntendantUnlocked,
             MonstersKilled = save.MonstersKilled,
             BossesKilled = save.BossesKilled,
             Chickens = save.Chickens,
@@ -68,6 +66,8 @@ public static class SaveCodec
             RoleRetreats = Math.Clamp(save.RoleRetreats, 0, Math.Max(0, save.Retreats)),
             Armor = Math.Max(0, save.Armor),
             Hero = save.Hero is HeroLook hero && hero.IsValid() ? hero : null,
+            Companions = [.. Enumerable.Range(0, FrontierState.FighterCount - 1).Select(index => Roles.Parse(save.Companions?.ElementAtOrDefault(index)))],
+            Xp = Fit(save.Xp ?? [], FrontierState.FighterCount),
         };
         state.Fighters[(int)FighterKind.Hero] = Math.Max(1, state.Fighters[(int)FighterKind.Hero]);
         PlaceBuildings(state, save);
@@ -76,7 +76,7 @@ public static class SaveCodec
     }
 
     public static bool Valid(FrontierSave save) =>
-        double.IsFinite(save.Gold) && double.IsFinite(save.LifetimeGold) && save.Cooldowns.All(double.IsFinite);
+        double.IsFinite(save.Gold) && double.IsFinite(save.LifetimeGold) && save.Cooldowns.All(double.IsFinite) && (save.Xp ?? []).All(double.IsFinite);
 
     public static string Serialize(FrontierSave save) => JsonSerializer.Serialize(save, Options);
 

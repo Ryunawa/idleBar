@@ -2,7 +2,7 @@ namespace IdleBar.Frontier;
 
 public abstract record FrontierEvent;
 
-public sealed record Hit(HitSource Source, double Amount, bool Critical = false, long Ally = 0) : FrontierEvent;
+public sealed record Hit(HitSource Source, double Amount, bool Critical = false, long Ally = 0, bool Big = false) : FrontierEvent;
 
 public sealed record Killed(double Gold, bool Boss) : FrontierEvent;
 
@@ -21,6 +21,10 @@ public sealed record Built(int Plot, BuildingKind Kind, int Level) : FrontierEve
 public sealed record TierReached(int Plot, BuildingKind Kind, int Tier) : FrontierEvent;
 
 public sealed record Trained(FighterKind Kind, int Level) : FrontierEvent;
+
+public sealed record LeveledUp(FighterKind Kind, int Level) : FrontierEvent;
+
+public sealed record CompanionReady(FighterKind Kind) : FrontierEvent;
 
 public sealed record Supplied(int Stacks) : FrontierEvent;
 
@@ -62,7 +66,7 @@ public sealed record TitanAppeared(int Kind, double Left, bool Fallen) : Frontie
 
 public sealed record TitanWounded(int Kind, double Left) : FrontierEvent;
 
-public sealed record TitanFell(int Kind) : FrontierEvent;
+public sealed record TitanFell(int Kind, bool Rewarded) : FrontierEvent;
 
 public sealed record TitanStruck(long Monsters) : FrontierEvent;
 

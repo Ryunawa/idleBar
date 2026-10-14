@@ -10,4 +10,10 @@ public sealed record HelpArguments(long PMember, string PKind);
 
 public sealed record ItemArguments(long PItem);
 
-public sealed record SlotArguments(string PSlot);
+public sealed record EquipArguments(long PItem, string PFighter);
+
+public sealed record UnequipArguments(string PSlot, string PFighter);
+
+public sealed record BuyArguments(System.Guid PSession, int PRevision, string PFighter, string PSlot, string PRarity);
+
+public sealed record UpgradeArguments(System.Guid PSession, int PRevision, long PItem, int PCount);

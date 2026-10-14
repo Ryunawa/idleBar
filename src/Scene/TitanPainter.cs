@@ -71,7 +71,7 @@ public static class TitanPainter
 
     public static void Gauge(ArtRaster r, FrontierState state, FrontierLayout layout)
     {
-        if (state.Titan is not TitanView titan || layout.FogWidth < MinFog || state.BossHeld)
+        if (state.Titan is not TitanView titan || layout.FogWidth < MinFog)
         {
             return;
         }

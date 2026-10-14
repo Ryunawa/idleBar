@@ -1,16 +1,20 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Godot;
 using IdleBar.Frontier;
 using IdleBar.Online;
+using IdleBar.Scene;
 
 namespace IdleBar.Ui;
 
 public partial class LootPanel : VBoxContainer
 {
+    private readonly List<GearSlotRow> _slots = [];
+    private readonly List<FighterKind> _wearers = [];
     private SocialSession? _social;
-    private VBoxContainer _worn = null!;
+    private OptionButton _wearer = null!;
     private VBoxContainer _bag = null!;
     private Label _count = null!;
     private Label _message = null!;
@@ -18,16 +22,31 @@ public partial class LootPanel : VBoxContainer
 
     public FrontierGame? Game { get; set; }
 
+    private FighterKind Chosen => _wearer.Selected >= 0 && _wearer.Selected < _wearers.Count ? _wearers[_wearer.Selected] : FighterKind.Hero;
+
     public override void _Ready()
     {
-        Name = "Butin";
+        Name = "Équipement";
         VBoxContainer rows = new();
         rows.AddThemeConstantOverride("separation", 6);
-        rows.AddChild(WindowRows.Muted("Chaque boss vaincu a une chance de laisser un objet, et le titan en laisse un à chaque récompense. Le serveur les tire et les garde : ils te suivent sur tous tes PC. Une arme, une armure et une coiffe s'équipent sur ton héros, et se voient sur lui."));
-        rows.AddChild(WindowRows.Heading("Équipé"));
-        _worn = new VBoxContainer();
-        _worn.AddThemeConstantOverride("separation", 4);
-        rows.AddChild(_worn);
+        rows.AddChild(WindowRows.Muted("Chacun de tes combattants porte une arme de sa classe, une armure et une coiffe. Les boss et le titan laissent du butin ; l'or achète des pièces neuves et les améliore. Le serveur fixe le prix, prend l'or de ta dernière sauvegarde et tire l'objet : ce que l'or achète ou améliore reste lié à toi."));
+        HBoxContainer choice = new();
+        choice.AddThemeConstantOverride("separation", 10);
+        choice.AddChild(WindowRows.Heading("Équipement de"));
+        _wearer = new OptionButton { CustomMinimumSize = new Vector2(260, 0) };
+        _wearer.ItemSelected += _ => Rebuild();
+        choice.AddChild(_wearer);
+        rows.AddChild(choice);
+        foreach (string slot in Items.Slots)
+        {
+            GearSlotRow row = new(slot);
+            row.Upgraded += (item, count) => Act(social => social.UpgradeAsync(item, count), $"Objet amélioré : {item.Name}.");
+            row.Removed += removed => Act(social => social.UnequipAsync(removed, Chosen), "Objet rangé dans le sac.");
+            row.Bought += (bought, rarity) => Act(social => social.BuyAsync(Chosen, bought, rarity), $"{Items.SlotName(bought)} achetée et équipée.");
+            _slots.Add(row);
+            rows.AddChild(row);
+        }
+
         _count = WindowRows.Heading("Sac");
         rows.AddChild(_count);
         _bag = new VBoxContainer();
@@ -46,6 +65,40 @@ public partial class LootPanel : VBoxContainer
         Rebuild();
     }
 
+    public void Refresh()
+    {
+        if (!IsNodeReady())
+        {
+            return;
+        }
+
+        if (!_wearers.SequenceEqual(Recruited()))
+        {
+            Rebuild();
+            return;
+        }
+
+        if (Game is FrontierGame game)
+        {
+            for (int index = 0; index < _wearers.Count; index++)
+            {
+                _wearer.SetItemText(index, Title(game.State, _wearers[index]));
+            }
+        }
+
+        ItemsData? items = _social?.Data?.Items;
+        bool room = items is not null && items.Bag.Count < items.Max;
+        bool idle = !_busy && Game is { Frozen: false } && items is not null;
+        foreach (GearSlotRow row in _slots)
+        {
+            row.Refresh(Game?.State, idle, room);
+        }
+    }
+
+    private IEnumerable<FighterKind> Recruited() =>
+        Fighters.All.Select(fighter => fighter.Kind).Where(kind => kind == FighterKind.Hero || Game?.State.Level(kind) > 0
+            || _social?.Data?.Items?.Bag.Any(item => item.Wearer == kind) == true);
+
     private void Rebuild()
     {
         if (!IsNodeReady())
@@ -53,27 +106,42 @@ public partial class LootPanel : VBoxContainer
             return;
         }
 
-        WindowRows.Clear(_worn);
-        WindowRows.Clear(_bag);
-        if (_social?.Data?.Items is not ItemsData items)
+        FighterKind chosen = Chosen;
+        _wearers.Clear();
+        _wearers.AddRange(Recruited());
+        _wearer.Clear();
+        foreach (FighterKind kind in _wearers)
         {
-            _count.Text = "Sac";
-            _bag.AddChild(WindowRows.Muted("Le butin se charge…"));
-            return;
+            _wearer.AddItem(Game is FrontierGame game ? Title(game.State, kind) : Fighters.Of(kind).Name);
         }
 
-        foreach (string slot in Items.Slots)
+        _wearer.Select(Math.Max(0, _wearers.IndexOf(chosen)));
+        HeroRole role = Game?.State.ClassOf(Chosen) ?? HeroRole.Warrior;
+        ItemsData? items = _social?.Data?.Items;
+        for (int index = 0; index < _slots.Count; index++)
         {
-            _worn.AddChild(items.Equipped(slot) is ItemData item
-                ? ItemRow.Create(item, ("Retirer", () => Act(social => social.UnequipAsync(slot), $"{item.Name} retirée.")))
-                : WindowRows.Muted($"{Items.SlotName(slot)} : rien d'équipé."));
+            _slots[index].Show(items?.Equipped(Chosen, Items.Slots[index]), role);
+        }
+
+        Bag(items, role);
+        Refresh();
+    }
+
+    private void Bag(ItemsData? items, HeroRole role)
+    {
+        WindowRows.Clear(_bag);
+        if (items is null)
+        {
+            _count.Text = "Sac";
+            _bag.AddChild(WindowRows.Muted("L'équipement se charge…"));
+            return;
         }
 
         ItemData[] bag = [.. items.Bag.Where(item => !item.Equipped)];
         _count.Text = $"Sac · {items.Bag.Count} / {items.Max}";
         if (items.Bag.Count >= items.Max)
         {
-            _bag.AddChild(WindowRows.Muted("Sac plein : le prochain butin sera perdu. Recycle des objets pour faire de la place."));
+            _bag.AddChild(WindowRows.Muted("Sac plein : le prochain butin sera perdu et la boutique attend. Recycle des objets pour faire de la place."));
         }
 
         if (bag.Length == 0)
@@ -83,12 +151,20 @@ public partial class LootPanel : VBoxContainer
 
         foreach (ItemData item in bag)
         {
-            string gold = Game is FrontierGame game ? NumberFormat.Gold(Items.SalvageGold(game.State, item.Rank)) : "de l'or";
+            string gold = Game is FrontierGame game ? NumberFormat.Gold(Items.SalvageGold(game.State, item.Rank, item.Source == Items.ShopSource, item.Level)) : "de l'or";
+            Action? equip = item.Fits(role) ? () => Act(social => social.EquipAsync(item.Id, Chosen), $"Objet équipé : {item.Name}.") : null;
             _bag.AddChild(ItemRow.Create(item,
-                ("Équiper", () => Act(social => social.EquipAsync(item.Id), $"{item.Name} équipée.")),
-                ($"Recycler · {gold}", () => Act(social => social.SalvageAsync(item), $"{item.Name} recyclée."))));
+                (item.Fits(role) ? "Équiper" : "Autre classe", equip),
+                ($"Recycler · {gold}", () => Act(social => social.SalvageAsync(item), $"Objet recyclé : {item.Name}."))));
         }
     }
+
+    private static string Title(FrontierState state, FighterKind kind) => kind switch
+    {
+        FighterKind.Hero => SceneText.Hero(state),
+        _ when state.Level(kind) == 0 => $"{Fighters.Of(kind).Name} · absent",
+        _ => $"{Roles.Of(state.ClassOf(kind)).Name} · {Fighters.Of(kind).Name.ToLowerInvariant()}",
+    };
 
     private async void Act(Func<SocialSession, Task<string>> action, string success)
     {
@@ -99,8 +175,13 @@ public partial class LootPanel : VBoxContainer
 
         _busy = true;
         _message.Text = "…";
-        string status = await action(social);
-        _busy = false;
-        _message.Text = status == SocialData.UnknownItem ? "Cet objet n'est plus dans ton sac." : GuildMessages.For(status, success);
+        try
+        {
+            _message.Text = GuildMessages.For(await action(social), success);
+        }
+        finally
+        {
+            _busy = false;
+        }
     }
 }

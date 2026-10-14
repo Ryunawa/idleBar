@@ -24,11 +24,12 @@ public static class Team
     public static bool Up(FrontierState state, Combatant member) =>
         member.Ally is Ally ally ? ally.Downed <= 0 : Vitality.Up(state, member.Kind);
 
-    public static HeroRole? Role(FrontierState state, Combatant member) =>
-        member.Ally?.Role ?? (member.Kind == FighterKind.Hero ? state.Role : null);
+    public static HeroRole Role(FrontierState state, Combatant member) => member.Ally?.Role ?? state.ClassOf(member.Kind);
 
     public static bool Ranged(FrontierState state, Combatant member) =>
-        Role(state, member) is not HeroRole role || Roles.Of(role).Ranged;
+        Roles.Of(Role(state, member)).Ranged;
+
+    public static Gear Gear(FrontierState state, Combatant member) => member.Ally is null ? state.Gears[(int)member.Kind] : Frontier.Gear.None;
 
     public static double Health(FrontierState state, Combatant member) => member.Ally?.Health ?? state.Health[(int)member.Kind];
 

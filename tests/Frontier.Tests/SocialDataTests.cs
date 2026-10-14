@@ -37,9 +37,10 @@ public sealed class SocialDataTests
           "items": {
             "max": 60,
             "bag": [
-              { "id": 7, "slot": "weapon", "rarity": "epic", "level": 45, "stat_a": "damage", "value_a": 15.5, "stat_b": "speed", "value_b": 4.2, "look": 1, "source": "boss", "equipped": true },
+              { "id": 7, "slot": "weapon", "rarity": "epic", "level": 45, "stat_a": "damage", "value_a": 15.5, "stat_b": "speed", "value_b": 4.2, "look": 1, "source": "boss", "role": "tank", "equipped": true },
               { "id": 8, "slot": "helm", "rarity": "rare", "level": 30, "stat_a": "health", "value_a": 12, "stat_b": null, "value_b": null, "look": 2, "source": "titan", "equipped": true },
-              { "id": 9, "slot": "armor", "rarity": "common", "level": 12, "stat_a": "healing", "value_a": 5, "stat_b": null, "value_b": null, "look": 0, "source": "boss", "equipped": false }
+              { "id": 9, "slot": "armor", "rarity": "common", "level": 12, "stat_a": "healing", "value_a": 5, "stat_b": null, "value_b": null, "look": 0, "source": "boss", "equipped": false },
+              { "id": 10, "slot": "armor", "rarity": "rare", "level": 20, "stat_a": "health", "value_a": 10, "stat_b": null, "value_b": null, "look": 1, "source": "shop", "equipped": true, "fighter": "mage", "bound": true, "upgrades": 2 }
             ]
           }
         }
@@ -65,10 +66,17 @@ public sealed class SocialDataTests
         Assert.Equal(50, data.Help.Boosts[0].ToBoost().Gold);
 
         ItemsData items = data.Items!;
-        Assert.Equal("Hache épique", items.Bag[0].Name);
-        Assert.Equal(new Gear(0.155, 0.12, 0, 0, 0.042), items.ToGear());
-        Assert.Equal(new GearLook(2, null, 2, 1), items.ToWorn());
-        Assert.Null(items.Equipped(Items.Armor));
+        Assert.Equal("Targe épique", items.Bag[0].Name);
+        Assert.True(items.Bag[0].Fits(HeroRole.Tank));
+        Assert.False(items.Bag[0].Fits(HeroRole.Warrior));
+        Assert.True(items.Bag[1].Fits(HeroRole.Mage));
+        Assert.True(data.Titan?.ToView().Rewarded);
+        Assert.Equal(new Gear(0.155, 0.12, 0, 0, 0.042), items.ToGear(FighterKind.Hero));
+        Assert.Equal(new GearLook(2, null, 2, 1), items.ToWorn(FighterKind.Hero));
+        Assert.Null(items.Equipped(FighterKind.Hero, Items.Armor));
+        Assert.Equal(FighterKind.Second, items.Bag[3].Wearer);
+        Assert.Equal(0.14, items.ToGear(FighterKind.Second).Health, 6);
+        Assert.Equal("Cotte rare +2", items.Bag[3].Name);
     }
 
     [Fact]

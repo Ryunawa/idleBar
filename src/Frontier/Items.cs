@@ -14,12 +14,22 @@ public static class Items
     public const string Critical = "critical";
     public const string Healing = "healing";
     public const string Speed = "speed";
+    public const string ShopSource = "shop";
 
     private static readonly CultureInfo French = CultureInfo.GetCultureInfo("fr-FR");
     private static readonly string[] RarityIds = ["common", "rare", "epic", "legendary"];
     private static readonly string[] RarityLabels = ["commune", "rare", "épique", "légendaire"];
+    private static readonly string[] MasculineLabels = ["commun", "rare", "épique", "légendaire"];
     private static readonly double[] SalvageFactors = [2, 5, 12, 30];
     private static readonly string[] WeaponNouns = ["Lame", "Hache", "Masse", "Lance"];
+    private static readonly (string Noun, bool Masculine)[][] ClassWeapons =
+    [
+        [("Épée", false), ("Hache", false), ("Masse", false), ("Lame", false)],
+        [("Bouclier", true), ("Targe", false), ("Pavois", true), ("Rondache", false)],
+        [("Arc", true), ("Arbalète", false), ("Arc long", true), ("Fronde", false)],
+        [("Bâton", true), ("Baguette", false), ("Grimoire", true), ("Tome", true)],
+        [("Sceptre", true), ("Crosse", false), ("Encensoir", true), ("Relique", false)],
+    ];
     private static readonly string[] ArmorNouns = ["Cuirasse", "Cotte", "Brigandine", "Armure"];
     private static readonly string[] HelmNouns = ["Barbute", "Couronne", "Capuche", "Toque"];
 
@@ -27,8 +37,16 @@ public static class Items
 
     public static int Rank(string? rarity) => Math.Max(0, Array.IndexOf(RarityIds, rarity));
 
-    public static string Name(string slot, int look, int rarity) =>
-        $"{Nouns(slot)[look & 3]} {RarityLabels[Math.Clamp(rarity, 0, RarityLabels.Length - 1)]}";
+    public static string RarityId(int rank) => RarityIds[Math.Clamp(rank, 0, RarityIds.Length - 1)];
+
+    public static string Name(string slot, int look, int rarity, HeroRole? role = null)
+    {
+        (string noun, bool masculine) = slot == Weapon && role is HeroRole owner ? ClassWeapons[(int)owner][look & 3] : (Nouns(slot)[look & 3], false);
+        string[] labels = masculine ? MasculineLabels : RarityLabels;
+        return $"{noun} {labels[Math.Clamp(rarity, 0, labels.Length - 1)]}";
+    }
+
+    public static string ClassWeapon(HeroRole role) => ClassWeapons[(int)role][0].Noun;
 
     public static string SlotName(string slot) => slot switch
     {
@@ -50,8 +68,10 @@ public static class Items
         };
     }
 
-    public static double SalvageGold(FrontierState state, int rarity) =>
-        Economy.KillGold(state, true) * SalvageFactors[Math.Clamp(rarity, 0, SalvageFactors.Length - 1)];
+    public static double Upgraded(double value, int upgrades) => value * (1 + Balance.UpgradeBonus * upgrades);
+
+    public static double SalvageGold(FrontierState state, int rarity, bool bought, int level) =>
+        bought ? GearPrices.Refund(state, rarity, level) : Economy.BaseKillGold(state, true) * SalvageFactors[Math.Clamp(rarity, 0, SalvageFactors.Length - 1)];
 
     private static string[] Nouns(string slot) => slot switch
     {

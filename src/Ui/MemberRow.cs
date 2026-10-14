@@ -11,6 +11,7 @@ public partial class MemberRow : PanelContainer
     private const int FrontMax = 3;
     private const double ConvoyFull = 7140;
     private const int SpriteScale = 2;
+    private const string ConfirmKick = "Confirmer";
 
     public event Action<string>? HelpRequested;
 
@@ -47,7 +48,7 @@ public partial class MemberRow : PanelContainer
                 () => row.HelpRequested?.Invoke(SocialApi.ConvoyHelp)));
             if (leader)
             {
-                line.AddChild(row.Offer("Exclure", false, "Retire ce joueur de la guilde.", () => row.KickRequested?.Invoke()));
+                line.AddChild(row.KickButton());
             }
         }
 
@@ -61,6 +62,23 @@ public partial class MemberRow : PanelContainer
         string help = member.Heroes > 0 ? $" · {member.Heroes} renfort(s)" : string.Empty;
         string convoy = convoyIn > 0 ? $" · convoi {GuildMessages.Wait(convoyIn)}" : string.Empty;
         return $"Héros niv {member.Level} · record niveau {member.BestStage} · {seen}{help}{convoy}";
+    }
+
+    private Button KickButton()
+    {
+        Button button = new() { Text = "Exclure", TooltipText = "Retire ce joueur de la guilde.", SizeFlagsVertical = SizeFlags.ShrinkCenter };
+        button.Pressed += () =>
+        {
+            if (button.Text == ConfirmKick)
+            {
+                KickRequested?.Invoke();
+                return;
+            }
+
+            button.Text = ConfirmKick;
+            button.TooltipText = "Clique encore pour l'exclure de la guilde.";
+        };
+        return button;
     }
 
     private Button Offer(string text, bool disabled, string tooltip, Action pressed)

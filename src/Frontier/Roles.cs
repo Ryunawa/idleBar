@@ -7,16 +7,21 @@ public static class Roles
 {
     public static IReadOnlyList<RoleInfo> All { get; } =
     [
-        new(HeroRole.Warrior, "warrior", "Guerrier", 1, 1, 0.6, false, "Frappe fort au contact, et chaque coup retarde celui du monstre."),
-        new(HeroRole.Tank, "tank", "Tank", 0.8, 2.5, 0.8, false, "Encaisse tous les coups des monstres : le reste de l'équipe est protégé."),
-        new(HeroRole.Archer, "archer", "Archer", 0.9, 0.6, 0.5, true, "Tire de loin, rarement visé, et un tir sur cinq est critique."),
-        new(HeroRole.Mage, "mage", "Mage", 0.95, 0.6, 2.4, true, "Un gros sort toutes les quelques secondes, plus fort contre les boss."),
-        new(HeroRole.Support, "support", "Soutien", 0.75, 1, 0.8, false, "Soigne toute l'équipe et fait revenir plus vite les personnages tombés."),
+        new(HeroRole.Warrior, "warrior", "Guerrier", 1, 1, 0.6, false, "Frappe fort au contact, et un coup sur trois étourdit le monstre.",
+            "Gagne son xp en étourdissant les monstres."),
+        new(HeroRole.Tank, "tank", "Tank", 0.5, 3, 0.8, false, "Peu de dégâts, mais il encaisse tous les coups des monstres, amortis de 40 % : le reste de l'équipe est protégé.",
+            "Gagne son xp en encaissant les coups."),
+        new(HeroRole.Archer, "archer", "Archer", 1, 0.55, 0.5, true, "Tire de loin, rarement visé, et un tir sur cinq est critique.",
+            "Gagne son xp avec ses tirs critiques."),
+        new(HeroRole.Mage, "mage", "Mage", 1, 0.5, 0.8, true, "Trois petits sorts, puis un gros, plus fort contre les boss.",
+            "Gagne son xp avec ses gros sorts."),
+        new(HeroRole.Support, "support", "Soutien", 0.5, 0.9, 0.8, false, "Peu de dégâts, mais il soigne toute l'équipe et fait revenir plus vite les personnages tombés.",
+            "Gagne son xp en relevant les personnages tombés."),
     ];
 
     public static RoleInfo Of(HeroRole role) => All[(int)role];
 
     public static HeroRole? Parse(string? id) => All.FirstOrDefault(role => role.Id == id)?.Role;
 
-    public static IReadOnlySet<HeroRole> OnFront(FrontierState state) => new HashSet<HeroRole>(state.Allies.Select(ally => ally.Role)) { state.Role };
+    public static IReadOnlySet<HeroRole> OnFront(FrontierState state) => new HashSet<HeroRole>(Team.Members(state).Select(member => Team.Role(state, member)));
 }

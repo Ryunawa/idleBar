@@ -3,8 +3,8 @@ namespace IdleBar.Frontier;
 public enum HitSource
 {
     Hero,
-    Archer,
-    Mage,
+    First,
+    Second,
     Click,
     Smite,
     Ally,

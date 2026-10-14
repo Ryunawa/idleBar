@@ -38,6 +38,14 @@ public static class Front
                 }
             }
 
+            foreach (FighterInfo fighter in Fighters.All)
+            {
+                if (fighter.Unlock > 1 && fighter.Unlock == state.MaxStage)
+                {
+                    events.Add(new CompanionReady(fighter.Kind));
+                }
+            }
+
             foreach (SkillInfo skill in Skills.All)
             {
                 if (skill.Unlock == state.MaxStage)

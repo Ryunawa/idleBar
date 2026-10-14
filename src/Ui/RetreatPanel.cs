@@ -18,7 +18,7 @@ public partial class RetreatPanel : VBoxContainer
     {
         Name = "Repli";
         AddThemeConstantOverride("separation", 8);
-        AddChild(WindowRows.Muted("Se replier abandonne le terrain conquis : tu repars du niveau 1, sans or, sans bâtiments ni compagnons. En échange, tu gagnes des âmes : chaque âme donne +2,5 % de dégâts et d'or pour toujours. Les âmes viennent de tout l'or gagné depuis le début, et chacune demande plus d'or que la précédente ; un repli ajoute celles gagnées depuis le dernier. Le premier repli débloque l'Intendant, qui achète à ta place."));
+        AddChild(WindowRows.Muted("Se replier abandonne le terrain conquis : tu repars du niveau 1, sans or, sans bâtiments ni compagnons. En échange, tu gagnes des âmes : chaque âme donne +2,5 % de dégâts et d'or pour toujours. Les âmes viennent de tout l'or gagné depuis le début, et chacune demande plus d'or que la précédente ; un repli ajoute celles gagnées depuis le dernier."));
         _souls = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         AddChild(WindowRows.Card(_souls));
         _offer = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
@@ -38,7 +38,7 @@ public partial class RetreatPanel : VBoxContainer
         }
 
         FrontierState state = game.State;
-        _souls.Text = $"Âmes : {state.Souls} · dégâts et or ×{Economy.SoulMultiplier(state.Souls):0.##} · {NumberFormat.Count(state.Retreats, "repli", "replis")} · record : niveau {state.BestStage}";
+        _souls.Text = $"Âmes : {state.Souls} · dégâts et or ×{NumberFormat.Factor(Economy.SoulMultiplier(state.Souls))} · {NumberFormat.Count(state.Retreats, "repli", "replis")} · record : niveau {state.BestStage}";
         int souls = RetreatRules.Pending(state);
         string next = $"Prochaine âme dans {NumberFormat.Gold(RetreatRules.GoldToNextSoul(state))} gagnés.";
         if (souls < 1)
@@ -51,7 +51,7 @@ public partial class RetreatPanel : VBoxContainer
             return;
         }
 
-        _offer.Text = $"Te replier maintenant rapporte {NumberFormat.Count(souls, "âme", "âmes")} : dégâts et or ×{Economy.SoulMultiplier(state.Souls + souls):0.##}. {next}";
+        _offer.Text = $"Te replier maintenant rapporte {NumberFormat.Count(souls, "âme", "âmes")} : dégâts et or ×{NumberFormat.Factor(Economy.SoulMultiplier(state.Souls + souls))}. {next}";
         _retreat.Disabled = false;
         _retreat.Text = _armed > 0 ? "Confirmer : repartir du niveau 1" : $"Se replier : +{souls} âmes";
     }

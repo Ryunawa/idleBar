@@ -47,20 +47,19 @@ public static class Balance
     public const double FrenzyGold = 7;
 
     public const double SmiteHits = 25;
+    public const double SmiteInterval = 0.6;
     public const double FuryFactor = 2;
     public const double GoldRainSeconds = 30;
     public const double GoldRainKills = 10;
 
     public const double AbsenceCapSeconds = 8 * 3600;
-    public const double IntendantSeconds = 0.5;
-    public const double IntendantReach = 20;
     public const double AchievementSeconds = 1;
 
     public const double MillAbsenceSeconds = 600;
     public const double AbsenceMaxSeconds = 24 * 3600;
-    public const double ForgeBonus = 0.01;
+    public const double ForgeBonus = 0.03;
     public const double MarketBonus = 0.02;
-    public const double TowerBonus = 0.03;
+    public const double TowerBonus = 0.02;
     public const double PortalBonus = 0.01;
     public const double FarmChickenBonus = 0.01;
     public const double FarmChickenMax = 1;
@@ -73,27 +72,55 @@ public static class Balance
     public const double BelfrySeconds = 1;
     public const double BelfryMax = 30;
 
-    public const double MonsterHit = 0.1;
+    public const double MonsterHit = 0.2;
     public const double MonsterStrikeSeconds = 1.5;
-    public const double BossHit = 1.0;
+    public const double BossHit = 1.5;
     public const double BossStrikeSeconds = 2;
     public const double HitRampStages = 40;
     public const double HitRampFloor = 0.15;
     public const double FirstStrikeShare = 0.6;
     public const double MeleeWeight = 4;
     public const double RangedWeight = 1;
-    public const double KillHeal = 0.15;
-    public const double StunSeconds = 0.12;
+    public const double KillHeal = 0.03;
+    public const double StunSeconds = 0.36;
+    public const int StunEvery = 3;
+    public const int SpellEvery = 4;
+    public const double SmallSpell = 0.5;
+    public const double BigSpell = 2.5;
+    public const double StunMax = 0.5;
     public const int CriticalEvery = 5;
     public const double CriticalFactor = 2.5;
     public const double MageBossFactor = 1.5;
     public const double HealSeconds = 3;
-    public const double HealShare = 0.06;
+    public const double HealShare = 0.1;
+    public const double TankGuard = 0.6;
     public const double SupportRevive = 0.5;
-    public const double SynergyBonus = 0.05;
+    public const double SynergyBonus = 0.1;
     public const double ArmorBonus = 0.1;
     public const double ArmorCost = 400;
     public const double BarracksHpBonus = 0.02;
+
+    public const double XpRatio = 0.012;
+    public const double XpFlat = 9;
+    public const double XpSmall = 0.05;
+    public const double XpStun = 1;
+    public const double XpCritical = 1;
+    public const double XpBigSpell = 1;
+    public const double XpTaken = 1;
+    public const double XpBossTaken = 3;
+    public const double XpRevive = 10;
+    public const double XpHeal = 0.3;
+
+    public const double ShopKills = 30;
+    public const double UpgradeShare = 0.5;
+    public const double RefundShare = 0.25;
+    public const double UpgradeGrowth = 1.25;
+    public const double UpgradeBonus = 0.2;
+    public const int MaxUpgrades = 100;
+
+    public const int ShopRarities = 3;
+
+    public static readonly double[] RarityPrices = [1, 4, 15, 40];
 
     public static readonly int[] Tiers = [10, 25, 50, 100, 250];
 

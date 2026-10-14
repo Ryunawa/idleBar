@@ -30,10 +30,19 @@ public static class EffectsPainter
                 }
 
                 r.Set(x, y, Palette.White);
+                if (!projectile.Big)
+                {
+                    continue;
+                }
+
                 r.Set(x - 1, y, Palette.Cyan);
                 r.Set(x + 1, y, Palette.Cyan);
                 r.Set(x, y - 1, Palette.Cyan);
                 r.Set(x, y + 1, Palette.Cyan);
+                r.Set(x - 2, y, Palette.Blue);
+                r.Set(x + 2, y, Palette.Blue);
+                r.Set(x, y - 2, Palette.Blue);
+                r.Set(x, y + 2, Palette.Blue);
             }
         }
     }

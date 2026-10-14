@@ -31,7 +31,7 @@ public static class Formation
 
     private static int Rank(FrontierState state, Combatant member)
     {
-        HeroRole role = Team.Role(state, member) ?? (member.Kind == FighterKind.Mage ? HeroRole.Mage : HeroRole.Archer);
+        HeroRole role = Team.Role(state, member);
         int standing = member.Ally is Ally ally ? -state.Allies.IndexOf(ally) - 1 : member.Kind == FighterKind.Hero ? 1 : 0;
         return Array.IndexOf(Order, role) * 10 + standing;
     }

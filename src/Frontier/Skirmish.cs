@@ -25,6 +25,7 @@ public static class Skirmish
             {
                 Team.SetHealth(state, member, 1);
                 events.Add(new Revived(member.Kind, member.AllyId));
+                Experience.Rescue(state, member, events);
             }
         }
     }
@@ -40,9 +41,20 @@ public static class Skirmish
         }
     }
 
-    public static void Stun(Monster monster) => monster.StrikeIn += Balance.StunSeconds;
+    public static bool Stun(Monster monster)
+    {
+        double stun = Math.Min(Balance.StunSeconds, Vitality.StrikeSeconds(monster.Boss) * Balance.StunMax - monster.Dazed);
+        if (stun <= 0)
+        {
+            return false;
+        }
 
-    public static void Rest(FrontierState state) => Mend(state, Balance.KillHeal * (1 + state.Gear.Healing));
+        monster.StrikeIn += stun;
+        monster.Dazed += stun;
+        return true;
+    }
+
+    public static void Rest(FrontierState state) => Mend(state, member => Balance.KillHeal * (1 + Team.Gear(state, member).Healing));
 
     public static void Restore(FrontierState state)
     {
@@ -93,34 +105,50 @@ public static class Skirmish
         if (state.HealTimer >= Balance.HealSeconds)
         {
             state.HealTimer -= Balance.HealSeconds;
-            Mend(state, Balance.HealShare * (1 + state.Gear.Healing));
+            double bonus = Team.Members(state)
+                .Where(member => Team.Role(state, member) == HeroRole.Support && Team.Up(state, member))
+                .Max(member => Team.Gear(state, member).Healing);
+            double restored = Mend(state, _ => Balance.HealShare * (1 + bonus));
             events.Add(new Healed());
+            Experience.Mended(state, restored, events);
         }
     }
 
-    private static void Mend(FrontierState state, double share)
+    private static double Mend(FrontierState state, Func<Combatant, double> share)
     {
+        double restored = 0;
         foreach (Combatant member in Team.Members(state))
         {
             if (Team.Up(state, member))
             {
-                Team.SetHealth(state, member, Math.Min(1, Team.Health(state, member) + share));
+                double health = Team.Health(state, member);
+                double healed = Math.Min(1, health + share(member));
+                restored += healed - health;
+                Team.SetHealth(state, member, healed);
             }
         }
+
+        return restored;
     }
 
     private static void Strike(FrontierState state, Monster monster, EventLog events)
     {
         monster.Strikes++;
+        monster.Dazed = 0;
         if (Target(state, monster) is not Combatant target)
         {
             return;
         }
 
-        double damage = Vitality.MonsterHit(monster.Stage, monster.Boss);
+        double damage = Vitality.MonsterHit(monster.Stage, monster.Boss) * (Team.Role(state, target) == HeroRole.Tank ? Balance.TankGuard : 1);
         double health = Team.Health(state, target) - damage / Team.MaxHp(state, target);
         Team.SetHealth(state, target, Math.Max(0, health));
         events.Add(new Struck(target.Kind, damage, monster.Boss, target.AllyId));
+        if (target.Ally is null && state.ClassOf(target.Kind) == HeroRole.Tank)
+        {
+            Experience.Gain(state, target.Kind, monster.Boss ? Balance.XpBossTaken : Balance.XpTaken, monster.Stage, events);
+        }
+
         if (health > 0)
         {
             return;

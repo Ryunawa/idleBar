@@ -128,8 +128,8 @@ public static class BackdropPainter
     private static void PaintClouds(ArtRaster raster, FrontierLayout layout, SceneLight light, float time)
     {
         bool wet = light.Rain || light.Snow;
-        Rgba top = wet ? Palette.Gray : Palette.White.Mix(Palette.Rose, light.Warmth * 0.6f).Mix(Palette.Slate, 1 - light.Daylight);
-        Rgba bottom = top.Mix(Palette.Steel, 0.35f);
+        Rgba top = PicoFilter.Nearest(wet ? Palette.Gray : Palette.White.Mix(Palette.Rose, light.Warmth * 0.6f).Mix(Palette.Slate, 1 - light.Daylight));
+        Rgba bottom = wet ? Palette.Slate : top == Palette.PicoWhite ? Palette.LightGrey : PicoFilter.Nearest(top.Mix(Palette.Steel, 0.35f));
         int count = CloudCount * layout.Width / 500 + (wet ? 4 : 0);
         for (int cloud = 0; cloud < count; cloud++)
         {

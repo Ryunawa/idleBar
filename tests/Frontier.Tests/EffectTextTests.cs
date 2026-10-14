@@ -7,10 +7,10 @@ namespace IdleBar.Tests;
 public sealed class EffectTextTests
 {
     [Theory]
-    [InlineData(BuildingKind.Forge, 30, "+30 % de dégâts et de PV du héros")]
+    [InlineData(BuildingKind.Forge, 30, "+90 % de dégâts et de PV du héros")]
     [InlineData(BuildingKind.Market, 8, "+16 % d'or des monstres")]
-    [InlineData(BuildingKind.Workshop, 25, "-12,5 % sur le prix des combattants")]
-    [InlineData(BuildingKind.Workshop, 400, "-50 % sur le prix des combattants")]
+    [InlineData(BuildingKind.Workshop, 25, "-12,5 % sur l'équipement et l'armure")]
+    [InlineData(BuildingKind.Workshop, 400, "-50 % sur l'équipement et l'armure")]
     [InlineData(BuildingKind.Mill, 30, "absence comptée jusqu'à 13 h")]
     [InlineData(BuildingKind.Mill, 1, "absence comptée jusqu'à 8 h 10")]
     [InlineData(BuildingKind.Farm, 40, "poule dorée 1,4× plus fréquente")]

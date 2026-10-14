@@ -27,7 +27,7 @@ public sealed class Crier
         "Le désert manque de sable. Enquête en cours.",
         "Un yéti cherche un pull à sa taille.",
         "Le dragon prétend qu'il était là avant.",
-        "L'archère a raté une cible. Volontairement.",
+        "Un archer a raté une cible. Volontairement.",
         "Le marché vend du brouillard en bocal.",
         "Le meunier jure que sa farine tient une journée entière.",
     ];

@@ -2,9 +2,10 @@ namespace IdleBar.Scene;
 
 public sealed class Projectile
 {
-    public Projectile(bool magic, float fromX, float fromY, float toX, float toY, float duration, double amount)
+    public Projectile(bool magic, float fromX, float fromY, float toX, float toY, float duration, double amount, bool big = false)
     {
         Magic = magic;
+        Big = big;
         FromX = fromX;
         FromY = fromY;
         ToX = toX;
@@ -14,6 +15,8 @@ public sealed class Projectile
     }
 
     public bool Magic { get; }
+
+    public bool Big { get; }
 
     public float FromX { get; }
 

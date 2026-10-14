@@ -23,7 +23,7 @@ public partial class VillagePanel : VBoxContainer
             OfferRow row = new();
             int index = plot.Index;
             row.Bought += count => Game?.BuyMany(new PlotPurchase(index), count);
-            row.Chosen += kind => Game?.Buy(new Construction(index, kind));
+            row.Chosen += id => Game?.Buy(new Construction(index, (BuildingKind)id));
             rows.AddChild(row);
             _rows.Add(row);
         }
@@ -39,7 +39,7 @@ public partial class VillagePanel : VBoxContainer
         }
 
         FrontierState state = game.State;
-        List<BuildingKind> free = [.. Buildings.All.Select(building => building.Kind).Where(kind => state.PlotOf(kind) is null)];
+        List<OfferChoice> free = [.. Buildings.All.Where(building => state.PlotOf(building.Kind) is null).Select(building => new OfferChoice((int)building.Kind, building.Name, building.Effect))];
         foreach (PlotInfo plot in Plots.All)
         {
             OfferRow row = _rows[plot.Index];

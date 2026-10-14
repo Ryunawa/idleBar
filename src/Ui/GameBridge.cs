@@ -128,7 +128,7 @@ public sealed class GameBridge : IDisposable
                 Journal.Add(line);
             }
 
-            if (frontierEvent is Retreated or AchievementUnlocked or PlotConquered or Built { Level: 1 })
+            if (frontierEvent is Retreated or AchievementUnlocked or PlotConquered or Built { Level: 1 } or Trained)
             {
                 _session?.RequestSave();
             }

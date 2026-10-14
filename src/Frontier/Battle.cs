@@ -55,7 +55,7 @@ public static class Battle
         }
     }
 
-    public static void Damage(FrontierState state, double amount, HitSource source, EventLog events, bool critical = false, long ally = 0)
+    public static void Damage(FrontierState state, double amount, HitSource source, EventLog events, bool critical = false, long ally = 0, bool big = false)
     {
         if (!Fighting(state) || state.Monster is not Monster monster)
         {
@@ -63,7 +63,7 @@ public static class Battle
         }
 
         monster.Hp -= amount;
-        events.Add(new Hit(source, amount, critical, ally));
+        events.Add(new Hit(source, amount, critical, ally, big));
         if (monster.Hp <= 0)
         {
             Kill(state, monster, events);
@@ -83,22 +83,8 @@ public static class Battle
         while (state.Timers[index] >= interval && state.Monster == monster)
         {
             state.Timers[index] -= interval;
-            Swing(state, kind, monster, Economy.Dps(state, kind) * interval, events);
+            Blows.Swing(state, kind, monster, Economy.Dps(state, kind) * interval, events);
         }
-    }
-
-    private static void Swing(FrontierState state, FighterKind kind, Monster monster, double amount, EventLog events)
-    {
-        if (kind != FighterKind.Hero)
-        {
-            Damage(state, amount, kind == FighterKind.Archer ? HitSource.Archer : HitSource.Mage, events);
-            return;
-        }
-
-        state.CritMeter += (state.Role == HeroRole.Archer ? 100 / Balance.CriticalEvery : 0) + (int)Math.Round(state.Gear.Critical * 100);
-        bool critical = state.CritMeter >= 100;
-        state.CritMeter = critical ? state.CritMeter - 100 : state.CritMeter;
-        Blow(state, state.Role, critical, monster, amount, HitSource.Hero, 0, events);
     }
 
     private static void Assist(FrontierState state, Ally ally, Monster monster, double dt, EventLog events)
@@ -113,21 +99,8 @@ public static class Battle
         while (ally.Timer >= interval && state.Monster == monster)
         {
             ally.Timer -= interval;
-            ally.Shots++;
-            bool critical = ally.Role == HeroRole.Archer && ally.Shots % Balance.CriticalEvery == 0;
-            Blow(state, ally.Role, critical, monster, Economy.AllyDps(state, ally) * interval, HitSource.Ally, ally.Id, events);
+            Blows.Assist(state, ally, monster, Economy.AllyDps(state, ally) * interval, events);
         }
-    }
-
-    private static void Blow(FrontierState state, HeroRole role, bool critical, Monster monster, double amount, HitSource source, long ally, EventLog events)
-    {
-        double factor = (critical ? Balance.CriticalFactor : 1) * (role == HeroRole.Mage && monster.Boss ? Balance.MageBossFactor : 1);
-        if (role == HeroRole.Warrior)
-        {
-            Skirmish.Stun(monster);
-        }
-
-        Damage(state, amount * factor, source, events, critical, ally);
     }
 
     private static void Kill(FrontierState state, Monster monster, EventLog events)

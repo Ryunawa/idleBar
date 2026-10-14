@@ -105,13 +105,23 @@ public sealed class LoaderTests
         Assert.Equal(3, SaveArguments.From(SaveCodec.Capture(plan.State), 1, Guid.Empty).PArmor);
     }
 
+    [Fact]
+    public void CompanionClassesTravelWithTheSave()
+    {
+        FrontierState state = new() { Fighters = [5, 5, 0] };
+        state.Companions[0] = HeroRole.Support;
+        LoadPlan plan = FrontierLoader.Plan(Data(state, 1, 0), null, Now);
+        Assert.Equal(HeroRole.Support, plan.State.ClassOf(FighterKind.First));
+        Assert.Equal(["support", null], SaveArguments.From(SaveCodec.Capture(plan.State), 1, Guid.Empty).PCompanions);
+    }
+
     private static FrontierData Data(FrontierState state, int revision, double away, Guid? savedBy = null)
     {
         FrontierSave save = SaveCodec.Capture(state);
         return new FrontierData(
             revision, Now, away, save.Gold, save.LifetimeGold, save.Souls, save.Retreats, save.Stage, save.MaxStage,
-            save.BestStage, save.Kills, save.BossHeld, save.IntendantUnlocked, save.IntendantOn, save.MonstersKilled,
+            save.BestStage, save.Kills, save.BossHeld, save.MonstersKilled,
             save.BossesKilled, save.Chickens, save.Clicks, save.SkillsUsed, save.Fighters, save.Plots, save.Levels,
-            save.Cooldowns, save.Achievements, savedBy, save.Armor);
+            save.Cooldowns, save.Achievements, savedBy, save.Armor, Companions: save.Companions);
     }
 }

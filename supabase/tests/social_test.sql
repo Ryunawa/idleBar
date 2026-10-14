@@ -39,7 +39,7 @@ language sql
 as $$
   select public.save_frontier(p_revision, pg_temp.session(p_player), 100, 1e10, 0, 0, 12, 12, 12, 0, false,
     '{5,1,0}', '{forge,bakery,null,null,null,null,null,null,null,null,null,null}', '{3,1,0,0,0,0,0,0,0,0,0,0}',
-    '{0,0,0}', false, false, '{}', p_killed, p_bosses, 0, 0, 0, 0) ->> 'status';
+    '{0,0,0}', '{}', p_killed, p_bosses, 0, 0, 0, 0) ->> 'status';
 $$;
 
 grant execute on function pg_temp.check(boolean, text), pg_temp.as_player(text), pg_temp.session(text), pg_temp.member(text),
@@ -91,7 +91,16 @@ select pg_temp.check(public.kick_member(pg_temp.member('Corentin')) ->> 'status'
 select pg_temp.as_player('a1111111-1111-1111-1111-111111111111');
 select pg_temp.check(jsonb_array_length(public.kick_member(pg_temp.member('Corentin')) #> '{guild,members}') = 2, 'membre exclu');
 select pg_temp.as_player('c3333333-3333-3333-3333-333333333333');
-select pg_temp.check(public.join_guild(current_setting('test.code')) ->> 'status' = 'ok', 'un exclu peut revenir');
+select pg_temp.check(public.join_guild(current_setting('test.code')) ->> 'status' = 'cooldown', 'un exclu attend une heure');
+reset role;
+update public.guild_departures set left_at = now() - interval '2 hours' where player_id = 'c3333333-3333-3333-3333-333333333333';
+set role authenticated;
+select public.join_guild('ZZZZZZ') from generate_series(1, 10);
+select pg_temp.check(public.join_guild(current_setting('test.code')) ->> 'status' = 'too_many_tries', 'dix codes faux par heure au plus');
+reset role;
+update private.guild_attempts set tried_at = now() - interval '2 hours';
+set role authenticated;
+select pg_temp.check(public.join_guild(current_setting('test.code')) ->> 'status' = 'ok', 'un exclu revient après une heure');
 
 select pg_temp.as_player('a1111111-1111-1111-1111-111111111111');
 select pg_temp.check(public.rename_guild('Les Épées') #>> '{guild,name}' = 'Les Épées', 'guilde renommée');
@@ -142,40 +151,52 @@ select pg_temp.check(public.send_help(pg_temp.member('Aldric'), 'hero') ->> 'sta
 select pg_temp.as_player('a1111111-1111-1111-1111-111111111111');
 select pg_temp.check((public.get_social() #>> '{help,allies,0,ratio}')::numeric <= 0.01, 'un renfort faible reste faible');
 reset role;
-update private.settings set help_front_max = 3, titan_min_hp = 1000;
+update private.settings set help_front_max = 3, titan_min_hp = 1000, reward_burst_minutes = 1;
 delete from public.titans;
 set role authenticated;
 
 select pg_temp.as_player('b2222222-2222-2222-2222-222222222222');
-select pg_temp.check((public.get_social() #>> '{titan,hp}')::bigint = 60000, 'titan à 15 000 PV par joueur actif');
+select pg_temp.check((public.get_social() #>> '{titan,hp}')::bigint = 48000, 'titan à 12 000 PV par joueur actif');
 select pg_temp.check(jsonb_array_length(public.get_social() #> '{titan,tiers}') = 3, 'trois paliers');
 select pg_temp.check((public.get_social() #>> '{titan,tiers,0,points}')::bigint = 500, 'premier palier à 500');
 select pg_temp.check(public.get_social() #> '{titan,last}' = 'null'::jsonb, 'pas de titan la semaine dernière');
 select pg_temp.check(pg_temp.save('b2222222-2222-2222-2222-222222222222', 0, 500) = 'ok', 'sauvegarde avec des monstres');
 select pg_temp.check((public.get_social() #>> '{titan,mine}')::bigint = 60, 'au plus 60 coups par minute');
 select pg_temp.check((public.get_social() #>> '{titan,fighters}')::integer = 1, 'un combattant contre le titan');
+select pg_temp.check(pg_temp.save('b2222222-2222-2222-2222-222222222222', 1, 5500) = 'ok', 'sauvegarde aussitôt après');
+select pg_temp.check((public.get_social() #>> '{titan,mine}')::bigint = 60, 'sauvegarder souvent ne relance pas le plafond');
 reset role;
-update public.frontiers set saved_at = now() - interval '30 minutes' where player_id = 'b2222222-2222-2222-2222-222222222222';
+update private.settings set reward_burst_minutes = 30;
+update private.reward_credits set titan_at = titan_at - interval '30 minutes' where player_id = 'b2222222-2222-2222-2222-222222222222';
 set role authenticated;
-select pg_temp.check(pg_temp.save('b2222222-2222-2222-2222-222222222222', 1, 5500) = 'ok', 'sauvegarde après 30 min');
-select pg_temp.check((public.get_social() #>> '{titan,mine}')::bigint = 1920, 'contribution plafonnée au temps écoulé');
+select pg_temp.check(pg_temp.save('b2222222-2222-2222-2222-222222222222', 2, 11000) = 'ok', 'sauvegarde après 30 min');
+select pg_temp.check((public.get_social() #>> '{titan,mine}')::bigint = 1860, 'contribution plafonnée au temps écoulé');
 select pg_temp.check(public.get_social() #>> '{titan,ranking,0,name}' = 'Les Épées', 'classement des guildes');
 select pg_temp.check((public.get_social() #>> '{titan,ranking,0,mine}')::boolean, 'sa guilde est signalée');
 select pg_temp.check(public.get_social() #> '{titan,claimable}' = 'null'::jsonb, 'rien à réclamer avant la chute');
 select pg_temp.check(public.claim_titan() ->> 'status' = 'nothing', 'pas de récompense avant la chute');
 reset role;
-update public.frontiers set saved_at = now() - interval '10 minutes' where player_id = 'b2222222-2222-2222-2222-222222222222';
+update private.reward_credits set titan_at = titan_at - interval '10 minutes' where player_id = 'b2222222-2222-2222-2222-222222222222';
 set role authenticated;
-select pg_temp.check(pg_temp.save('b2222222-2222-2222-2222-222222222222', 2, 5520, 2) = 'ok', 'deux boss vaincus');
-select pg_temp.check((public.get_social() #>> '{titan,mine}')::bigint = 1958, 'un boss compte pour dix monstres');
+select pg_temp.check(pg_temp.save('b2222222-2222-2222-2222-222222222222', 3, 11020, 2) = 'ok', 'deux boss vaincus');
+select pg_temp.check((public.get_social() #>> '{titan,mine}')::bigint = 1898, 'un boss compte pour dix monstres');
 reset role;
 update public.titans set hp = 4000, damage = 3990;
-update public.frontiers set saved_at = now() - interval '10 minutes' where player_id = 'b2222222-2222-2222-2222-222222222222';
+update private.reward_credits set titan_at = titan_at - interval '10 minutes' where player_id = 'b2222222-2222-2222-2222-222222222222';
 set role authenticated;
-select pg_temp.check(pg_temp.save('b2222222-2222-2222-2222-222222222222', 3, 6000, 2) = 'ok', 'le coup final');
+select pg_temp.check(pg_temp.save('b2222222-2222-2222-2222-222222222222', 4, 11500, 2) = 'ok', 'le coup final');
 select pg_temp.check((public.get_social() #>> '{titan,fallen}')::boolean, 'le titan tombe');
-select pg_temp.check((public.get_social() #>> '{titan,mine}')::bigint = 1968, 'pas plus que les PV restants');
+select pg_temp.check((public.get_social() #>> '{titan,mine}')::bigint = 1908, 'pas plus que les PV restants');
 select pg_temp.check(public.get_social() #> '{titan,claimable}' = '{"hours": 4, "percent": 25}'::jsonb, 'palier de 500 coups');
+reset role;
+update private.settings set bag_size = 1;
+select private.roll_item('b2222222-2222-2222-2222-222222222222', 5, null, 'boss');
+set role authenticated;
+select pg_temp.check(public.claim_titan() ->> 'status' = 'bag_full', 'sac plein : la récompense attend');
+select pg_temp.check(public.get_social() #> '{titan,claimable}' = '{"hours": 4, "percent": 25}'::jsonb, 'la récompense reste à réclamer');
+reset role;
+update private.settings set bag_size = 60;
+set role authenticated;
 select pg_temp.check(public.claim_titan() ->> 'status' = 'ok', 'récompense réclamée');
 select pg_temp.check(exists (
   select 1 from jsonb_array_elements(public.get_social() #> '{items,bag}') item
@@ -186,11 +207,15 @@ select pg_temp.check(exists (
   where boost ->> 'source' = 'titan' and (boost ->> 'damage')::integer = 25 and (boost ->> 'ends_in')::numeric > 14000), 'bonus de 4 h');
 reset role;
 insert into public.titans (week, hp, damage, fallen_at) values (private.titan_week() - 7, 100, 100, now() - interval '3 days');
-insert into public.titan_contributions (week, player_id, monsters)
-values (private.titan_week() - 7, 'b2222222-2222-2222-2222-222222222222', 77);
+insert into public.titan_contributions (week, player_id, monsters, claimed_at, boost_percent, boost_ends_at)
+values (private.titan_week() - 7, 'b2222222-2222-2222-2222-222222222222', 77, now(), 50, now() + interval '2 hours');
 set role authenticated;
 select pg_temp.check((public.get_social() #>> '{titan,last,fallen}')::boolean, 'la semaine dernière reste connue');
 select pg_temp.check((public.get_social() #>> '{titan,last,mine}')::bigint = 77, 'avec sa part');
+select pg_temp.check((
+  select count(*) = 1 and min((boost ->> 'damage')::integer) = 50
+  from jsonb_array_elements(public.get_social() #> '{help,boosts}') boost
+  where boost ->> 'source' = 'titan'), 'seul le plus fort bonus du titan compte');
 select pg_temp.as_player('c3333333-3333-3333-3333-333333333333');
 select pg_temp.check(public.claim_titan() ->> 'status' = 'nothing', 'rien sans participation');
 reset role;

@@ -52,15 +52,15 @@ public static class LaneHints
     private static string Fighter(FighterKind kind, FrontierState state)
     {
         bool hero = kind == FighterKind.Hero;
-        string name = hero ? SceneText.Hero(state) : Fighters.Of(kind).Name;
-        string action = hero ? "clique pour le personnaliser" : "clique pour l'améliorer";
+        string name = SceneText.Fighter(state, kind);
+        string action = hero ? "clique pour le personnaliser" : "clique pour voir sa progression";
         if (!Vitality.Up(state, kind))
         {
             return $"{name} est à terre : de retour dans {Math.Ceiling(state.Downed[(int)kind])} s · {action}";
         }
 
         string life = $"{NumberFormat.Amount(Vitality.Hp(state, kind))} / {NumberFormat.Amount(Vitality.MaxHp(state, kind))} PV";
-        return $"{name} niv {state.Level(kind)} · {life} · {NumberFormat.Rate(Economy.Dps(state, kind))} dégâts/s · {action}";
+        return $"{name} niv {state.Level(kind)} · xp {Experience.Share(state, kind) * 100:0} % · {life} · {NumberFormat.Rate(Economy.Dps(state, kind))} dégâts/s · {action}";
     }
 
     private static string? Titan(FrontierState state) => state.Titan is TitanView titan

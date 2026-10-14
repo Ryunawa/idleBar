@@ -27,9 +27,9 @@ public sealed class EconomyTests
     public void EachLevelMakesTheNextOneDearer()
     {
         FrontierState state = new();
-        double first = Economy.FighterCost(state, FighterKind.Hero);
+        double first = Experience.ToNext(state, FighterKind.Hero);
         state.Fighters[(int)FighterKind.Hero]++;
-        Assert.Equal(first * Balance.FighterCostGrowth, Economy.FighterCost(state, FighterKind.Hero), 6);
+        Assert.Equal(first * Balance.FighterCostGrowth, Experience.ToNext(state, FighterKind.Hero), 6);
     }
 
     [Fact]

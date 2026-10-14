@@ -8,111 +8,91 @@ public static class TeamPainter
 {
     private const int BarWidth = 8;
 
+    private static readonly HeroLook[] CompanionLooks = [new("Premier", 1, 1, 2, 2), new("Second", 2, 2, 0, 6)];
+
     public static void Paint(ArtRaster r, FrontierState state, FrontierLayout layout, FrontierScene scene)
     {
-        SceneMotion motion = scene.Motion;
+        foreach (Post post in Formation.Posts(state, layout))
+        {
+            Stance stance = Of(state, layout, post, scene.Motion);
+            Figure(r, state, post, stance, scene.Time);
+        }
+    }
+
+    public static void Bars(ArtRaster r, FrontierState state, FrontierLayout layout, FrontierScene scene)
+    {
         IReadOnlyList<Post> posts = Formation.Posts(state, layout);
         foreach (Post post in posts)
         {
-            switch (post.Member)
+            Stance stance = Of(state, layout, post, scene.Motion);
+            HeroFigure figure = stance.Figure;
+            if (stance.Down)
             {
-                case { Ally: Ally ally }:
-                    Reinforcement(r, state, ally, post.X, scene);
-                    break;
-                case { Kind: FighterKind.Hero }:
-                    Hero(r, state, post.X, scene);
-                    break;
-                case { Kind: FighterKind kind }:
-                    Companion(r, state, kind, FrontPainter.Walk(post.X, layout, kind, motion), motion);
-                    break;
+                Bar(r, stance.X + 1, FrontierLayout.Ground - figure.Down.Height - 2, stance.Revival, Palette.Cyan);
+            }
+            else if (stance.Health < 0.999)
+            {
+                Rgba fill = stance.Health > 0.5 ? Palette.Green : stance.Health > 0.25 ? Palette.Gold : Palette.Red;
+                Bar(r, stance.X + 1, FrontierLayout.Ground - figure.Standing.Height + figure.Top - 2, stance.Health, fill);
             }
         }
 
         AllyNames.Paint(r, posts);
     }
 
-    public static int HeroLean(HeroRole role, SceneMotion motion) =>
-        !Roles.Of(role).Ranged && motion.HeroSwing > 0.4f ? 1 : 0;
+    public static int HeroLean(HeroRole role, SceneMotion motion) => Lean(role, motion.HeroSwing);
 
-    private static void Reinforcement(ArtRaster r, FrontierState state, Ally ally, int x, FrontierScene scene)
+    public static HeroLook CompanionLook(FighterKind kind) => CompanionLooks[Math.Max(0, (int)kind - 1)];
+
+    private static Stance Of(FrontierState state, FrontierLayout layout, Post post, SceneMotion motion)
     {
-        SceneMotion motion = scene.Motion;
-        HeroFigure figure = HeroSprites.Of(ally.Role, ally.Look);
-        if (ally.Downed > 0)
+        if (post.Member.Ally is Ally ally)
         {
-            r.Blit(figure.Down, x - 2, FrontierLayout.Ground - figure.Down.Height);
+            float swing = motion.AllySwing.GetValueOrDefault(ally.Id);
             double total = Fighters.Of(FighterKind.Hero).Revive * (Team.SupportUp(state) ? Balance.SupportRevive : 1);
-            Bar(r, x + 1, FrontierLayout.Ground - figure.Down.Height - 2, 1 - ally.Downed / total, Palette.Cyan);
-            return;
+            return new Stance(ally.Role, HeroSprites.Of(ally.Role, ally.Look), post.X + Lean(ally.Role, swing), swing,
+                motion.AllyHurt.ContainsKey(ally.Id), ally.Downed > 0, ally.Health, 1 - ally.Downed / total);
         }
 
-        float swing = motion.AllySwing.GetValueOrDefault(ally.Id);
-        int left = x + (!Roles.Of(ally.Role).Ranged && swing > 0.4f ? 1 : 0);
-        int y = FrontierLayout.Ground - figure.Standing.Height;
-        r.Blit(motion.AllyHurt.ContainsKey(ally.Id) ? figure.Flash : figure.Standing, left, y);
-        if (ally.Role == HeroRole.Warrior)
-        {
-            Sword(r, left + HeroGrids.HandX, y + HeroGrids.HandY, FrontPainter.SwordAngle(swing, scene.Time), Palette.Silver);
-        }
-
-        if (ally.Health < 0.999)
-        {
-            Bar(r, left + 1, y + figure.Top - 2, ally.Health, ally.Health > 0.5 ? Palette.Green : ally.Health > 0.25 ? Palette.Gold : Palette.Red);
-        }
+        FighterKind kind = post.Member.Kind;
+        HeroRole role = state.ClassOf(kind);
+        bool hero = kind == FighterKind.Hero;
+        float stroke = hero ? motion.HeroSwing : motion.CompanionSwing[(int)kind];
+        HeroFigure figure = HeroSprites.Of(role, hero ? state.Hero : CompanionLook(kind), state.Worn[(int)kind]);
+        int x = (hero ? post.X : FrontPainter.Walk(post.X, layout, kind, motion)) + Lean(role, stroke);
+        double revival = 1 - state.Downed[(int)kind] / Math.Max(1, Vitality.ReviveSeconds(state, kind));
+        return new Stance(role, figure, x, stroke, motion.Hurt[(int)kind] > 0, !Vitality.Up(state, kind), state.Health[(int)kind], revival);
     }
 
-    private static void Companion(ArtRaster r, FrontierState state, FighterKind kind, int x, SceneMotion motion)
+    private static void Figure(ArtRaster r, FrontierState state, Post post, Stance stance, float time)
     {
-        int y = FrontierLayout.Ground - (kind == FighterKind.Mage ? SceneSprites.Mage : SceneSprites.Archer).Height;
-        if (state.Level(kind) <= 0)
+        HeroFigure figure = stance.Figure;
+        if (stance.Down)
         {
+            r.Blit(figure.Down, stance.X - 2, FrontierLayout.Ground - figure.Down.Height);
             return;
         }
 
-        bool archer = kind == FighterKind.Archer;
-        if (!Vitality.Up(state, kind))
-        {
-            ArtSprite down = archer ? SceneSprites.ArcherDown : SceneSprites.MageDown;
-            r.Blit(down, x - 2, FrontierLayout.Ground - down.Height);
-            Revival(r, state, kind, x, FrontierLayout.Ground - down.Height - 2);
-            return;
-        }
-
-        bool hurt = motion.Hurt[(int)kind] > 0;
-        r.Blit(archer ? hurt ? SceneSprites.ArcherFlash : SceneSprites.Archer : hurt ? SceneSprites.MageFlash : SceneSprites.Mage, x, y);
-        Health(r, state, kind, x, y - 2);
-    }
-
-    private static void Hero(ArtRaster r, FrontierState state, int post, FrontierScene scene)
-    {
-        SceneMotion motion = scene.Motion;
-        HeroFigure figure = HeroSprites.Of(state.Role, state.Hero, state.Worn);
-        int x = post + HeroLean(state.Role, motion);
         int y = FrontierLayout.Ground - figure.Standing.Height;
-        if (!Vitality.Up(state, FighterKind.Hero))
+        bool hero = post.Member is { Ally: null, Kind: FighterKind.Hero };
+        if (hero && state.FuryLeft > 0 && (int)(time * 10) % 2 == 0)
         {
-            r.Blit(figure.Down, x - 2, FrontierLayout.Ground - figure.Down.Height);
-            Revival(r, state, FighterKind.Hero, x + 1, FrontierLayout.Ground - figure.Down.Height - 2);
-            return;
+            r.Blit(figure.Rage, stance.X - 1, y);
+            r.Blit(figure.Rage, stance.X + 1, y);
+            r.Blit(figure.Rage, stance.X, y - 1);
         }
 
-        if (state.FuryLeft > 0 && (int)(scene.Time * 10) % 2 == 0)
+        r.Blit(stance.Hurt ? figure.Flash : figure.Standing, stance.X, y);
+        if (stance.Role == HeroRole.Warrior)
         {
-            r.Blit(figure.Rage, x - 1, y);
-            r.Blit(figure.Rage, x + 1, y);
-            r.Blit(figure.Rage, x, y - 1);
+            Rgba blade = post.Member.Ally is null ? Blade(state.Worn[(int)post.Member.Kind].Weapon) : Palette.Silver;
+            Sword(r, stance.X + HeroGrids.HandX, y + HeroGrids.HandY, FrontPainter.SwordAngle(stance.Swing, time), blade);
         }
-
-        r.Blit(motion.Hurt[(int)FighterKind.Hero] > 0 ? figure.Flash : figure.Standing, x, y);
-        if (state.Role == HeroRole.Warrior)
-        {
-            Sword(r, x + HeroGrids.HandX, y + HeroGrids.HandY, FrontPainter.SwordAngle(motion, scene.Time), Blade(state.Worn.Weapon));
-        }
-
-        Health(r, state, FighterKind.Hero, x + 1, y + figure.Top - 2);
     }
 
-    private static Rgba Blade(int? rarity) => rarity is int rank ? ItemSprites.Rarities[System.Math.Clamp(rank, 0, 3)].Main : Palette.Silver;
+    private static int Lean(HeroRole role, float swing) => !Roles.Of(role).Ranged && swing > 0.4f ? 1 : 0;
+
+    private static Rgba Blade(int? rarity) => rarity is int rank ? ItemSprites.Rarities[Math.Clamp(rank, 0, 3)].Main : Palette.Silver;
 
     private static void Sword(ArtRaster r, int handX, int handY, float angle, Rgba blade)
     {
@@ -129,21 +109,6 @@ public static class TeamPainter
                 r.Set((int)MathF.Round(px + sin), (int)MathF.Round(py - cos), Palette.Gold);
             }
         }
-    }
-
-    private static void Health(ArtRaster r, FrontierState state, FighterKind kind, int x, int y)
-    {
-        double health = state.Health[(int)kind];
-        if (health < 0.999)
-        {
-            Bar(r, x, y, health, health > 0.5 ? Palette.Green : health > 0.25 ? Palette.Gold : Palette.Red);
-        }
-    }
-
-    private static void Revival(ArtRaster r, FrontierState state, FighterKind kind, int x, int y)
-    {
-        double total = Math.Max(1, Vitality.ReviveSeconds(state, kind));
-        Bar(r, x, y, 1 - state.Downed[(int)kind] / total, Palette.Cyan);
     }
 
     private static void Bar(ArtRaster r, int x, int y, double share, Rgba fill)

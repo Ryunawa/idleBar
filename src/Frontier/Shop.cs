@@ -10,12 +10,13 @@ public static class Shop
     {
         Construction build => Economy.Unlocked(state, build.Plot) && state.Built[build.Plot] is null && state.PlotOf(build.Kind) is null,
         PlotPurchase raise => state.Built[raise.Plot] is not null,
+        Recruitment recruit => Fighters.IsCompanion(recruit.Kind) && state.Level(recruit.Kind) == 0 && Fighters.Unlocked(state, recruit.Kind),
         _ => true,
     };
 
     public static double Cost(FrontierState state, Purchase purchase) => purchase switch
     {
-        FighterPurchase fighter => Economy.FighterCost(state, fighter.Kind),
+        Recruitment => 0,
         ArmorPurchase => Economy.ArmorCost(state),
         Construction build => Economy.PlotCost(state, build.Plot),
         PlotPurchase raise => Economy.PlotCost(state, raise.Plot),
@@ -33,7 +34,7 @@ public static class Shop
 
     public static int MaxCount(FrontierState state, Purchase purchase)
     {
-        if (!Affordable(state, purchase) || purchase is Construction)
+        if (!Affordable(state, purchase) || purchase is Construction or Recruitment)
         {
             return Affordable(state, purchase) ? 1 : 0;
         }
@@ -64,9 +65,11 @@ public static class Shop
         state.Gold -= Cost(state, purchase);
         switch (purchase)
         {
-            case FighterPurchase fighter:
-                state.Fighters[(int)fighter.Kind]++;
-                events.Add(new Trained(fighter.Kind, state.Level(fighter.Kind)));
+            case Recruitment recruit:
+                state.Companions[(int)recruit.Kind - 1] = recruit.Class;
+                state.Fighters[(int)recruit.Kind] = 1;
+                state.Xp[(int)recruit.Kind] = 0;
+                events.Add(new Trained(recruit.Kind, 1));
                 break;
             case ArmorPurchase:
                 state.Armor++;
@@ -85,7 +88,7 @@ public static class Shop
     }
 
     private static double Growth(Purchase purchase) =>
-        purchase is FighterPurchase or ArmorPurchase ? Balance.FighterCostGrowth : Balance.BuildingCostGrowth;
+        purchase is ArmorPurchase ? Balance.FighterCostGrowth : Balance.BuildingCostGrowth;
 
     private static void Raise(FrontierState state, int plot, EventLog events)
     {

@@ -30,8 +30,8 @@ public sealed class HeroSceneTests
         state.Role = HeroRole.Mage;
         state.Hero = new HeroLook("Aldric", 2, 1, 2, 3);
         state.Health[(int)FighterKind.Hero] = 0.3;
-        state.Downed[(int)FighterKind.Archer] = 12;
-        state.Health[(int)FighterKind.Mage] = 0.7;
+        state.Downed[(int)FighterKind.First] = 12;
+        state.Health[(int)FighterKind.Second] = 0.7;
         FrontierScene scene = new(new Random(3));
         FrontierLayout layout = FrontierLayout.For(400, FrontierLayout.Rows);
         scene.Update(1 / 30f, state, [], layout, false);
@@ -78,12 +78,14 @@ public sealed class HeroSceneTests
     }
 
     [Theory]
-    [InlineData(815, false)]
-    [InlineData(1135, false)]
-    [InlineData(815, true)]
-    public void TheTitanRenders(int width, bool fallen)
+    [InlineData(815, false, false)]
+    [InlineData(1135, false, false)]
+    [InlineData(815, true, false)]
+    [InlineData(815, false, true)]
+    public void TheTitanRenders(int width, bool fallen, bool held)
     {
         FrontierState state = SceneTests.SampleState(47);
+        state.BossHeld = held;
         state.Titan = new TitanView("2026-10-12", width == 1135 ? 1 : 0, 100_000, 38_000, false, 1290);
         FrontierScene scene = new(new Random(3));
         FrontierLayout layout = FrontierLayout.For(width, FrontierLayout.Rows);
@@ -108,7 +110,7 @@ public sealed class HeroSceneTests
         if (Environment.GetEnvironmentVariable(SceneTests.SnapshotFolder) is string folder)
         {
             Directory.CreateDirectory(folder);
-            PngWriter.Write(frame, Path.Combine(folder, $"titan-{width}{(fallen ? "-chute" : string.Empty)}.png"), 3);
+            PngWriter.Write(frame, Path.Combine(folder, $"titan-{width}{(fallen ? "-chute" : string.Empty)}{(held ? "-boss" : string.Empty)}.png"), 3);
         }
     }
 

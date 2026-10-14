@@ -32,7 +32,7 @@ public partial class GuildPanel : VBoxContainer
         _lonely.AddThemeConstantOverride("separation", 8);
         _lonely.AddChild(WindowRows.Muted("Une guilde réunit jusqu'à 20 joueurs. Ses membres s'envoient des renforts et des convois, et comptent ensemble leurs monstres contre le titan de la semaine. On la rejoint seulement avec son code."));
         _name = new LineEdit { PlaceholderText = "Nom de la guilde", MaxLength = 24, SizeFlagsHorizontal = SizeFlags.ExpandFill };
-        _lonely.AddChild(Line(_name, "Fonder", () => Act(social => social.CreateGuildAsync(_name.Text), "Guilde fondée : partage son code à tes amis.")));
+        _lonely.AddChild(Line(_name, "Fonder", () => Act(social => social.CreateGuildAsync(_name.Text), "Guilde fondée : partage son code avec tes amis.")));
         _code = new LineEdit { PlaceholderText = "Code de 6 caractères", MaxLength = 6, SizeFlagsHorizontal = SizeFlags.ExpandFill };
         _lonely.AddChild(Line(_code, "Rejoindre", () => Act(social => social.JoinGuildAsync(_code.Text), "Bienvenue dans la guilde !")));
         _rejoin = WindowRows.Muted(string.Empty);
@@ -152,8 +152,16 @@ public partial class GuildPanel : VBoxContainer
 
         _busy = true;
         _message.Text = "…";
-        string status = await action(social);
-        _busy = false;
+        string status;
+        try
+        {
+            status = await action(social);
+        }
+        finally
+        {
+            _busy = false;
+        }
+
         _message.Text = GuildMessages.For(status, success, help);
         if (status == SocialData.Ok)
         {

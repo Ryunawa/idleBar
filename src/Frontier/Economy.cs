@@ -20,8 +20,8 @@ public static class Economy
         return kind switch
         {
             FighterKind.Hero => dps * (1 + Balance.ForgeBonus * state.Level(BuildingKind.Forge)),
-            FighterKind.Mage => dps * (1 + Balance.TowerBonus * state.Level(BuildingKind.Tower)),
-            FighterKind.Archer => dps * (1 + Balance.BarracksBonus * state.Level(BuildingKind.Barracks)),
+            FighterKind.Second => dps * (1 + Balance.TowerBonus * state.Level(BuildingKind.Tower)),
+            FighterKind.First => dps * (1 + Balance.BarracksBonus * state.Level(BuildingKind.Barracks)),
             _ => dps,
         };
     }
@@ -32,10 +32,10 @@ public static class Economy
         (state.FuryLeft > 0 ? Balance.FuryFactor : 1) * (1 + Balance.SupplyBonus * state.Supply) * Synergy(state) * Help.DamageFactor(state);
 
     public static double HeroPower(FrontierState state) =>
-        BaseDps(state, FighterKind.Hero, state.Level(FighterKind.Hero)) * Buff(state) * (1 + state.Gear.Damage);
+        BaseDps(state, FighterKind.Hero, state.Level(FighterKind.Hero)) * Buff(state) * (1 + state.Gears[(int)FighterKind.Hero].Damage);
 
     public static double Dps(FrontierState state, FighterKind kind) =>
-        BaseDps(state, kind, state.Level(kind)) * Buff(state) * (kind == FighterKind.Hero ? Roles.Of(state.Role).Dps * (1 + state.Gear.Damage) : 1);
+        BaseDps(state, kind, state.Level(kind)) * Buff(state) * Roles.Of(state.ClassOf(kind)).Dps * (1 + state.Gears[(int)kind].Damage);
 
     public static double AllyDps(FrontierState state, Ally ally) =>
         BaseDps(state, FighterKind.Hero, state.Level(FighterKind.Hero)) * ally.Ratio * Roles.Of(ally.Role).Dps * Buff(state);
@@ -57,9 +57,7 @@ public static class Economy
     }
 
     public static double Interval(FrontierState state, FighterKind kind) =>
-        kind == FighterKind.Hero
-            ? Roles.Of(state.Role).Interval / (state.FuryLeft > 0 ? Balance.FuryFactor : 1) / (1 + state.Gear.Speed)
-            : Fighters.Of(kind).Interval;
+        Roles.Of(state.ClassOf(kind)).Interval / (kind == FighterKind.Hero && state.FuryLeft > 0 ? Balance.FuryFactor : 1) / (1 + state.Gears[(int)kind].Speed);
 
     public static double ClickDamage(FrontierState state) =>
         Math.Max(1, HeroPower(state) * Balance.ClickShare * (1 + Balance.TavernBonus * state.Level(BuildingKind.Tavern)));
@@ -119,16 +117,14 @@ public static class Economy
 
     public static bool IsBossStage(int stage) => stage % Balance.BossEvery == 0;
 
-    public static double KillGold(FrontierState state, bool boss)
-    {
-        double gold = (MonsterHp(state.Stage) * Balance.KillGoldRatio + Balance.KillGoldFlat)
-            * Wealth(state)
-            * (1 + Balance.MarketBonus * state.Level(BuildingKind.Market));
-        return gold * (boss ? Balance.BossGoldFactor : 1) * (state.FrenzyLeft > 0 ? Balance.FrenzyGold : 1) * Help.GoldFactor(state);
-    }
+    public static double KillGold(FrontierState state, bool boss) =>
+        BaseKillGold(state, boss) * (state.FrenzyLeft > 0 ? Balance.FrenzyGold : 1) * Help.GoldFactor(state);
 
-    public static double FighterCost(FrontierState state, FighterKind kind) =>
-        Fighters.Of(kind).Cost * Math.Pow(Balance.FighterCostGrowth, state.Level(kind)) * Discount(state);
+    public static double BaseKillGold(FrontierState state, bool boss) =>
+        (MonsterHp(state.Stage) * Balance.KillGoldRatio + Balance.KillGoldFlat)
+            * Wealth(state)
+            * (1 + Balance.MarketBonus * state.Level(BuildingKind.Market))
+            * (boss ? Balance.BossGoldFactor : 1);
 
     public static double ArmorCost(FrontierState state) =>
         Balance.ArmorCost * Math.Pow(Balance.FighterCostGrowth, state.Armor) * Discount(state);

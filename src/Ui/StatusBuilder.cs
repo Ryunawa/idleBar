@@ -39,7 +39,7 @@ public static class StatusBuilder
         string wave = state.BossHeld ? "boss en attente" : $"{state.Kills}/{Balance.MonstersPerStage}";
         int pending = RetreatRules.Pending(state);
         string souls = pending > 0 ? $" · repli : +{NumberFormat.Count(pending, "âme", "âmes")}" : string.Empty;
-        string boost = state.Boosts.Count > 0 ? $" (or ×{Help.GoldFactor(state):0.##})" : string.Empty;
+        string boost = state.Boosts.Count > 0 ? $" (or ×{NumberFormat.Factor(Help.GoldFactor(state))})" : string.Empty;
         return $"{rate}{boost} · niv {state.Stage} · {wave}{souls}";
     }
 

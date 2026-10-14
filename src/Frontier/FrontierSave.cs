@@ -17,8 +17,6 @@ public sealed record FrontierSave(
     IReadOnlyList<string?> Plots,
     IReadOnlyList<int> Levels,
     IReadOnlyList<double> Cooldowns,
-    bool IntendantUnlocked,
-    bool IntendantOn,
     IReadOnlyList<string> Achievements,
     long MonstersKilled,
     long BossesKilled,
@@ -28,4 +26,6 @@ public sealed record FrontierSave(
     string? Role = null,
     int RoleRetreats = 0,
     int Armor = 0,
-    HeroLook? Hero = null);
+    HeroLook? Hero = null,
+    IReadOnlyList<string?>? Companions = null,
+    IReadOnlyList<double>? Xp = null);

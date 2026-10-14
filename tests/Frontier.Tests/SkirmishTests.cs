@@ -8,6 +8,8 @@ namespace IdleBar.Tests;
 
 public sealed class SkirmishTests
 {
+    private const int Deep = 150;
+
     [Fact]
     public void TheTankDrawsEveryBlow()
     {
@@ -20,8 +22,8 @@ public sealed class SkirmishTests
     {
         Dictionary<FighterKind, int> hits = Targets(Team(HeroRole.Warrior)).GroupBy(target => target).ToDictionary(group => group.Key, group => group.Count());
         Assert.InRange(hits[FighterKind.Hero], 380, 420);
-        Assert.InRange(hits[FighterKind.Archer], 80, 120);
-        Assert.InRange(hits[FighterKind.Mage], 80, 120);
+        Assert.InRange(hits[FighterKind.First], 80, 120);
+        Assert.InRange(hits[FighterKind.Second], 80, 120);
     }
 
     [Fact]
@@ -36,31 +38,32 @@ public sealed class SkirmishTests
     {
         FrontierState state = Team(HeroRole.Warrior);
         EventLog events = new();
-        state.Downed[(int)FighterKind.Archer] = Vitality.ReviveSeconds(state, FighterKind.Archer);
-        state.Health[(int)FighterKind.Archer] = 0;
-        Assert.Equal(30, state.Downed[(int)FighterKind.Archer]);
+        state.Downed[(int)FighterKind.First] = Vitality.ReviveSeconds(state, FighterKind.First);
+        state.Health[(int)FighterKind.First] = 0;
+        Assert.Equal(30, state.Downed[(int)FighterKind.First]);
 
         Skirmish.Recover(state, 29.9, events);
-        Assert.False(Vitality.Up(state, FighterKind.Archer));
+        Assert.False(Vitality.Up(state, FighterKind.First));
         Skirmish.Recover(state, 0.2, events);
-        Assert.True(Vitality.Up(state, FighterKind.Archer));
-        Assert.Equal(1, state.Health[(int)FighterKind.Archer]);
-        Assert.Contains(events.Drain(), frontierEvent => frontierEvent is Revived { Kind: FighterKind.Archer });
+        Assert.True(Vitality.Up(state, FighterKind.First));
+        Assert.Equal(1, state.Health[(int)FighterKind.First]);
+        Assert.Contains(events.Drain(), frontierEvent => frontierEvent is Revived { Kind: FighterKind.First });
     }
 
     [Fact]
     public void ASupportBringsTheFallenBackTwiceAsFast()
     {
         FrontierState state = Team(HeroRole.Support);
-        Assert.Equal(15, Vitality.ReviveSeconds(state, FighterKind.Archer));
+        Assert.Equal(15, Vitality.ReviveSeconds(state, FighterKind.First));
         state.Downed[(int)FighterKind.Hero] = 10;
-        Assert.Equal(30, Vitality.ReviveSeconds(state, FighterKind.Archer));
+        Assert.Equal(30, Vitality.ReviveSeconds(state, FighterKind.First));
     }
 
     [Fact]
     public void EveryoneDownSendsTheFrontBackOneStage()
     {
         FrontierState state = new() { Stage = 15, MaxStage = 15 };
+        state.Health[(int)FighterKind.Hero] = 0.0001;
         FrontierGame game = new(state, new Random(1));
         BattleTests.Run(game, 20);
         IReadOnlyList<FrontierEvent> events = game.Events.Drain();
@@ -72,10 +75,17 @@ public sealed class SkirmishTests
     [Fact]
     public void TheFrontNeverFallsBackPastABeatenBoss()
     {
-        FrontierState state = new() { Stage = 12, MaxStage = 12 };
+        FrontierState state = new() { Stage = 15, MaxStage = 15 };
         FrontierGame game = new(state, new Random(1));
-        BattleTests.Run(game, 300);
-        Assert.True(game.Events.Drain().OfType<Routed>().Count() > 2);
+        int routs = 0;
+        for (int second = 0; second < 300; second++)
+        {
+            state.Health[(int)FighterKind.Hero] = Math.Min(state.Health[(int)FighterKind.Hero], 0.001);
+            game.Advance(1);
+            routs += game.Events.Drain().OfType<Routed>().Count();
+        }
+
+        Assert.True(routs > 4, $"{routs} reculs");
         Assert.Equal(11, state.Stage);
     }
 
@@ -130,9 +140,9 @@ public sealed class SkirmishTests
     public void ArmorRaisesEveryonesHealth()
     {
         FrontierState state = Team(HeroRole.Warrior);
-        double before = Vitality.MaxHp(state, FighterKind.Mage);
+        double before = Vitality.MaxHp(state, FighterKind.Second);
         state.Armor = 10;
-        Assert.Equal(2, Vitality.MaxHp(state, FighterKind.Mage) / before, 6);
+        Assert.Equal(2, Vitality.MaxHp(state, FighterKind.Second) / before, 6);
         Assert.True(new FrontierGame(new FrontierState { Gold = 1_000 }, new Random(1)).Buy(new ArmorPurchase()));
     }
 
@@ -140,17 +150,17 @@ public sealed class SkirmishTests
     public void ReturningRestoresTheTeam()
     {
         FrontierGame game = new(Team(HeroRole.Warrior), new Random(1));
-        game.State.Downed[(int)FighterKind.Mage] = 20;
+        game.State.Downed[(int)FighterKind.Second] = 20;
         game.State.Health[(int)FighterKind.Hero] = 0.2;
         game.Absent(120);
-        Assert.True(Vitality.Up(game.State, FighterKind.Mage));
+        Assert.True(Vitality.Up(game.State, FighterKind.Second));
         Assert.Equal(1, game.State.Health[(int)FighterKind.Hero]);
     }
 
     private static FrontierState Team(HeroRole role) => new() { Role = role, Fighters = [10, 10, 10] };
 
     private static FrontierState Sturdy(HeroRole role, int stage) =>
-        new() { Role = role, Fighters = [1, 1, 1], Stage = stage, MaxStage = stage, Armor = int.MaxValue / 2 };
+        new() { Role = role, Fighters = [400, 400, 400], Stage = stage + Deep, MaxStage = stage + Deep, Armor = int.MaxValue / 2 };
 
     private static List<FighterKind> Targets(FrontierState state)
     {

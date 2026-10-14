@@ -7,7 +7,6 @@ public sealed class FrontierGame
 {
     private readonly Random _random;
     private double _pending;
-    private double _intendantTimer;
     private double _achievementTimer;
 
     public FrontierGame(FrontierState state, Random random)
@@ -48,7 +47,9 @@ public sealed class FrontierGame
         }
 
         State.Clicks++;
+        int stage = State.Stage;
         Battle.Damage(State, Economy.ClickDamage(State), HitSource.Click, Events);
+        Experience.Gain(State, FighterKind.Hero, Balance.XpSmall, stage, Events);
         return true;
     }
 
@@ -71,49 +72,38 @@ public sealed class FrontierGame
 
     public bool CallBoss() => !Frozen && Front.CallBoss(State, Events);
 
-    public bool Embody(HeroLook look, HeroRole role)
+    public void Adopt(HeroLook look, HeroRole role, int roleRetreats)
     {
-        if (Frozen || !look.IsValid() || (role != State.Role && !State.CanChangeRole))
-        {
-            return false;
-        }
-
-        if (State.Hero is null || role != State.Role)
-        {
-            State.RoleRetreats = State.Retreats;
-        }
-
-        State.Role = role;
         State.Hero = look;
-        return true;
+        State.Role = role;
+        State.RoleRetreats = Math.Clamp(roleRetreats, 0, State.Retreats);
     }
 
-    public void Reinforce(IReadOnlyList<Ally> allies, IReadOnlyList<Boost> boosts) => Help.Sync(State, allies, boosts, Events);
+    public void Reinforce(IReadOnlyList<Ally> allies, IReadOnlyList<Boost> boosts, bool announce = true) =>
+        Help.Sync(State, allies, boosts, announce ? Events : new EventLog());
 
-    public void Sight(TitanView titan) => Titans.Sight(State, titan, Events);
+    public void Sight(TitanView titan, bool announce = true) => Titans.Sight(State, titan, announce ? Events : new EventLog());
 
-    public void Equip(Gear gear, GearLook worn)
+    public void Equip(FighterKind kind, Gear gear, GearLook worn)
     {
-        State.Gear = gear;
-        State.Worn = worn;
+        State.Gears[(int)kind] = gear;
+        State.Worn[(int)kind] = worn;
     }
 
     public void Discover(int rarity, string name) => Events.Add(new LootFound(rarity, name));
 
-    public double Recycle(int rarity)
+    public double Recycle(int rarity, bool bought, int level)
     {
         if (Frozen)
         {
             return 0;
         }
 
-        double gold = Items.SalvageGold(State, rarity);
+        double gold = Items.SalvageGold(State, rarity, bought, level);
         State.Earn(gold);
         Events.Add(new Recycled(gold));
         return gold;
     }
-
-    public void SetIntendant(bool on) => State.IntendantOn = Frozen ? State.IntendantOn : on && State.IntendantUnlocked;
 
     public bool UseSkill(SkillKind kind)
     {
@@ -129,7 +119,7 @@ public sealed class FrontierGame
                 return false;
             case SkillKind.Smite:
                 Events.Add(new Smote());
-                double hit = Economy.HeroPower(State) * Fighters.Of(FighterKind.Hero).Interval * Balance.SmiteHits;
+                double hit = Economy.HeroPower(State) * Balance.SmiteInterval * Balance.SmiteHits;
                 Battle.Damage(State, hit, HitSource.Smite, Events);
                 break;
             case SkillKind.Fury:
@@ -164,16 +154,6 @@ public sealed class FrontierGame
         Convoys.Update(state, dt, Events);
         GoldenChicken.Update(state, dt, _random, Events);
         Battle.Update(state, dt, Events);
-        if (state.IntendantOn)
-        {
-            _intendantTimer -= dt;
-            if (_intendantTimer <= 0)
-            {
-                _intendantTimer = Balance.IntendantSeconds;
-                Intendant.Run(state, Events);
-            }
-        }
-
         _achievementTimer -= dt;
         if (_achievementTimer <= 0)
         {

@@ -40,15 +40,6 @@ public sealed class SideSystemsTests
     }
 
     [Fact]
-    public void TheIntendantFillsAFreePlotFirst()
-    {
-        FrontierState state = new() { Gold = 1_000 };
-        Assert.Equal(new Construction(0, BuildingKind.Forge), Intendant.Choose(state));
-        Village.Build(state, BuildingKind.Forge, 1, 0);
-        Assert.Equal(new Construction(1, BuildingKind.Bakery), Intendant.Choose(state));
-    }
-
-    [Fact]
     public void TheFarmBringsTheChickenTwiceAsOften()
     {
         FrontierState state = new();
@@ -96,13 +87,13 @@ public sealed class SideSystemsTests
     {
         FrontierState state = new() { Gold = 1e9, Stage = 60, MaxStage = 60, BestStage = 60, BossHeld = false };
         FrontierGame game = new(state, new Random(1)) { Frozen = true };
-        Assert.False(game.Buy(new FighterPurchase(FighterKind.Archer)));
+        Assert.False(game.Buy(new ArmorPurchase()));
         Assert.Equal(0, game.BuyMany(new Construction(0, BuildingKind.Forge), 3));
         Assert.False(game.UseSkill(SkillKind.GoldRain));
         Assert.Equal(0, game.Retreat());
         Assert.Equal(1e9, state.Gold);
         game.Frozen = false;
-        Assert.True(game.Buy(new FighterPurchase(FighterKind.Archer)));
+        Assert.True(game.Buy(new ArmorPurchase()));
     }
 
     [Fact]

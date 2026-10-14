@@ -24,8 +24,8 @@ public static class TitanReactions
                 scene.Banners.Add(["LE TITAN VACILLE", $"PLUS QUE {Math.Ceiling(wounded.Left * 100)} % DE PV"], 4);
                 motion.TitanFlash = 0.4f;
                 break;
-            case TitanFell:
-                scene.Banners.Add(["LE TITAN EST TOMBÉ !", "RÉCLAME TA RÉCOMPENSE"], 6);
+            case TitanFell fell:
+                scene.Banners.Add(["LE TITAN EST TOMBÉ !", fell.Rewarded ? "RÉCLAME TA RÉCOMPENSE" : "VICTOIRE DE TOUTES LES FRONTIÈRES"], 6);
                 motion.TitanFall = 0;
                 motion.Shake = 1.2f;
                 motion.Flash = 0.3f;

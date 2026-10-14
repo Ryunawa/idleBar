@@ -33,7 +33,7 @@ public static class SkillReactions
             case Retreated retreated:
                 motion.Flash = 0.6f;
                 motion.Forget();
-                scene.Banners.Add([$"REPLI : +{retreated.Souls} ÂMES", $"DÉGÂTS ET OR ×{retreated.Multiplier:0.##}"], 4);
+                scene.Banners.Add([$"REPLI : +{retreated.Souls} ÂMES", $"DÉGÂTS ET OR ×{NumberFormat.Factor(retreated.Multiplier)}"], 4);
                 break;
             case AchievementUnlocked unlocked:
                 scene.Banners.Add(["SUCCÈS DÉBLOQUÉ", unlocked.Achievement.Name]);

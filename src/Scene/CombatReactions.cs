@@ -7,6 +7,7 @@ namespace IdleBar.Scene;
 public static class CombatReactions
 {
     private static readonly Rgba[] Spark = [Palette.Yellow, Palette.White];
+    private static readonly Rgba[] Daze = [Palette.Yellow, Palette.Gold];
 
     public static void Hit(FrontierScene scene, Hit hit, MonsterBox target, FrontierLayout layout, FrontierState state, Random random)
     {
@@ -18,6 +19,11 @@ public static class CombatReactions
             fx.Float("CRITIQUE", target.CenterX, target.Y - 9, Palette.Gold, 0.9f);
         }
 
+        if (hit.Big && Striker(state, hit) == HeroRole.Warrior)
+        {
+            fx.Burst(target.CenterX, target.Y, 4, Daze, random);
+        }
+
         switch (hit.Source)
         {
             case HitSource.Ally:
@@ -27,7 +33,7 @@ public static class CombatReactions
                 fx.Projectiles.Add(new Projectile(false, Formation.X(state, layout, FighterKind.Hero) + 10, 17, target.X + 2, target.MiddleY, 0.12f, hit.Amount));
                 break;
             case HitSource.Hero when state.Role == HeroRole.Mage:
-                fx.Projectiles.Add(new Projectile(true, Formation.X(state, layout, FighterKind.Hero) + 10, 12, target.CenterX, target.MiddleY, 0.3f, hit.Amount));
+                fx.Projectiles.Add(new Projectile(true, Formation.X(state, layout, FighterKind.Hero) + 10, 12, target.CenterX, target.MiddleY, 0.3f, hit.Amount, hit.Big));
                 break;
             case HitSource.Hero:
                 motion.HeroSwing = 1;
@@ -35,12 +41,11 @@ public static class CombatReactions
                 motion.MonsterKick = 0.08f;
                 fx.Float(amount, target.CenterX + random.Next(-5, 6), target.Y - 2, Palette.White);
                 break;
-            case HitSource.Archer:
-                fx.Projectiles.Add(new Projectile(false, Formation.X(state, layout, FighterKind.Archer) + 10, 17, target.X + 2, target.MiddleY, 0.16f, hit.Amount));
+            case HitSource.First:
+                Companion(scene, hit, FighterKind.First, target, layout, state, random);
                 break;
-            case HitSource.Mage:
-                motion.MageGlow = 0.25f;
-                fx.Projectiles.Add(new Projectile(true, Formation.X(state, layout, FighterKind.Mage) + 10, 11, target.CenterX, target.MiddleY, 0.3f, hit.Amount));
+            case HitSource.Second:
+                Companion(scene, hit, FighterKind.Second, target, layout, state, random);
                 break;
             case HitSource.Click:
                 ArtPoint strike = scene.LastStrike ?? new ArtPoint(target.CenterX, target.Y + 4);
@@ -51,6 +56,25 @@ public static class CombatReactions
             case HitSource.Smite:
                 motion.MonsterFlash = 0.14f;
                 fx.Float(amount + " !", target.CenterX, target.Y - 3, Palette.Gold, 1.2f);
+                break;
+        }
+    }
+
+    private static void Companion(FrontierScene scene, Hit hit, FighterKind kind, MonsterBox target, FrontierLayout layout, FrontierState state, Random random)
+    {
+        int x = Formation.X(state, layout, kind);
+        switch (state.ClassOf(kind))
+        {
+            case HeroRole.Archer:
+                scene.Fx.Projectiles.Add(new Projectile(false, x + 10, 17, target.X + 2, target.MiddleY, 0.16f, hit.Amount));
+                break;
+            case HeroRole.Mage:
+                scene.Fx.Projectiles.Add(new Projectile(true, x + 10, 12, target.CenterX, target.MiddleY, 0.3f, hit.Amount, hit.Big));
+                break;
+            default:
+                scene.Motion.CompanionSwing[(int)kind] = 1;
+                scene.Motion.MonsterFlash = 0.07f;
+                scene.Fx.Float(NumberFormat.Amount(hit.Amount), target.CenterX + random.Next(-5, 6), target.Y - 2, Palette.Silver);
                 break;
         }
     }
@@ -68,7 +92,7 @@ public static class CombatReactions
                 scene.Fx.Projectiles.Add(new Projectile(false, x + 10, 17, target.X + 2, target.MiddleY, 0.14f, hit.Amount));
                 break;
             case HeroRole.Mage:
-                scene.Fx.Projectiles.Add(new Projectile(true, x + 10, 12, target.CenterX, target.MiddleY, 0.3f, hit.Amount));
+                scene.Fx.Projectiles.Add(new Projectile(true, x + 10, 12, target.CenterX, target.MiddleY, 0.3f, hit.Amount, hit.Big));
                 break;
             default:
                 scene.Motion.AllySwing[ally.Id] = 1;
@@ -77,6 +101,15 @@ public static class CombatReactions
                 break;
         }
     }
+
+    private static HeroRole? Striker(FrontierState state, Hit hit) => hit.Source switch
+    {
+        HitSource.Hero => state.Role,
+        HitSource.First => state.ClassOf(FighterKind.First),
+        HitSource.Second => state.ClassOf(FighterKind.Second),
+        HitSource.Ally => state.Allies.Find(ally => ally.Id == hit.Ally)?.Role,
+        _ => null,
+    };
 
     public static void Bolt(FrontierScene scene, MonsterBox target, Random random)
     {

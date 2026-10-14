@@ -27,7 +27,7 @@ public static class Titans
 
         if (view.Fallen && !known.Fallen)
         {
-            events.Add(new TitanFell(view.Kind));
+            events.Add(new TitanFell(view.Kind, view.Rewarded));
             return;
         }
 
