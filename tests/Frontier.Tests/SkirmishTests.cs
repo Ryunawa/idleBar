@@ -26,10 +26,13 @@ public sealed class SkirmishTests
         Assert.InRange(hits[FighterKind.Second], 80, 120);
     }
 
-    [Fact]
-    public void ARangedHeroIsAimedAtLikeTheCompanions()
+    [Theory]
+    [InlineData(HeroRole.Archer)]
+    [InlineData(HeroRole.Mage)]
+    [InlineData(HeroRole.Support)]
+    public void ARangedHeroIsAimedAtLikeTheCompanions(HeroRole role)
     {
-        Dictionary<FighterKind, int> hits = Targets(Team(HeroRole.Archer)).GroupBy(target => target).ToDictionary(group => group.Key, group => group.Count());
+        Dictionary<FighterKind, int> hits = Targets(Team(role)).GroupBy(target => target).ToDictionary(group => group.Key, group => group.Count());
         Assert.All(hits.Values, count => Assert.InRange(count, 180, 220));
     }
 

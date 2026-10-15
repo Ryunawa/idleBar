@@ -17,10 +17,10 @@ public static class Roles
             $"Tire de loin et se fait rarement viser. Passif : l'équipe attaque {Percent(Balance.RangerSpeed)} plus vite. Actif, toutes les {Balance.VolleyCooldown:0} s : une volée de {Balance.VolleyShots} tirs, tous critiques.",
             "Gagne surtout son xp avec sa volée ; ses autres tirs en rapportent un peu."),
         new(HeroRole.Mage, "mage", "Mage", 1, 0.5, 0.8, true, Balance.BlastCooldown,
-            $"Lance ses sorts de loin. Passif : l'équipe inflige {Percent(Balance.MageBossBonus)} de dégâts en plus aux boss. Actif, toutes les {Balance.BlastCooldown:0} s : un sort à {Percent(Balance.BlastFactor)}.",
+            $"Lance ses sorts de loin et se fait rarement viser. Passif : l'équipe inflige {Percent(Balance.MageBossBonus)} de dégâts en plus aux boss. Actif, toutes les {Balance.BlastCooldown:0} s : un sort à {Percent(Balance.BlastFactor)}.",
             "Gagne surtout son xp avec son grand sort ; ses autres sorts en rapportent un peu."),
-        new(HeroRole.Support, "support", "Clerc", 0.5, 0.9, 0.8, false, Balance.RaiseCooldown,
-            $"Peu de dégâts, mais chacun de ses coups soigne le plus blessé de l'équipe, lui compris, de {Percent(Balance.ClericTouch)} de ses propres PV. Passif : l'équipe inflige {Percent(Balance.SupportBlessing)} de dégâts en plus. Actif, toutes les {Balance.RaiseCooldown:0} s : ressuscite les alliés tombés et rend à chacun {Percent(Balance.PrayerHeal)} de ses propres PV : plus il monte de niveau, plus il soigne.",
+        new(HeroRole.Support, "support", "Clerc", 0.5, 0.9, 0.8, true, Balance.RaiseCooldown,
+            $"Lance sa lumière de loin et se fait rarement viser. Peu de dégâts, mais chacun de ses coups soigne le plus blessé de l'équipe, lui compris, de {Percent(Balance.ClericTouch)} de ses propres PV. Passif : l'équipe inflige {Percent(Balance.SupportBlessing)} de dégâts en plus. Actif, toutes les {Balance.RaiseCooldown:0} s : ressuscite les alliés tombés et rend à chacun {Percent(Balance.PrayerHeal)} de ses propres PV : plus il monte de niveau, plus il soigne.",
             "Gagne surtout son xp en ressuscitant ses alliés ; ses coups en rapportent un peu."),
     ];
 

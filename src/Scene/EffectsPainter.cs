@@ -25,7 +25,7 @@ public static class EffectsPainter
                 int y = (int)MathF.Round(projectile.FromY + (projectile.ToY - projectile.FromY) * step - MathF.Sin(step * MathF.PI) * 4);
                 if (trail > 0)
                 {
-                    r.Set(x, y, trail == 1 ? Palette.Cyan : Palette.Blue);
+                    r.Set(x, y, projectile.Holy ? (trail == 1 ? Palette.Yellow : Palette.Gold) : (trail == 1 ? Palette.Cyan : Palette.Blue));
                     continue;
                 }
 

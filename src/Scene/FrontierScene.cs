@@ -11,6 +11,7 @@ public sealed class FrontierScene
     private const float TimeWrap = 3600;
 
     private static readonly Rgba[] MagicSparks = [Palette.Cyan, Palette.White];
+    private static readonly Rgba[] HolySparks = [Palette.Orange, Palette.White];
 
     private readonly Random _random;
 
@@ -52,10 +53,10 @@ public sealed class FrontierScene
         foreach (Projectile projectile in landed)
         {
             Motion.MonsterFlash = 0.06f;
-            Fx.Float(NumberFormat.Amount(projectile.Amount), projectile.ToX + _random.Next(-4, 5), (LastMonster?.Y ?? 12) - 2, projectile.Magic ? Palette.Cyan : Palette.Green);
+            Fx.Float(NumberFormat.Amount(projectile.Amount), projectile.ToX + _random.Next(-4, 5), (LastMonster?.Y ?? 12) - 2, projectile.Holy ? Palette.Orange : projectile.Magic ? Palette.Cyan : Palette.Green);
             if (projectile.Magic)
             {
-                Fx.Burst(projectile.ToX, projectile.ToY, 6, MagicSparks, _random);
+                Fx.Burst(projectile.ToX, projectile.ToY, 6, projectile.Holy ? HolySparks : MagicSparks, _random);
             }
         }
 

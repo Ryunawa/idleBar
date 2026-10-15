@@ -8,7 +8,7 @@ namespace IdleBar.Ui;
 public partial class UpdateNotice : Node
 {
     private const double FirstCheckSeconds = 5;
-    private const double CheckIntervalSeconds = 6 * 3600;
+    private const double CheckIntervalSeconds = 2 * 3600;
     private const int TimeoutSeconds = 10;
 
     private readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(TimeoutSeconds) };

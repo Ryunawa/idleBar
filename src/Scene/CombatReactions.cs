@@ -38,6 +38,9 @@ public static class CombatReactions
             case HitSource.Hero when state.Role == HeroRole.Mage:
                 fx.Projectiles.Add(new Projectile(true, Formation.X(state, layout, FighterKind.Hero) + 10, 12, target.CenterX, target.MiddleY, 0.3f, hit.Amount, hit.Big));
                 break;
+            case HitSource.Hero when state.Role == HeroRole.Support:
+                fx.Projectiles.Add(Light(Formation.X(state, layout, FighterKind.Hero), target, hit));
+                break;
             case HitSource.Hero:
                 motion.HeroSwing = 1;
                 motion.MonsterFlash = 0.07f;
@@ -65,7 +68,7 @@ public static class CombatReactions
 
     private static void Companion(FrontierScene scene, Hit hit, FighterKind kind, MonsterBox target, FrontierLayout layout, FrontierState state, Random random)
     {
-        int x = Formation.X(state, layout, kind);
+        int x = FrontPainter.Walk(state, layout, kind, scene.Motion);
         switch (state.ClassOf(kind))
         {
             case HeroRole.Archer:
@@ -73,6 +76,9 @@ public static class CombatReactions
                 break;
             case HeroRole.Mage:
                 scene.Fx.Projectiles.Add(new Projectile(true, x + 10, 12, target.CenterX, target.MiddleY, 0.3f, hit.Amount, hit.Big));
+                break;
+            case HeroRole.Support:
+                scene.Fx.Projectiles.Add(Light(x, target, hit));
                 break;
             default:
                 scene.Motion.CompanionSwing[(int)kind] = 1;
@@ -97,6 +103,9 @@ public static class CombatReactions
             case HeroRole.Mage:
                 scene.Fx.Projectiles.Add(new Projectile(true, x + 10, 12, target.CenterX, target.MiddleY, 0.3f, hit.Amount, hit.Big));
                 break;
+            case HeroRole.Support:
+                scene.Fx.Projectiles.Add(Light(x, target, hit));
+                break;
             default:
                 scene.Motion.AllySwing[ally.Id] = 1;
                 scene.Motion.MonsterFlash = 0.07f;
@@ -104,6 +113,9 @@ public static class CombatReactions
                 break;
         }
     }
+
+    private static Projectile Light(int x, MonsterBox target, Hit hit) =>
+        new(true, x + 10, 12, target.CenterX, target.MiddleY, 0.25f, hit.Amount, holy: true);
 
     private static HeroRole? Striker(FrontierState state, Hit hit) => hit.Source switch
     {
