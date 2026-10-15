@@ -72,6 +72,18 @@ public sealed class ItemServerTests
     private static double Setting(string name) =>
         Number(Regex.Match(Script, $@"{name} \w+ not null default ([\d.]+)").Groups[1].Value);
 
+    [Fact]
+    public void RarityPricesMatchTheServer()
+    {
+        MatchCollection prices = Regex.Matches(Read("45_prices_and_class.sql"), @"when '(\w+)' then ([\d.]+)");
+        Assert.Equal(Balance.RarityPrices.Length, prices.Count);
+        foreach (Match entry in prices)
+        {
+            Assert.Equal(entry.Groups[1].Value, Items.RarityId(Items.Rank(entry.Groups[1].Value)));
+            Assert.Equal(Balance.RarityPrices[Items.Rank(entry.Groups[1].Value)], Number(entry.Groups[2].Value), 6);
+        }
+    }
+
     private static double Number(string text) => double.Parse(text, CultureInfo.InvariantCulture);
 
     private static string Read(string script)

@@ -17,7 +17,6 @@ public sealed class GameDialogs
     private readonly StartWindow _start = new();
     private readonly FrontierWindow _window = new();
     private float _scale = 1;
-    private bool _classWanted;
 
     public GameDialogs(FrontierSession session, SocialSession social, Account account, Journal journal, Node host)
     {
@@ -89,15 +88,12 @@ public sealed class GameDialogs
         }
     }
 
-    public void AskClassNext() => _classWanted = true;
-
     public void AskHero(float scale)
     {
         _scale = scale;
-        if (!_start.Visible && _window.Game is FrontierGame game && (game.State.Hero is null || _classWanted))
+        if (!_start.Visible && _window.Game is FrontierGame game && game.State.CanChangeRole)
         {
             _start.Open(scale, game.State, game.State.Hero is not null);
-            _classWanted = false;
         }
     }
 
@@ -128,6 +124,13 @@ public sealed class GameDialogs
 
     private async void OnHeroSaveRequested(HeroLook look, HeroRole role)
     {
+        if (_window.Game is FrontierGame game && game.State.CanChangeRole)
+        {
+            _start.Open(_scale, game.State, true);
+            _window.Hero.ShowResult(HeroMessages.ClassFirst);
+            return;
+        }
+
         _window.Hero.SetBusy(true);
         string status = await _session.SetHeroAsync(look, role);
         _window.Hero.SetBusy(false);

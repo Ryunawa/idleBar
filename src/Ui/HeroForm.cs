@@ -82,7 +82,7 @@ public partial class HeroForm : HBoxContainer
     {
         _preview.Texture = SpriteTexture.From(HeroSprites.Of(Role, Look).Standing);
         RoleInfo info = Roles.Of(Role);
-        string locked = _role.Disabled ? " La classe se change au prochain repli." : string.Empty;
+        string locked = _role.Disabled ? " La classe se choisit à chaque repli." : string.Empty;
         _roleText.Text = $"{info.Name} : {info.Effect} PV ×{info.Hp.ToString("0.##", French)} · dégâts ×{info.Dps.ToString("0.##", French)}.{locked}";
     }
 

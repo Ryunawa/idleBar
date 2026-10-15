@@ -8,7 +8,7 @@ public partial class StartWindow : Window
 {
     private const string Newcomer = "Ton héros t'attend aux portes du village. Au-delà, le brouillard cache le reste du monde : chaque boss vaincu le fait reculer et libère de la place pour bâtir. Donne-lui un nom, un visage et une classe.";
     private const string Veteran = "La Frontière accueille désormais les héros des joueurs. Donne un nom et un visage au tien, et choisis sa classe : tu pourras la changer à chaque repli.";
-    private const string Returning = "Ton héros rentre au village et repart du niveau 1 ; l'équipement de toute l'équipe l'attend dans le sac. Choisis sa classe pour reprendre la route.";
+    private const string Returning = "Choisis la classe de ton héros pour cette partie : elle ne changera plus avant ton prochain repli. Après un repli, tout l'équipement porté par l'équipe t'attend dans le sac.";
 
     private static readonly Vector2I BaseSize = new(500, 500);
 

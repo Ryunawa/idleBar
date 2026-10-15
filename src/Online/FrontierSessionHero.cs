@@ -23,12 +23,12 @@ public sealed partial class FrontierSession
             return Unavailable;
         }
 
-        if (role != game.State.Role)
+        if (role != game.State.Role || SavedRetreats != game.State.Retreats)
         {
             await WaitForSaveAsync();
         }
 
-        if (role != game.State.Role && !_busy)
+        if ((role != game.State.Role || SavedRetreats != game.State.Retreats) && !_busy)
         {
             await SaveAsync();
         }

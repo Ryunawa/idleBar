@@ -101,4 +101,4 @@ select pg_temp.check(not exists (select 1 from public.frontier_plots where playe
 select pg_temp.check((select count(*) from public.plots) = 12 and (select max(unlock_stage) from public.plots) = 101, 'douze emplacements, le dernier au boss 100');
 select pg_temp.check((select count(*) from public.building_kinds) = 12, 'douze bâtiments');
 select pg_temp.check((select count(*) from public.achievement_kinds) = 30, 'trente succès connus');
-select pg_temp.check((select min_client_version from private.settings) = '0.9.0', 'la 0.9.0 est exigée');
+select pg_temp.check((select min_client_version from private.settings) = '0.9.1', 'la 0.9.1 est exigée');

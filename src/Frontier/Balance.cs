@@ -132,7 +132,7 @@ public static class Balance
     public const double UpgradeBonus = 0.2;
     public const int MaxUpgrades = 100;
 
-    public static readonly double[] RarityPrices = [1, 4, 15, 40];
+    public static readonly double[] RarityPrices = [1, 2, 3, 4];
 
     public static readonly int[] Tiers = [10, 25, 50, 100, 250];
 

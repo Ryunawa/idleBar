@@ -32,8 +32,14 @@ update private.settings set bag_size = 1;
 update public.frontiers set retreats = retreats where player_id = '7aaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaac1';
 select pg_temp.check((select count(*) from public.hero_equipment where player_id = '7aaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaac1') = 3, 'rien ne bouge sans repli');
 
+select private.stock_shop('7aaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaac1');
+select pg_temp.check(exists (select 1 from public.shop_offers where player_id = '7aaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaac1'), 'le marché a ses offres');
 update public.frontiers set retreats = retreats + 1 where player_id = '7aaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaac1';
 select pg_temp.check(not exists (select 1 from public.hero_equipment where player_id = '7aaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaac1'), 'le repli retire tout l''équipement');
+select pg_temp.check(not exists (select 1 from public.shop_offers where player_id = '7aaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaac1' and opened_at = private.shop_opened()), 'le repli renouvelle les offres du marché');
+select private.stock_shop('7aaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaac1');
+select pg_temp.check((select count(*) = 4 and max(item_level) <= 4 from public.shop_offers
+  where player_id = '7aaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaac1' and opened_at = private.shop_opened()), 'de nouvelles offres au niveau de la nouvelle partie');
 select pg_temp.check(private.bag_count('7aaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaac1') = 3, 'tout revient au sac, au-delà de sa limite, pieds compris');
 select pg_temp.check((select count(*) from public.items where owner_id = '7aaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaac1') = 3, 'aucun objet perdu');
 select pg_temp.check(private.roll_item('7aaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaac1', 10, 'common', 'boss') is null, 'un sac qui déborde refuse le butin suivant');

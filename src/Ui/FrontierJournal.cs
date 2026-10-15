@@ -21,7 +21,7 @@ public static class FrontierJournal
         Routed { Boss: true } => $"Toute l'équipe est tombée face au boss : le front recule au niveau {state.Stage}. Clique sur « BOSS » dans le brouillard quand tu te sens prêt.",
         Routed => $"Toute l'équipe est tombée : le front recule au niveau {state.Stage}.",
         AchievementUnlocked unlocked => $"Succès : {unlocked.Achievement.Name} ({unlocked.Achievement.Description})",
-        Retreated retreated => $"Repli : +{retreated.Souls} âmes, dégâts et or ×{NumberFormat.Factor(retreated.Multiplier)}. Tout l'équipement porté est rangé dans le sac, et la classe de ton héros peut changer dans l'onglet Héros.",
+        Retreated retreated => $"Repli : +{retreated.Souls} âmes, dégâts et or ×{NumberFormat.Factor(retreated.Multiplier)}. Tout l'équipement porté est rangé dans le sac, et le Marché renouvelle ses offres.",
         AllyArrived arrived => $"{arrived.Name} ({Roles.Of(arrived.Role).Name}) arrive en renfort de ta guilde.",
         AllyLeft left => $"{left.Name} repart défendre sa propre frontière.",
         Boosted { Source: "titan" } boosted => $"Récompense du titan : +{boosted.Gold} % d'or et de dégâts.",

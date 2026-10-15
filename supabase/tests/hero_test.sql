@@ -82,5 +82,12 @@ select pg_temp.check(pg_temp.hero('Aldric', 'archer') ->> 'status' = 'role_locke
 select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000008') #>> '{frontier,hero_role}' = 'mage', 'nouveau rôle relu');
 reset role;
 
+update public.frontiers set retreats = 2 where player_id = '88888888-8888-8888-8888-888888888888';
+
+set role authenticated;
+select pg_temp.check(pg_temp.hero('Aldric', 'mage') #>> '{frontier,role_retreats}' = '2', 'garder la même classe après un repli compte comme le choix');
+select pg_temp.check(pg_temp.hero('Aldric', 'archer') ->> 'status' = 'role_locked', 'plus de changement après avoir gardé sa classe');
+reset role;
+
 delete from auth.users where id = '88888888-8888-8888-8888-888888888888';
 select pg_temp.check((select count(*) from public.role_kinds) = 5, 'cinq rôles');

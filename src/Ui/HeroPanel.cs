@@ -20,7 +20,7 @@ public partial class HeroPanel : VBoxContainer
         Name = "Héros";
         VBoxContainer rows = new();
         rows.AddThemeConstantOverride("separation", 8);
-        rows.AddChild(WindowRows.Muted("Ton héros te représente sur ton front, et chez les membres de ta guilde quand tu l'envoies en renfort. Son apparence change quand tu veux, sa classe une fois par repli."));
+        rows.AddChild(WindowRows.Muted("Ton héros te représente sur ton front, et chez les membres de ta guilde quand tu l'envoies en renfort. Son apparence change quand tu veux ; sa classe se choisit à chaque repli."));
         _form = new HeroForm();
         _form.Submitted += Submit;
         rows.AddChild(_form);
@@ -38,7 +38,7 @@ public partial class HeroPanel : VBoxContainer
     {
         if (Game is FrontierGame game)
         {
-            _form.Fill(game.State.Hero, game.State.Role, !game.State.CanChangeRole);
+            _form.Fill(game.State.Hero, game.State.Role, true);
         }
 
         _message.Text = string.Empty;

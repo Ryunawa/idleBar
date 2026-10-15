@@ -6,6 +6,7 @@ public static class HeroMessages
 {
     public const string InvalidName = "Le nom doit compter de 3 à 16 lettres, chiffres, espaces, tirets ou apostrophes.";
     public const string Saved = "Héros enregistré.";
+    public const string ClassFirst = "Choisis d'abord la classe de ton héros pour cette partie, dans la fenêtre qui vient de s'ouvrir.";
 
     public static string? For(string status) => status switch
     {

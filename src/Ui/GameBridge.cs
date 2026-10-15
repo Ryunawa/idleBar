@@ -137,7 +137,6 @@ public sealed class GameBridge : IDisposable
 
             if (frontierEvent is Retreated)
             {
-                _dialogs?.AskClassNext();
                 HeroWanted?.Invoke();
             }
         }
@@ -158,7 +157,7 @@ public sealed class GameBridge : IDisposable
 
     private void AskHeroOnce()
     {
-        if (!_heroAsked && _session?.Status == SessionStatus.Ready && Game is { State.Hero: null })
+        if (!_heroAsked && _session?.Status == SessionStatus.Ready && Game is { State.CanChangeRole: true })
         {
             _heroAsked = true;
             HeroWanted?.Invoke();
