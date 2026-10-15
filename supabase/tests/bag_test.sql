@@ -34,6 +34,18 @@ update private.settings set bag_size = 3;
 set role authenticated;
 select pg_temp.check(public.unequip_item('helm', 'hero') ->> 'status' = 'ok', 'retiré quand il y a de la place');
 reset role;
+with ring as (
+  insert into public.items (owner_id, slot, rarity, item_level, stat_a, value_a, source)
+  values ('7aaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaab1', 'ring', 'common', 1, 'gold', 1, 'boss') returning id)
+insert into public.hero_equipment (player_id, fighter, slot, item_id)
+select '7aaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaab1', 'hero', 'ring', id from ring;
+set role authenticated;
+select pg_temp.check(public.unequip_item('ring', 'hero') ->> 'status' = 'bag_full', 'un anneau reste au doigt quand le sac est plein');
+reset role;
+update private.settings set bag_size = 4;
+set role authenticated;
+select pg_temp.check(public.unequip_item('ring', 'hero') ->> 'status' = 'ok', 'l''anneau rejoint le sac quand il y a de la place');
+reset role;
 update private.settings set bag_size = 60;
 
 delete from auth.users where id = '7aaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaab1';

@@ -23,11 +23,19 @@ public sealed partial class SocialSession
     private int _sent;
     private int _accepted;
     private FrontierGame? _seen;
+    private int _worn = -1;
 
     public SocialSession(FrontierSession frontier, SocialApi api)
     {
         _frontier = frontier;
         _api = api;
+        _frontier.Saved += () =>
+        {
+            if (_frontier.SavedRetreats != _worn)
+            {
+                RefreshSoon();
+            }
+        };
     }
 
     public event Action? Changed;
@@ -88,6 +96,7 @@ public sealed partial class SocialSession
     {
         int generation = _generation;
         int ticket = ++_sent;
+        int retreats = _frontier.Game?.State.Retreats ?? 0;
         _busy = true;
         Failure = report ? null : Failure;
         try
@@ -101,7 +110,7 @@ public sealed partial class SocialSession
             if (ticket > _accepted)
             {
                 _accepted = ticket;
-                Accept(data);
+                Accept(data, retreats);
             }
 
             return data.Status;
@@ -123,7 +132,7 @@ public sealed partial class SocialSession
         }
     }
 
-    private void Accept(SocialData data)
+    private void Accept(SocialData data, int retreats)
     {
         Data = data;
         ReceivedAt = DateTimeOffset.UtcNow;
@@ -139,14 +148,23 @@ public sealed partial class SocialSession
             watcher.Sight(titan.ToView(), !quiet);
         }
 
+        bool settled = _frontier.Game?.State.Retreats == retreats && _frontier.SavedRetreats == retreats;
         if (_frontier.Game is FrontierGame wearer && data.Items is ItemsData items)
         {
-            foreach (FighterInfo fighter in Fighters.All)
+            if (settled)
             {
-                wearer.Equip(fighter.Kind, items.ToGear(fighter.Kind), items.ToWorn(fighter.Kind));
+                foreach (FighterInfo fighter in Fighters.All)
+                {
+                    wearer.Equip(fighter.Kind, items.ToGear(fighter.Kind), items.ToWorn(fighter.Kind));
+                }
             }
 
             Discover(wearer, items);
+        }
+
+        if (settled)
+        {
+            _worn = retreats;
         }
 
         Changed?.Invoke();

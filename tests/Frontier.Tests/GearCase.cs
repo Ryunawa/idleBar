@@ -7,27 +7,31 @@ namespace IdleBar.Tests;
 
 public sealed class GearCase
 {
-    private const double DamageBase = 4;
-    private const double HealthBase = 6;
     private const double WindowSeconds = 3 * 3600;
-    private const int OfferCount = 4;
+    private const int Offered = 4;
+    private const int BagSize = 60;
 
-    private static readonly double[] Odds = [0.62, 0.28, 0.08, 0.02];
-    private static readonly double[] Factors = [1, 1.6, 2.5, 4];
-
-    private readonly Dictionary<(FighterKind Kind, string Slot), (int Level, int Rarity, int Upgrades)> _pieces = [];
-    private readonly List<(string Slot, int Level, int Rarity, double Price)> _offers = [];
+    private readonly List<GearPiece> _pieces = [];
+    private readonly List<Gear> _values = [];
+    private readonly List<(GearPiece Piece, Gear Value, double Price)> _offers = [];
+    private readonly int[][] _worn = [.. Fighters.All.Select(_ => new int[Items.Slots.Count])];
     private readonly Random _random;
     private long _window = -1;
 
     public GearCase(int seed)
     {
         _random = new Random(seed);
+        Unwear();
     }
 
     public int Count => _pieces.Count;
 
-    public IReadOnlyList<(string Slot, int Level, int Rarity, double Price)> Offers => _offers;
+    public int Offers => _offers.Count;
+
+    public double Price(int offer) => _offers[offer].Price;
+
+    public Gear Worn(int fighter) => Enumerable.Range(0, Items.Slots.Count)
+        .Where(slot => _worn[fighter][slot] >= 0).Aggregate(Gear.None, (sum, slot) => GearWorth.Sum(sum, _values[_worn[fighter][slot]]));
 
     public void Restock(FrontierState state, double clock)
     {
@@ -39,46 +43,85 @@ public sealed class GearCase
 
         _window = window;
         _offers.Clear();
-        for (int index = 0; index < OfferCount; index++)
+        for (int index = 0; index < Offered; index++)
         {
-            string slot = Items.Slots[_random.Next(Items.Slots.Count)];
-            int rarity = Rarity(_random.NextDouble());
-            _offers.Add((slot, state.MaxStage, rarity, GearPrices.Offer(state, state.MaxStage, rarity)));
+            GearPiece piece = GearPiece.Draw(_random, state, ItemRolls.ShopOdds, true);
+            _offers.Add((piece, Gear.Of(piece.Stats()), GearPrices.Offer(state, state.MaxStage, piece.Rarity)));
         }
     }
 
-    public double UpgradeCost(FrontierState state, FighterKind kind, string slot) =>
-        _pieces.TryGetValue((kind, slot), out (int Level, int Rarity, int Upgrades) piece) ? GearPrices.Upgrade(state, piece.Rarity, piece.Upgrades, 1) : double.PositiveInfinity;
-
-    public double UpgradeGain(FighterKind kind, string slot) =>
-        _pieces.TryGetValue((kind, slot), out (int Level, int Rarity, int Upgrades) piece)
-            ? Value(slot, piece.Level, piece.Rarity, piece.Upgrades + 1) - Value(slot, piece.Level, piece.Rarity, piece.Upgrades) : 0;
-
-    public double OfferGain(FighterKind kind, int offer)
+    public void Loot(FrontierGame game)
     {
-        (string slot, int level, int rarity, double _) = _offers[offer];
-        double now = _pieces.TryGetValue((kind, slot), out (int Level, int Rarity, int Upgrades) piece) ? Value(slot, piece.Level, piece.Rarity, piece.Upgrades) : 0;
-        return Value(slot, level, rarity, 0) - now;
+        if (_random.NextDouble() * 100 >= ItemRolls.LootChance)
+        {
+            return;
+        }
+
+        Keep(game, GearPiece.Draw(_random, game.State, ItemRolls.BossOdds, false));
+        Wear(game);
     }
 
-    public bool Upgrade(FrontierGame game, FighterKind kind, string slot)
+    public void Wear(FrontierGame game)
     {
-        double cost = UpgradeCost(game.State, kind, slot);
+        Assign(game.State);
+        foreach (FighterInfo fighter in Fighters.All)
+        {
+            game.Equip(fighter.Kind, Worn((int)fighter.Kind), GearLook.None);
+        }
+    }
+
+    public (double Cost, double Gain)? Upgrade(GearWorth worth, FrontierState state, int fighter, int slot)
+    {
+        int piece = _worn[fighter][slot];
+        if (piece < 0 || _pieces[piece].Upgrades >= Balance.MaxUpgrades)
+        {
+            return null;
+        }
+
+        Gear[] gears = Current();
+        double before = worth.Score(gears);
+        gears[fighter] = GearWorth.Sum(GearWorth.Minus(gears[fighter], _values[piece]), Gear.Of(_pieces[piece].Stats(1)));
+        return (GearPrices.Upgrade(state, _pieces[piece].Rarity, _pieces[piece].Upgrades, 1), worth.Score(gears) / before - 1);
+    }
+
+    public bool Upgrade(FrontierGame game, int fighter, int slot)
+    {
+        int piece = _worn[fighter][slot];
+        double cost = piece < 0 ? double.PositiveInfinity : GearPrices.Upgrade(game.State, _pieces[piece].Rarity, _pieces[piece].Upgrades, 1);
         if (game.State.Gold < cost)
         {
             return false;
         }
 
         game.State.Gold -= cost;
-        (int level, int rarity, int upgrades) = _pieces[(kind, slot)];
-        _pieces[(kind, slot)] = (level, rarity, upgrades + 1);
-        game.Equip(kind, GearOf(kind), GearLook.None);
+        _pieces[piece] = _pieces[piece] with { Upgrades = _pieces[piece].Upgrades + 1 };
+        _values[piece] = Gear.Of(_pieces[piece].Stats());
+        Wear(game);
         return true;
     }
 
-    public bool Buy(FrontierGame game, FighterKind kind, int offer)
+    public double OfferGain(GearWorth worth, FrontierState state, int offer)
     {
-        (string slot, int level, int rarity, double price) = _offers[offer];
+        (GearPiece piece, Gear value, double _) = _offers[offer];
+        Gear[] gears = Current();
+        double before = worth.Score(gears);
+        double best = 0;
+        int slot = Index(piece.Slot);
+        foreach (FighterInfo fighter in Fighters.All.Where(fighter => piece.Fits(state, fighter.Kind)))
+        {
+            int index = (int)fighter.Kind;
+            Gear kept = gears[index];
+            gears[index] = GearWorth.Sum(_worn[index][slot] >= 0 ? GearWorth.Minus(kept, _values[_worn[index][slot]]) : kept, value);
+            best = Math.Max(best, worth.Score(gears) / before - 1);
+            gears[index] = kept;
+        }
+
+        return best;
+    }
+
+    public bool Buy(FrontierGame game, int offer)
+    {
+        (GearPiece piece, Gear _, double price) = _offers[offer];
         if (game.State.Gold < price)
         {
             return false;
@@ -86,31 +129,69 @@ public sealed class GearCase
 
         game.State.Gold -= price;
         _offers.RemoveAt(offer);
-        _pieces[(kind, slot)] = (level, rarity, 0);
-        game.Equip(kind, GearOf(kind), GearLook.None);
+        Keep(game, piece);
+        Wear(game);
         return true;
     }
 
-    public Gear GearOf(FighterKind kind) => Gear.Of(_pieces.Where(pair => pair.Key.Kind == kind)
-        .Select(pair => (Damages(pair.Key.Slot) ? Items.Damage : Items.Health, Value(pair.Key.Slot, pair.Value.Level, pair.Value.Rarity, pair.Value.Upgrades))));
+    private static int Index(string slot) => Items.Slots.ToList().IndexOf(slot);
 
-    public static bool Damages(string slot) => slot != Items.Armor;
+    private Gear[] Current() => [.. Enumerable.Range(0, Fighters.All.Count).Select(Worn)];
 
-    private static int Rarity(double roll)
+    private void Keep(FrontierGame game, GearPiece piece)
     {
-        double total = 0;
-        for (int rank = 0; rank < Odds.Length; rank++)
+        HashSet<int> worn = [.. _worn.SelectMany(row => row).Where(index => index >= 0)];
+        _pieces.Add(piece);
+        _values.Add(Gear.Of(piece.Stats()));
+        if (_pieces.Count - worn.Count <= BagSize)
         {
-            total += Odds[rank];
-            if (roll < total)
-            {
-                return rank;
-            }
+            return;
         }
 
-        return Odds.Length - 1;
+        int worst = Enumerable.Range(0, _pieces.Count).Where(index => !worn.Contains(index)).MinBy(index => _pieces[index].Rank);
+        game.Recycle(_pieces[worst].Rarity, _pieces[worst].Bought, _pieces[worst].Stage);
+        _pieces.RemoveAt(worst);
+        _values.RemoveAt(worst);
+        Unwear();
     }
 
-    private static double Value(string slot, int level, int rarity, int upgrades) =>
-        Items.Upgraded((Damages(slot) ? DamageBase : HealthBase) * Factors[rarity] * (1 + Math.Min(level, 1000) / 100.0), upgrades);
+    private void Unwear() => Array.ForEach(_worn, row => Array.Fill(row, -1));
+
+    private void Assign(FrontierState state)
+    {
+        GearWorth worth = new(state);
+        Unwear();
+        Gear[] gears = [.. Fighters.All.Select(_ => Gear.None)];
+        bool[] taken = new bool[_pieces.Count];
+        for (int slot = 0; slot < Items.Slots.Count; slot++)
+        {
+            foreach (FighterInfo fighter in Fighters.All)
+            {
+                int index = (int)fighter.Kind;
+                Gear kept = gears[index];
+                double best = worth.Score(gears);
+                for (int piece = 0; piece < _pieces.Count; piece++)
+                {
+                    if (taken[piece] || _pieces[piece].Slot != Items.Slots[slot] || !_pieces[piece].Fits(state, fighter.Kind))
+                    {
+                        continue;
+                    }
+
+                    gears[index] = GearWorth.Sum(kept, _values[piece]);
+                    double score = worth.Score(gears);
+                    if (score > best)
+                    {
+                        best = score;
+                        _worn[index][slot] = piece;
+                    }
+                }
+
+                gears[index] = _worn[index][slot] >= 0 ? GearWorth.Sum(kept, _values[_worn[index][slot]]) : kept;
+                if (_worn[index][slot] >= 0)
+                {
+                    taken[_worn[index][slot]] = true;
+                }
+            }
+        }
+    }
 }

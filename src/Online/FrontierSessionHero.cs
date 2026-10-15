@@ -8,11 +8,24 @@ public sealed partial class FrontierSession
 {
     public const string Unavailable = "unavailable";
 
+    private const int SaveWaits = 200;
+
+    public async Task SettleAsync()
+    {
+        await WaitForSaveAsync();
+        await FlushAsync();
+    }
+
     public async Task<string> SetHeroAsync(HeroLook look, HeroRole role)
     {
         if (Game is not FrontierGame game || Status != SessionStatus.Ready)
         {
             return Unavailable;
+        }
+
+        if (role != game.State.Role)
+        {
+            await WaitForSaveAsync();
         }
 
         if (role != game.State.Role && !_busy)
@@ -41,6 +54,14 @@ public sealed partial class FrontierSession
         catch (Exception exception) when (Stale(generation) || Fails(exception))
         {
             return Unavailable;
+        }
+    }
+
+    private async Task WaitForSaveAsync()
+    {
+        for (int wait = 0; _busy && wait < SaveWaits; wait++)
+        {
+            await Task.Delay(SaveWaitMilliseconds);
         }
     }
 }

@@ -46,6 +46,7 @@ public sealed record SocialData(
     public const string Refused = "refused";
     public const string UnknownOffer = "unknown_offer";
     public const string Sold = "sold";
+    public const string LevelTooLow = "level_too_low";
 }
 
 public sealed record GuildData(string Name, string Code, bool Leader, IReadOnlyList<MemberData> Members);

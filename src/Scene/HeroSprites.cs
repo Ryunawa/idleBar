@@ -48,6 +48,9 @@ public static class HeroSprites
             ['V'] = edge,
             ['X'] = plate,
             ['Y'] = seam,
+            ['G'] = worn.Arms is int arms ? ItemSprites.Rarities[arms].Main : Skins[look.Skin],
+            ['L'] = worn.Legs is int legs ? ItemSprites.Rarities[legs].Main : shade,
+            ['F'] = worn.Feet is int feet ? ItemSprites.Rarities[feet].Shade : shade,
         };
         ArtSprite sprite = ArtSprite.Parse(HeroGrids.Bodies[(int)role], colors).Over(ArtSprite.Parse(HeroGrids.Hairs[look.Hair], colors));
         if (worn.Helm is int helm)

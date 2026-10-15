@@ -67,7 +67,7 @@ public static class Battle
             return;
         }
 
-        amount *= monster.Boss ? 1 + Talents.BossDamage(state) : 1;
+        amount *= monster.Boss ? (1 + Talents.BossDamage(state)) * (1 + BossGear(state, source)) : 1;
         monster.Hp -= amount;
         events.Add(new Hit(source, amount, critical, ally, big));
         if (monster.Hp <= 0)
@@ -75,6 +75,14 @@ public static class Battle
             Kill(state, monster, events);
         }
     }
+
+    private static double BossGear(FrontierState state, HitSource source) => source switch
+    {
+        HitSource.Hero or HitSource.Click or HitSource.Smite => state.Gears[(int)FighterKind.Hero].Boss,
+        HitSource.First => state.Gears[(int)FighterKind.First].Boss,
+        HitSource.Second => state.Gears[(int)FighterKind.Second].Boss,
+        _ => 0,
+    };
 
     private static void Attack(FrontierState state, FighterKind kind, Monster monster, double dt, EventLog events)
     {

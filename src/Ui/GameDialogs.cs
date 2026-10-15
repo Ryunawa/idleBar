@@ -17,6 +17,7 @@ public sealed class GameDialogs
     private readonly StartWindow _start = new();
     private readonly FrontierWindow _window = new();
     private float _scale = 1;
+    private bool _classWanted;
 
     public GameDialogs(FrontierSession session, SocialSession social, Account account, Journal journal, Node host)
     {
@@ -88,12 +89,15 @@ public sealed class GameDialogs
         }
     }
 
+    public void AskClassNext() => _classWanted = true;
+
     public void AskHero(float scale)
     {
         _scale = scale;
-        if (!_start.Visible && _window.Game is FrontierGame game && game.State.Hero is null)
+        if (!_start.Visible && _window.Game is FrontierGame game && (game.State.Hero is null || _classWanted))
         {
-            _start.Open(scale, game.State);
+            _start.Open(scale, game.State, game.State.Hero is not null);
+            _classWanted = false;
         }
     }
 
@@ -118,6 +122,7 @@ public sealed class GameDialogs
             return;
         }
 
+        _social.RefreshSoon();
         _start.Hide();
     }
 

@@ -77,6 +77,7 @@ public sealed partial class FrontierSession
             }
 
             _revision = data.Revision;
+            SavedRetreats = data.Retreats;
             _saveSoon = true;
             SetStatus(SessionStatus.Ready);
             return;
@@ -85,6 +86,7 @@ public sealed partial class FrontierSession
         bool replacing = Game is not null;
         LoadPlan plan = FrontierLoader.Plan(data, local, DateTimeOffset.UtcNow);
         _revision = data.Revision;
+        SavedRetreats = data.Retreats;
         _saveSoon = plan.Unsent;
         SetStatus(SessionStatus.Ready);
         Loaded?.Invoke(plan);

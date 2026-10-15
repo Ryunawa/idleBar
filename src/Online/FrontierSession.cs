@@ -35,6 +35,10 @@ public sealed partial class FrontierSession
 
     public event Action<string>? Noticed;
 
+    public event Action? Saved;
+
+    public int SavedRetreats { get; private set; } = -1;
+
     public SessionStatus Status { get; private set; } = SessionStatus.SignedOut;
 
     public FrontierGame? Game { get; set; }

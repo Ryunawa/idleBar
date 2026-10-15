@@ -27,6 +27,7 @@ public static class GuildMessages
         SocialData.Nothing => "Rien à réclamer pour l'instant.",
         SocialData.UnknownItem => "Cet objet n'est plus dans ton sac.",
         SocialData.WrongClass => "Cette arme est réservée à une autre classe.",
+        SocialData.LevelTooLow => "Ce combattant n'a pas encore le niveau requis par cet objet.",
         SocialData.BagFull => "Ton sac est plein : recycle un objet pour faire de la place.",
         SocialData.Paused => "Ta partie est ouverte ailleurs : reprends-la d'abord.",
         SocialData.Refused => "Le serveur a refusé cette action.",

@@ -54,7 +54,7 @@ public partial class HeroForm : HBoxContainer
         _name = new LineEdit { MaxLength = HeroLook.NameMax, PlaceholderText = "Nom du héros", SizeFlagsHorizontal = SizeFlags.ExpandFill };
         _name.TextSubmitted += _ => Submitted?.Invoke();
         Row(grid, "Nom", _name);
-        _role = Choice(grid, "Rôle", Roles.All.Select(role => role.Name));
+        _role = Choice(grid, "Classe", Roles.All.Select(role => role.Name));
         _skin = Choice(grid, "Peau", SkinNames);
         _hair = Choice(grid, "Cheveux", HairNames);
         _hairColor = Choice(grid, "Couleur", HairColorNames);
@@ -82,7 +82,7 @@ public partial class HeroForm : HBoxContainer
     {
         _preview.Texture = SpriteTexture.From(HeroSprites.Of(Role, Look).Standing);
         RoleInfo info = Roles.Of(Role);
-        string locked = _role.Disabled ? " Le rôle se change au prochain repli." : string.Empty;
+        string locked = _role.Disabled ? " La classe se change au prochain repli." : string.Empty;
         _roleText.Text = $"{info.Name} : {info.Effect} PV ×{info.Hp.ToString("0.##", French)} · dégâts ×{info.Dps.ToString("0.##", French)}.{locked}";
     }
 

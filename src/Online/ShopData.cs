@@ -1,9 +1,15 @@
 using System.Collections.Generic;
+using System.Linq;
 using IdleBar.Frontier;
 
 namespace IdleBar.Online;
 
-public sealed record ShopData(double RefreshIn, IReadOnlyList<OfferData> Offers);
+public sealed record ShopData(double RefreshIn, IReadOnlyList<OfferData> Offers, IReadOnlyList<OddsData>? Odds = null)
+{
+    public string? OddsLine => Odds is { Count: > 0 } odds ? ItemRolls.OddsLine(odds.Select(entry => (entry.Rarity, entry.Percent))) : null;
+}
+
+public sealed record OddsData(string Rarity, double Percent);
 
 public sealed record OfferData(
     long Id,

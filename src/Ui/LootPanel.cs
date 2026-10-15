@@ -11,14 +11,17 @@ namespace IdleBar.Ui;
 
 public partial class LootPanel : VBoxContainer
 {
-    private readonly List<GearSlotRow> _slots = [];
+    private readonly List<GearSlotTile> _tiles = [];
     private readonly List<FighterKind> _wearers = [];
     private SocialSession? _social;
     private OptionButton _wearer = null!;
-    private VBoxContainer _bag = null!;
-    private Label _count = null!;
+    private GearSlotRow _worn = null!;
+    private Label _totals = null!;
+    private BagSection _bag = null!;
     private Label _message = null!;
+    private string _slot = Items.Weapon;
     private bool _busy;
+    private int _level;
 
     public FrontierGame? Game { get; set; }
 
@@ -29,7 +32,7 @@ public partial class LootPanel : VBoxContainer
         Name = "Équipement";
         VBoxContainer rows = new();
         rows.AddThemeConstantOverride("separation", 6);
-        rows.AddChild(WindowRows.Muted("Chacun de tes combattants porte une arme de sa classe, une armure et une coiffe. Les boss et le titan laissent du butin, et l'onglet Marché vend des objets. L'or améliore aussi les objets portés ; le serveur fixe les prix et prend l'or de ta dernière sauvegarde, et ce que l'or achète ou améliore reste lié à toi."));
+        rows.AddChild(WindowRows.Muted("Sept pièces par combattant : arme de sa classe, coiffe, armure, bras, jambes, pieds et anneau, chacune à son niveau requis. Clique sur un emplacement pour voir sa pièce ; le chiffre compte les objets du sac qui peuvent y aller. L'or améliore les pièces portées, et ce qu'il achète ou améliore reste lié à toi."));
         HBoxContainer choice = new();
         choice.AddThemeConstantOverride("separation", 10);
         choice.AddChild(WindowRows.Heading("Équipement de"));
@@ -37,19 +40,17 @@ public partial class LootPanel : VBoxContainer
         _wearer.ItemSelected += _ => Rebuild();
         choice.AddChild(_wearer);
         rows.AddChild(choice);
-        foreach (string slot in Items.Slots)
-        {
-            GearSlotRow row = new(slot);
-            row.Upgraded += (item, count) => Act(social => social.UpgradeAsync(item, count), $"Objet amélioré : {item.Name}.");
-            row.Removed += removed => Act(social => social.UnequipAsync(removed, Chosen), "Objet rangé dans le sac.");
-            _slots.Add(row);
-            rows.AddChild(row);
-        }
-
-        _count = WindowRows.Heading("Sac");
-        rows.AddChild(_count);
-        _bag = new VBoxContainer();
-        _bag.AddThemeConstantOverride("separation", 4);
+        rows.AddChild(Tiles());
+        _worn = new GearSlotRow();
+        _worn.Upgraded += (item, count) => Act(social => social.UpgradeAsync(item, count), $"Objet amélioré : {item.Name}.");
+        _worn.Removed += removed => Act(social => social.UnequipAsync(removed, Chosen), "Objet rangé dans le sac.");
+        rows.AddChild(_worn);
+        _totals = WindowRows.Muted(string.Empty);
+        rows.AddChild(_totals);
+        _bag = new BagSection();
+        _bag.Filtered += Rebuild;
+        _bag.Equipped += item => Act(social => social.EquipAsync(item.Id, Chosen), $"Objet équipé : {item.Name}.");
+        _bag.Recycled += item => Act(social => social.SalvageAsync(item), $"Objet recyclé : {item.Name}.");
         rows.AddChild(_bag);
         _message = WindowFrame.CreateMessage();
         rows.AddChild(_message);
@@ -71,7 +72,7 @@ public partial class LootPanel : VBoxContainer
             return;
         }
 
-        if (!_wearers.SequenceEqual(Recruited()))
+        if (!_wearers.SequenceEqual(Recruited()) || Game?.State.Level(Chosen) is int level && level != _level)
         {
             Rebuild();
             return;
@@ -88,10 +89,28 @@ public partial class LootPanel : VBoxContainer
         ItemsData? items = _social?.Data?.Items;
         bool room = items is not null && items.Carried < items.Max;
         bool idle = !_busy && Game is { Frozen: false } && items is not null;
-        foreach (GearSlotRow row in _slots)
+        _worn.Refresh(Game?.State, idle, room);
+    }
+
+    private HFlowContainer Tiles()
+    {
+        HFlowContainer tiles = new();
+        tiles.AddThemeConstantOverride("h_separation", 6);
+        tiles.AddThemeConstantOverride("v_separation", 6);
+        ButtonGroup group = new();
+        foreach (string slot in Items.Slots)
         {
-            row.Refresh(Game?.State, idle, room);
+            GearSlotTile tile = new(slot) { ButtonGroup = group, ButtonPressed = slot == _slot };
+            tile.Pressed += () =>
+            {
+                _slot = slot;
+                Rebuild();
+            };
+            _tiles.Add(tile);
+            tiles.AddChild(tile);
         }
+
+        return tiles;
     }
 
     private IEnumerable<FighterKind> Recruited() =>
@@ -116,47 +135,23 @@ public partial class LootPanel : VBoxContainer
 
         _wearer.Select(Math.Max(0, _wearers.IndexOf(chosen)));
         HeroRole role = Game?.State.ClassOf(Chosen) ?? HeroRole.Warrior;
+        _level = Game?.State.Level(Chosen) ?? 0;
         ItemsData? items = _social?.Data?.Items;
-        for (int index = 0; index < _slots.Count; index++)
+        foreach (GearSlotTile tile in _tiles)
         {
-            _slots[index].Show(items?.Equipped(Chosen, Items.Slots[index]), role);
+            int ready = items?.Bag.Count(item => !item.Equipped && item.Slot == tile.Slot && item.Fits(role) && item.Reached(_level)) ?? 0;
+            tile.Show(items?.Equipped(Chosen, tile.Slot), ready, role);
         }
 
-        Bag(items, role);
+        _worn.Show(_slot, items?.Equipped(Chosen, _slot), role);
+        _totals.Text = items is null ? string.Empty : GearSummary.Describe(items.ToGear(Chosen), TeamGold(items));
+        _totals.Visible = _totals.Text.Length > 0;
+        _bag.Show(items, Game?.State, role, _level, _slot);
         Refresh();
     }
 
-    private void Bag(ItemsData? items, HeroRole role)
-    {
-        WindowRows.Clear(_bag);
-        if (items is null)
-        {
-            _count.Text = "Sac";
-            _bag.AddChild(WindowRows.Muted("L'équipement se charge…"));
-            return;
-        }
-
-        ItemData[] bag = [.. items.Bag.Where(item => !item.Equipped)];
-        _count.Text = $"Sac · {items.Carried} / {items.Max}";
-        if (items.Carried >= items.Max)
-        {
-            _bag.AddChild(WindowRows.Muted("Sac plein : le prochain butin sera perdu et la boutique attend. Recycle des objets pour faire de la place."));
-        }
-
-        if (bag.Length == 0)
-        {
-            _bag.AddChild(WindowRows.Muted("Rien dans le sac pour l'instant. Bats des boss !"));
-        }
-
-        foreach (ItemData item in bag)
-        {
-            string gold = Game is FrontierGame game ? NumberFormat.Gold(Items.SalvageGold(game.State, item.Rank, item.Source == Items.ShopSource, item.Level)) : "de l'or";
-            Action? equip = item.Fits(role) ? () => Act(social => social.EquipAsync(item.Id, Chosen), $"Objet équipé : {item.Name}.") : null;
-            _bag.AddChild(ItemRow.Create(item,
-                (item.Fits(role) ? "Équiper" : "Autre classe", equip),
-                ($"Recycler · {gold}", () => Act(social => social.SalvageAsync(item), $"Objet recyclé : {item.Name}."))));
-        }
-    }
+    private double TeamGold(ItemsData items) =>
+        Fighters.All.Where(fighter => fighter.Kind == FighterKind.Hero || Game?.State.Level(fighter.Kind) > 0).Sum(fighter => items.ToGear(fighter.Kind).Gold);
 
     private static string Title(FrontierState state, FighterKind kind) => kind switch
     {

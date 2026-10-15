@@ -13,7 +13,7 @@ public sealed class HeroSceneTests
     [Fact]
     public void EveryHeroSymbolHasAColor()
     {
-        Dictionary<char, Rgba> looks = new() { ['S'] = Palette.Skin, ['H'] = Palette.Bark, ['O'] = Palette.Red, ['Q'] = Palette.Wine, ['W'] = Palette.Blue, ['V'] = Palette.Navy, ['X'] = Palette.Silver, ['Y'] = Palette.Slate };
+        Dictionary<char, Rgba> looks = new() { ['S'] = Palette.Skin, ['H'] = Palette.Bark, ['O'] = Palette.Red, ['Q'] = Palette.Wine, ['W'] = Palette.Blue, ['V'] = Palette.Navy, ['X'] = Palette.Silver, ['Y'] = Palette.Slate, ['G'] = Palette.Skin, ['L'] = Palette.Wine, ['F'] = Palette.Wine };
         IEnumerable<IReadOnlyList<string>> grids = HeroGrids.Bodies.Concat(HeroGrids.Hairs).Append(HeroGrids.MageHat);
         Assert.All(grids, grid => Assert.Empty(ArtSprite.UnknownSymbols(grid, looks)));
         Assert.Equal(Roles.All.Count, HeroGrids.Bodies.Count);
@@ -111,31 +111,6 @@ public sealed class HeroSceneTests
         {
             Directory.CreateDirectory(folder);
             PngWriter.Write(frame, Path.Combine(folder, $"titan-{width}{(fallen ? "-chute" : string.Empty)}{(held ? "-boss" : string.Empty)}.png"), 3);
-        }
-    }
-
-    [Fact]
-    public void TheGearSheetRenders()
-    {
-        ArtRaster sheet = new(5 * 5 * 16 + 4, 40);
-        sheet.Fill(0, 0, sheet.Width, sheet.Height, Palette.Sand.Mix(Palette.White, 0.6f));
-        int x = 2;
-        foreach (RoleInfo role in Roles.All)
-        {
-            for (int helm = -1; helm < 4; helm++)
-            {
-                GearLook worn = new(3, 2, helm < 0 ? null : helm, helm < 0 ? 0 : helm);
-                HeroFigure figure = HeroSprites.Of(role.Role, HeroSprites.Default, worn);
-                sheet.Blit(figure.Standing, x, 24 - figure.Standing.Height);
-                sheet.Blit(ItemSprites.Icon(Items.Slots[(x / 16) % 3], helm + 1, helm + 1), x, 28);
-                x += 16;
-            }
-        }
-
-        if (Environment.GetEnvironmentVariable(SceneTests.SnapshotFolder) is string folder)
-        {
-            Directory.CreateDirectory(folder);
-            PngWriter.Write(sheet, Path.Combine(folder, "equipement.png"), 5);
         }
     }
 

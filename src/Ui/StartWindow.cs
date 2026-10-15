@@ -6,8 +6,9 @@ namespace IdleBar.Ui;
 
 public partial class StartWindow : Window
 {
-    private const string Newcomer = "Ton héros t'attend aux portes du village. Au-delà, le brouillard cache le reste du monde : chaque boss vaincu le fait reculer et libère de la place pour bâtir. Donne-lui un nom, un visage et un rôle.";
-    private const string Veteran = "La Frontière accueille désormais les héros des joueurs. Donne un nom et un visage au tien, et choisis son rôle : tu pourras le changer à chaque repli.";
+    private const string Newcomer = "Ton héros t'attend aux portes du village. Au-delà, le brouillard cache le reste du monde : chaque boss vaincu le fait reculer et libère de la place pour bâtir. Donne-lui un nom, un visage et une classe.";
+    private const string Veteran = "La Frontière accueille désormais les héros des joueurs. Donne un nom et un visage au tien, et choisis sa classe : tu pourras la changer à chaque repli.";
+    private const string Returning = "Ton héros rentre au village et repart du niveau 1 ; l'équipement de toute l'équipe l'attend dans le sac. Choisis sa classe pour reprendre la route.";
 
     private static readonly Vector2I BaseSize = new(500, 500);
 
@@ -16,6 +17,7 @@ public partial class StartWindow : Window
     private Button _start = null!;
     private Label _message = null!;
     private bool _newcomer;
+    private bool _returning;
 
     public event Action<HeroLook, HeroRole>? Submitted;
 
@@ -34,10 +36,11 @@ public partial class StartWindow : Window
         content.AddChild(_message);
     }
 
-    public void Open(float scale, FrontierState? state)
+    public void Open(float scale, FrontierState? state, bool returning = false)
     {
         _newcomer = state is null;
-        _intro.Text = _newcomer ? Newcomer : Veteran;
+        _returning = returning && !_newcomer;
+        _intro.Text = _newcomer ? Newcomer : _returning ? Returning : Veteran;
         _form.Fill(state?.Hero, state?.Role ?? HeroRole.Warrior, state is not null && !state.CanChangeRole);
         _message.Text = string.Empty;
         SetBusy(false);
@@ -47,7 +50,7 @@ public partial class StartWindow : Window
     public void SetBusy(bool busy)
     {
         _start.Disabled = busy;
-        _start.Text = busy ? "En route…" : _newcomer ? "Prendre la route" : "Valider mon héros";
+        _start.Text = busy ? "En route…" : _newcomer ? "Prendre la route" : _returning ? "Reprendre la route" : "Valider mon héros";
     }
 
     public void ShowError(string message) => _message.Text = message;

@@ -46,6 +46,8 @@ public static class RetreatRules
         state.FrenzyLeft = 0;
         Actives.Stagger(state);
         Array.Clear(state.Guards);
+        Array.Fill(state.Gears, Gear.None);
+        Array.Fill(state.Worn, GearLook.None);
         Convoys.Clear(state);
         events.Add(new Retreated(souls, Economy.SoulMultiplier(state.Souls)));
         return souls;

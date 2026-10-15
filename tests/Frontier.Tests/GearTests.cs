@@ -28,7 +28,7 @@ public sealed class GearTests
         double health = Vitality.MaxHp(state, FighterKind.Hero);
         double interval = Economy.Interval(state, FighterKind.Hero);
         new FrontierGame(state, new Random(1)).Equip(FighterKind.Hero, new Gear(0.5, 0.25, 0, 0, 0.2), GearLook.None);
-        Assert.Equal(1.5, Economy.Dps(state, FighterKind.Hero) / damage, 6);
+        Assert.Equal(1.5 * 1.2, Economy.Dps(state, FighterKind.Hero) / damage, 6);
         Assert.Equal(archer, Economy.Dps(state, FighterKind.First));
         Assert.Equal(1.25, Vitality.MaxHp(state, FighterKind.Hero) / health, 6);
         Assert.Equal(1.2, interval / Economy.Interval(state, FighterKind.Hero), 6);
@@ -84,20 +84,46 @@ public sealed class GearTests
     [Fact]
     public void ItemsHaveFrenchNames()
     {
-        Assert.Equal("Lame épique", Items.Name(Items.Weapon, 0, Items.Rank("epic")));
+        Assert.Equal("Épée épique", Items.Name(Items.Weapon, 0, Items.Rank("epic")));
         Assert.Equal("Bouclier commun", Items.Name(Items.Weapon, 0, 0, HeroRole.Tank));
         Assert.Equal("Arbalète commune", Items.Name(Items.Weapon, 1, 0, HeroRole.Archer));
-        Assert.Equal("Couronne légendaire", Items.Name(Items.Helm, 5, 3));
+        Assert.Equal("Ostensoir rare", Items.Name(Items.Weapon, 7, 1, HeroRole.Support));
+        Assert.Equal("Harnois commun", Items.Name(Items.Armor, 7, 0));
+        Assert.Equal("Morion légendaire", Items.Name(Items.Helm, 7, 3));
+        Assert.Equal("Couronne légendaire", Items.Name(Items.Helm, 9, 3));
+        Assert.Equal("Jambières communes", Items.Name(Items.Legs, 0, 0));
+        Assert.Equal("Hauts-de-chausses épiques", Items.Name(Items.Legs, 7, 2));
+        Assert.Equal("Solerets communs", Items.Name(Items.Feet, 1, 0));
+        Assert.Equal("Bottes légendaires", Items.Name(Items.Feet, 0, 3));
+        Assert.Equal("Gantelets rares", Items.Name(Items.Arms, 0, 1));
+        Assert.Equal("Mitaines communes", Items.Name(Items.Arms, 3, 0));
+        Assert.Equal("Chevalière commune", Items.Name(Items.Ring, 2, 0));
+        Assert.Equal("Anneau commun", Items.Name(Items.Ring, 0, 0));
+        Assert.Equal(["Arme", "Coiffe", "Armure", "Bras", "Jambes", "Pieds", "Anneau"], Items.Slots.Select(Items.SlotName));
         Assert.Equal("+12,5 % de dégâts", Items.Stat(Items.Damage, 12.5));
+        Assert.Equal("+3 % d'or des monstres", Items.Stat(Items.Gold, 3));
+        Assert.Equal("+8 % d'xp", Items.Stat(Items.Xp, 8));
+        Assert.Equal("+4,2 % de recharge de l'actif", Items.Stat(Items.Recharge, 4.2));
+        Assert.Equal("+6 % de dégâts aux boss", Items.Stat(Items.Boss, 6));
+        Assert.Equal("+2 % d'un effet inconnu", Items.Stat("chance", 2));
         Assert.Equal(0, Items.Rank("inconnue"));
     }
 
     [Fact]
-    public void EveryItemSymbolHasAColor()
+    public void EverySlotAndClassHasEightDistinctLooks()
     {
         Dictionary<char, Rgba> colors = ItemSprites.Colors(2);
-        IEnumerable<IReadOnlyList<string>> grids = ItemGrids.Weapons.Concat(ItemGrids.ClassWeapons.Values).Concat(ItemGrids.Armors).Concat(ItemGrids.Helms).Concat(ItemGrids.Worn);
-        Assert.All(grids, grid => Assert.Empty(ArtSprite.UnknownSymbols(grid, colors)));
-        Assert.All(Items.Slots, slot => Assert.Equal(10, ItemSprites.Icon(slot, 3, 3).Width));
+        List<IReadOnlyList<string>> grids =
+        [
+            .. Roles.All.SelectMany(role => WeaponGrids.Of(role.Role)), .. ItemGrids.Armors, .. ItemGrids.Helms,
+            .. GearGrids.Arms, .. GearGrids.Legs, .. GearGrids.Feet, .. GearGrids.Rings,
+        ];
+        Assert.Equal((Roles.All.Count + Items.Slots.Count - 1) * Items.Looks, grids.Count);
+        Assert.Equal(Items.Looks, ItemGrids.Worn.Count);
+        Assert.Equal(grids.Count, grids.Select(grid => string.Join("/", grid)).Distinct().Count());
+        Assert.All(grids.Concat(ItemGrids.Worn), grid => Assert.Empty(ArtSprite.UnknownSymbols(grid, colors)));
+        Assert.All(grids, grid => Assert.All(grid, row => Assert.Equal(10, row.Length)));
+        Assert.All(grids, grid => Assert.Equal(10, grid.Count));
+        Assert.All(Items.Slots, slot => Assert.Equal(10, ItemSprites.Icon(slot, 11, 3, HeroRole.Mage).Width));
     }
 }

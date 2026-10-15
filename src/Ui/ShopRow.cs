@@ -58,7 +58,7 @@ public partial class ShopRow : PanelContainer
         Rgba color = ItemSprites.Rarities[Math.Clamp(item.Rank, 0, ItemSprites.Rarities.Length - 1)].Main;
         _name.AddThemeColorOverride("font_color", new Color(color.R / 255f, color.G / 255f, color.B / 255f));
         string owner = item.Class is HeroRole role ? $" · pour les {Roles.Of(role).Name.ToLowerInvariant()}s" : string.Empty;
-        _detail.Text = $"Niveau {item.Level} · {item.Describe()}{owner}";
+        _detail.Text = $"{Items.SlotName(item.Slot)} · {Items.Required(item.Level)} · {item.Describe()}{owner}";
         _icon.Texture = SpriteTexture.From(ItemSprites.Icon(item.Slot, item.Look, item.Rank, item.Class));
     }
 

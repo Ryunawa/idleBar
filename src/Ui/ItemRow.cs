@@ -32,7 +32,7 @@ public partial class ItemRow : PanelContainer
         text.AddChild(name);
         string source = item.Source == "titan" ? " · tombé du titan" : string.Empty;
         string owner = item.Class is HeroRole role ? $" · pour les {Roles.Of(role).Name.ToLowerInvariant()}s" : string.Empty;
-        text.AddChild(WindowRows.Muted($"Niveau {item.Level} · {item.Describe()}{owner}{source}"));
+        text.AddChild(WindowRows.Muted($"{Items.SlotName(item.Slot)} · {Items.Required(item.Level)} · {item.Describe()}{owner}{source}"));
         line.AddChild(text);
         foreach ((string label, Action? pressed) in actions)
         {

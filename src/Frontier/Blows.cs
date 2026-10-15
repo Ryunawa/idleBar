@@ -7,7 +7,7 @@ public static class Blows
     public static void Swing(FrontierState state, FighterKind kind, Monster monster, double amount, EventLog events)
     {
         int index = (int)kind;
-        state.CritMeters[index] += (int)Math.Round(state.Gears[index].Critical * 100);
+        state.CritMeters[index] += state.Gears[index].Critical * 100;
         bool critical = state.CritMeters[index] >= 100;
         if (critical)
         {

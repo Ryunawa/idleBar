@@ -35,7 +35,9 @@ public static class Economy
     public static double HeroPower(FrontierState state) =>
         BaseDps(state, FighterKind.Hero, state.Level(FighterKind.Hero)) * Buff(state) * (1 + state.Gears[(int)FighterKind.Hero].Damage);
 
-    public static double Dps(FrontierState state, FighterKind kind) =>
+    public static double Dps(FrontierState state, FighterKind kind) => Force(state, kind) * (1 + state.Gears[(int)kind].Speed);
+
+    public static double Force(FrontierState state, FighterKind kind) =>
         BaseDps(state, kind, state.Level(kind)) * Buff(state) * Roles.Of(state.ClassOf(kind)).Dps * (1 + state.Gears[(int)kind].Damage) * Talents.Speed(state);
 
     public static double AllyDps(FrontierState state, Ally ally) =>
@@ -80,7 +82,7 @@ public static class Economy
         Math.Min(Balance.AbsenceMaxSeconds, Balance.AbsenceCapSeconds + state.Level(BuildingKind.Mill) * Balance.MillAbsenceSeconds);
 
     public static double FrontGoldPerSecond(FrontierState state) =>
-        BaseKillGold(state, false) / (MonsterHp(state.Stage) / Math.Max(1e-9, TotalDps(state)) + Balance.RespawnSeconds + Balance.ApproachSeconds);
+        BaseKillGold(state, false) * Plunder(state) / (MonsterHp(state.Stage) / Math.Max(1e-9, TotalDps(state)) + Balance.RespawnSeconds + Balance.ApproachSeconds);
 
     public static double AbsenceGoldPerSecond(FrontierState state) =>
         BaseGoldPerSecond(state) + Balance.AbsenceFrontShare * FrontGoldPerSecond(state);
@@ -127,7 +129,21 @@ public static class Economy
     public static bool IsBossStage(int stage) => stage % Balance.BossEvery == 0;
 
     public static double KillGold(FrontierState state, bool boss) =>
-        BaseKillGold(state, boss) * (state.FrenzyLeft > 0 ? Balance.FrenzyGold : 1) * Help.GoldFactor(state);
+        BaseKillGold(state, boss) * Plunder(state) * (state.FrenzyLeft > 0 ? Balance.FrenzyGold : 1) * Help.GoldFactor(state);
+
+    public static double Plunder(FrontierState state)
+    {
+        double bonus = 0;
+        foreach (FighterInfo fighter in Fighters.All)
+        {
+            if (state.Level(fighter.Kind) > 0)
+            {
+                bonus += state.Gears[(int)fighter.Kind].Gold;
+            }
+        }
+
+        return 1 + Math.Min(Balance.PlunderCap, bonus);
+    }
 
     public static double BaseKillGold(FrontierState state, bool boss) =>
         (MonsterHp(state.Stage) * Balance.KillGoldRatio + Balance.KillGoldFlat)

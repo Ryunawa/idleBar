@@ -6,7 +6,11 @@ namespace IdleBar.Online;
 
 public sealed partial class SocialSession
 {
-    public Task<string> EquipAsync(long item, FighterKind kind) => RunAsync(token => _api.EquipAsync(token, item, Fighters.Of(kind).Id));
+    public async Task<string> EquipAsync(long item, FighterKind kind)
+    {
+        await _frontier.SettleAsync();
+        return await RunAsync(token => _api.EquipAsync(token, item, Fighters.Of(kind).Id));
+    }
 
     public Task<string> UnequipAsync(string slot, FighterKind kind) => RunAsync(token => _api.UnequipAsync(token, slot, Fighters.Of(kind).Id));
 
@@ -26,7 +30,7 @@ public sealed partial class SocialSession
         string status = await RunAsync(token => _api.SalvageAsync(token, item.Id));
         if (status == SocialData.Ok)
         {
-            _frontier.Game?.Recycle(item.Rank, item.Source == Items.ShopSource, item.Level);
+            _frontier.Game?.Recycle(item.Rank, item.Source == Items.ShopSource, item.PriceStage);
         }
 
         return status;
@@ -37,6 +41,7 @@ public sealed partial class SocialSession
         int generation = _generation;
         Failure = null;
         int ticket = 0;
+        int retreats = _frontier.Game?.State.Retreats ?? 0;
         SocialData? data = await _frontier.SpendAsync((token, session, revision) =>
         {
             ticket = ++_sent;
@@ -51,7 +56,7 @@ public sealed partial class SocialSession
         if (ticket > _accepted)
         {
             _accepted = ticket;
-            Accept(data);
+            Accept(data, retreats);
         }
 
         return data.Status;

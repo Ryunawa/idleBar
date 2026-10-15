@@ -15,7 +15,8 @@ public sealed record ItemsData(int Max, IReadOnlyList<ItemData> Bag)
         ItemData? weapon = Equipped(kind, Items.Weapon);
         ItemData? armor = Equipped(kind, Items.Armor);
         ItemData? helm = Equipped(kind, Items.Helm);
-        return new GearLook(weapon?.Rank, armor?.Rank, helm?.Look, helm?.Rank ?? 0);
+        return new GearLook(weapon?.Rank, armor?.Rank, helm?.Look, helm?.Rank ?? 0,
+            Equipped(kind, Items.Arms)?.Rank, Equipped(kind, Items.Legs)?.Rank, Equipped(kind, Items.Feet)?.Rank);
     }
 
     public ItemData? Equipped(FighterKind kind, string slot) => Bag.FirstOrDefault(item => item.Wearer == kind && item.Slot == slot);
@@ -36,7 +37,8 @@ public sealed record ItemData(
     string? Role = null,
     string? Fighter = null,
     bool Bound = false,
-    int Upgrades = 0)
+    int Upgrades = 0,
+    int Stage = 0)
 {
     public int Rank => Items.Rank(Rarity);
 
@@ -47,6 +49,10 @@ public sealed record ItemData(
     public FighterKind? Wearer => Equipped ? Fighters.Parse(Fighter ?? Fighters.Of(FighterKind.Hero).Id) : null;
 
     public bool Fits(HeroRole role) => Class is not HeroRole owner || owner == role;
+
+    public bool Reached(int level) => level >= Level;
+
+    public int PriceStage => Stage > 0 ? Stage : Level;
 
     public IEnumerable<(string Stat, double Percent)> Stats =>
         StatB is string second && ValueB is double value

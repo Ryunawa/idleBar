@@ -44,6 +44,8 @@ set role authenticated;
 select pg_temp.expect_denied('select * from private.settings');
 select pg_temp.expect_denied('select * from public.frontiers');
 select pg_temp.expect_denied('select * from public.shop_offers');
+select pg_temp.expect_denied('select * from public.rarity_odds');
+select pg_temp.expect_denied('update public.rarity_odds set percent = 100');
 select pg_temp.expect_denied('update public.shop_offers set price = 1');
 select pg_temp.expect_denied('update public.frontiers set souls = 1000000');
 select pg_temp.expect_denied('select * from public.frontier_fighters');

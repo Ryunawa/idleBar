@@ -7,7 +7,7 @@ namespace IdleBar.Frontier;
 public static class Actives
 {
     public static double Cooldown(FrontierState state, FighterKind kind) =>
-        Roles.Of(state.ClassOf(kind)).Cooldown / (kind == FighterKind.Hero ? 1 : Balance.CompanionShare);
+        Roles.Of(state.ClassOf(kind)).Cooldown / (kind == FighterKind.Hero ? 1 : Balance.CompanionShare) / (1 + Math.Min(Balance.RechargeCap, state.Gears[(int)kind].Recharge));
 
     public static double Charge(FrontierState state, FighterKind kind) =>
         1 - Math.Clamp(state.ActiveTimers[(int)kind] / Cooldown(state, kind), 0, 1);
@@ -43,7 +43,7 @@ public static class Actives
     private static void Cast(FrontierState state, FighterKind kind, Monster monster, EventLog events)
     {
         HeroRole role = state.ClassOf(kind);
-        double hit = Economy.Dps(state, kind) * Roles.Of(role).Interval / Talents.Speed(state);
+        double hit = Economy.Force(state, kind) * Roles.Of(role).Interval / Talents.Speed(state);
         double xp = Balance.XpActive * Cooldown(state, kind);
         HitSource source = Blows.Source(kind);
         int raised = 0;

@@ -8,7 +8,6 @@ namespace IdleBar.Tests;
 public sealed class Shopper
 {
     private const double FighterWeight = 2;
-    private const double ArmorWeight = 0.5;
     private const double Reach = 20;
 
     private static readonly BuildingKind[] Preference =
@@ -39,7 +38,11 @@ public sealed class Shopper
         _ => (HeroRole.Mage, HeroRole.Archer),
     };
 
-    public void Restock(double clock) => Gear.Restock(_game.State, clock);
+    public void Restock(double clock)
+    {
+        Gear.Restock(_game.State, clock);
+        Gear.Wear(_game);
+    }
 
     public void Recruit()
     {
@@ -69,30 +72,29 @@ public sealed class Shopper
         return (best ?? cheapest) is { } pick && state.Gold >= pick.Cost && pick.Apply();
     }
 
+    public void Loot() => Gear.Loot(_game);
+
     private IEnumerable<(double Cost, double Value, Func<bool> Apply)> Options(FrontierState state)
     {
+        GearWorth worth = new(state);
+        double rate = FighterWeight * CombatRate(state) * Economy.TotalDps(state);
         foreach (FighterInfo fighter in Fighters.All)
         {
-            FighterKind kind = fighter.Kind;
-            if (state.Level(kind) <= 0)
+            for (int slot = 0; slot < Items.Slots.Count; slot++)
             {
-                continue;
-            }
-
-            foreach (string slot in Items.Slots)
-            {
-                double cost = Gear.UpgradeCost(state, kind, slot);
-                yield return (cost, Worth(state, kind, slot, Gear.UpgradeGain(kind, slot)) / cost, () => Gear.Upgrade(_game, kind, slot));
+                int index = slot;
+                if (Gear.Upgrade(worth, state, (int)fighter.Kind, slot) is (double cost, double gain))
+                {
+                    yield return (cost, rate * Math.Max(0, gain) / cost, () => Gear.Upgrade(_game, (int)fighter.Kind, index));
+                }
             }
         }
 
-        for (int offer = 0; offer < Gear.Offers.Count; offer++)
+        for (int offer = 0; offer < Gear.Offers; offer++)
         {
             int index = offer;
-            FighterKind wearer = Fighters.All.Select(fighter => fighter.Kind).Where(kind => state.Level(kind) > 0)
-                .MaxBy(kind => Worth(state, kind, Gear.Offers[index].Slot, Gear.OfferGain(kind, index)));
-            double price = Gear.Offers[index].Price;
-            yield return (price, Worth(state, wearer, Gear.Offers[index].Slot, Gear.OfferGain(wearer, index)) / price, () => Gear.Buy(_game, wearer, index));
+            double price = Gear.Price(index);
+            yield return (price, rate * Gear.OfferGain(worth, state, index) / price, () => Gear.Buy(_game, index));
         }
 
         for (int plot = 0; plot < FrontierState.PlotCount; plot++)
@@ -109,9 +111,6 @@ public sealed class Shopper
             }
         }
     }
-
-    private static double Worth(FrontierState state, FighterKind kind, string slot, double gain) =>
-        FighterWeight * (GearCase.Damages(slot) ? 1 : ArmorWeight) * CombatRate(state) * Economy.Dps(state, kind) * Math.Max(0, gain) / 100;
 
     private static BuildingKind? Next(FrontierState state)
     {

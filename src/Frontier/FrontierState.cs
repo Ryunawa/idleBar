@@ -54,7 +54,7 @@ public sealed class FrontierState
 
     public double[] Downed { get; } = new double[FighterCount];
 
-    public int[] CritMeters { get; } = new int[FighterCount];
+    public double[] CritMeters { get; } = new double[FighterCount];
 
     public double[] ActiveTimers { get; } = [0, Balance.ActiveStagger, 2 * Balance.ActiveStagger];
 

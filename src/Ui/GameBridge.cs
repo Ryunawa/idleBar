@@ -57,7 +57,7 @@ public sealed class GameBridge : IDisposable
 
     public event Action<FrontierGame?>? GameChanged;
 
-    public event Action? HeroMissing;
+    public event Action? HeroWanted;
 
     public Journal Journal { get; } = new();
 
@@ -134,6 +134,12 @@ public sealed class GameBridge : IDisposable
             {
                 _session?.RequestSave();
             }
+
+            if (frontierEvent is Retreated)
+            {
+                _dialogs?.AskClassNext();
+                HeroWanted?.Invoke();
+            }
         }
 
         Happened?.Invoke(events);
@@ -155,7 +161,7 @@ public sealed class GameBridge : IDisposable
         if (!_heroAsked && _session?.Status == SessionStatus.Ready && Game is { State.Hero: null })
         {
             _heroAsked = true;
-            HeroMissing?.Invoke();
+            HeroWanted?.Invoke();
         }
     }
 

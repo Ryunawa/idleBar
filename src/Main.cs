@@ -42,7 +42,7 @@ public partial class Main : Control
         _expanded.Lane.GoldArrived += _expanded.Glow;
         _game.Happened += _expanded.Lane.Receive;
         _expanded.Lane.ManageRequested += tab => _game.OpenTab(_placement.DialogScale, tab);
-        _game.HeroMissing += () => _game.AskHero(_placement.DialogScale);
+        _game.HeroWanted += () => _game.AskHero(_placement.DialogScale);
 
         BarPreferences preferences = BarPreferences.Load(PreferencesPath);
         _placement = new BarPlacement(GetWindow(), preferences);

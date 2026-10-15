@@ -11,6 +11,7 @@ public partial class MarketPanel : VBoxContainer
     private SocialSession? _social;
     private ShopSection _shop = null!;
     private Label _message = null!;
+    private Label _odds = null!;
     private bool _busy;
 
     public FrontierGame? Game { get; set; }
@@ -20,7 +21,9 @@ public partial class MarketPanel : VBoxContainer
         Name = "Marché";
         VBoxContainer rows = new();
         rows.AddThemeConstantOverride("separation", 6);
-        rows.AddChild(WindowRows.Muted("La boutique propose quatre objets tirés au hasard, au niveau de ton front, et se renouvelle toutes les 3 heures. Le serveur fixe les prix et prend l'or de ta dernière sauvegarde ; un objet acheté rejoint ton sac et reste lié à toi."));
+        rows.AddChild(WindowRows.Muted("La boutique propose quatre objets tirés au hasard parmi les sept emplacements, armes de toutes les classes comprises, au niveau de ton meilleur combattant, et se renouvelle toutes les 3 heures. Le serveur fixe les prix d'après ton front et prend l'or de ta dernière sauvegarde ; un objet acheté rejoint ton sac et reste lié à toi."));
+        _odds = WindowRows.Muted(string.Empty);
+        rows.AddChild(_odds);
         _shop = new ShopSection();
         _shop.Bought += offer => Act(social => social.BuyAsync(offer), "Objet acheté : il t'attend dans le sac.");
         rows.AddChild(_shop);
@@ -58,6 +61,8 @@ public partial class MarketPanel : VBoxContainer
         }
 
         _shop.Show(_social?.Data?.Shop);
+        _odds.Text = _social?.Data?.Shop?.OddsLine ?? string.Empty;
+        _odds.Visible = _odds.Text.Length > 0;
         Refresh();
     }
 

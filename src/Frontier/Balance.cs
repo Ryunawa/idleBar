@@ -121,6 +121,9 @@ public static class Balance
     public const double XpBossTaken = 3;
     public const double XpRevive = 10;
     public const double FallXp = 0.1;
+    public const double RechargeCap = 0.25;
+    public const double PlunderCap = 0.5;
+    public const double GearXpCap = 0.5;
 
     public const double ShopKills = 30;
     public const double UpgradeShare = 0.5;

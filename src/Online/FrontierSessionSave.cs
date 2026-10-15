@@ -58,8 +58,10 @@ public sealed partial class FrontierSession
             case FrontierReply.Ok when reply.Frontier is FrontierData data:
                 _refusals = 0;
                 _revision = data.Revision;
+                SavedRetreats = save.Retreats;
                 _local.Write(Copy(player, false, save));
                 SetStatus(SessionStatus.Ready);
+                Saved?.Invoke();
                 break;
             case FrontierReply.Elsewhere:
                 SetStatus(SessionStatus.Elsewhere);

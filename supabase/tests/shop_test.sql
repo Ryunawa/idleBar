@@ -71,18 +71,18 @@ select pg_temp.check(jsonb_array_length(public.get_social() #> '{shop,offers}') 
 select pg_temp.check((public.get_social() #>> '{shop,refresh_in}')::numeric between 0 and 10800, 'nouvel arrivage dans moins de trois heures');
 select pg_temp.check(not exists (
   select 1 from jsonb_array_elements(public.get_social() #> '{shop,offers}') offer
-  where (offer ->> 'sold')::boolean or (offer ->> 'level')::integer <> 31 or (offer ->> 'price')::numeric <= 0
-    or (offer ->> 'slot' = 'weapon') <> (offer ->> 'role' is not null)), 'offres au niveau atteint, armes avec une classe');
+  where (offer ->> 'sold')::boolean or (offer ->> 'level')::integer not between 15 and 23 or (offer ->> 'price')::numeric <= 0
+    or (offer ->> 'slot' = 'weapon') <> (offer ->> 'role' is not null)), 'offres au niveau des combattants, armes avec une classe');
 select pg_temp.check(public.get_social() #> '{shop,offers}' = public.get_social() #> '{shop,offers}', 'les offres restent les mêmes');
 reset role;
 
-update public.shop_offers set slot = 'weapon', role = 'tank', rarity = 'common', stat_a = 'damage', value_a = 6, stat_b = null, value_b = null,
+update public.shop_offers set item_level = 5, slot = 'weapon', role = 'tank', rarity = 'common', stat_a = 'damage', value_a = 6, stat_b = null, value_b = null,
   price = private.gear_base(player_id, 31, 'common')
 where player_id = 'a7777777-7777-7777-7777-7777777777a7' and position = 0;
-update public.shop_offers set slot = 'weapon', role = 'support', rarity = 'epic', stat_a = 'damage', value_a = 15, stat_b = 'healing', value_b = 7,
+update public.shop_offers set item_level = 5, slot = 'weapon', role = 'support', rarity = 'epic', stat_a = 'damage', value_a = 15, stat_b = 'healing', value_b = 7,
   price = private.gear_base(player_id, 31, 'epic')
 where player_id = 'a7777777-7777-7777-7777-7777777777a7' and position = 1;
-update public.shop_offers set slot = 'helm', role = null, rarity = 'common', stat_a = 'health', value_a = 9, stat_b = null, value_b = null,
+update public.shop_offers set item_level = 5, slot = 'helm', role = null, rarity = 'common', stat_a = 'health', value_a = 9, stat_b = null, value_b = null,
   price = private.gear_base(player_id, 31, 'common')
 where player_id = 'a7777777-7777-7777-7777-7777777777a7' and position in (2, 3);
 delete from public.items where owner_id = 'a7777777-7777-7777-7777-7777777777a7';

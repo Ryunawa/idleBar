@@ -46,6 +46,21 @@ public sealed class RetreatTests
     }
 
     [Fact]
+    public void ARetreatTakesOffEveryPieceOfGear()
+    {
+        FrontierState state = new() { Stage = 55, MaxStage = 55, LifetimeGold = 1e9, Fighters = [40, 20, 10] };
+        FrontierGame game = new(state, new Random(1));
+        foreach (FighterInfo fighter in Fighters.All)
+        {
+            game.Equip(fighter.Kind, Gear.None with { Damage = 0.5 }, new GearLook(1, 2, 3, 1));
+        }
+
+        Assert.Equal(24, game.Retreat());
+        Assert.All(state.Gears, gear => Assert.Equal(Gear.None, gear));
+        Assert.All(state.Worn, look => Assert.Equal(GearLook.None, look));
+    }
+
+    [Fact]
     public void ARetreatTooEarlyChangesNothing()
     {
         FrontierState state = new() { Stage = 30, MaxStage = 30, Gold = 500 };

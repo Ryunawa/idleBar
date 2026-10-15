@@ -10,7 +10,7 @@ public partial class GearSlotRow : PanelContainer
 {
     private const int IconScale = 3;
 
-    private readonly string _slot;
+    private string _slot = Items.Weapon;
     private TextureRect _icon = null!;
     private Label _name = null!;
     private Label _detail = null!;
@@ -19,11 +19,6 @@ public partial class GearSlotRow : PanelContainer
     private Button _remove = null!;
     private ItemData? _item;
     private int _most;
-
-    public GearSlotRow(string slot)
-    {
-        _slot = slot;
-    }
 
     public event Action<ItemData, int>? Upgraded;
 
@@ -59,14 +54,15 @@ public partial class GearSlotRow : PanelContainer
         AddChild(worn);
     }
 
-    public void Show(ItemData? item, HeroRole role)
+    public void Show(string slot, ItemData? item, HeroRole role)
     {
+        _slot = slot;
         _item = item;
         string owner = _slot == Items.Weapon ? $" de {Roles.Of(role).Name.ToLowerInvariant()}" : string.Empty;
         _name.Text = item?.Name ?? $"{Items.SlotName(_slot)}{owner} : rien d'équipé";
         Rgba color = ItemSprites.Rarities[Math.Clamp(item?.Rank ?? 0, 0, ItemSprites.Rarities.Length - 1)].Main;
         _name.AddThemeColorOverride("font_color", item is null ? new Color(0.7f, 0.7f, 0.7f) : new Color(color.R / 255f, color.G / 255f, color.B / 255f));
-        _detail.Text = item is null ? "Équipe un objet du sac, ou guette la boutique." : $"Niveau {item.Level} · {item.Describe()}{(item.Bound ? " · liée" : string.Empty)}";
+        _detail.Text = item is null ? "Équipe un objet du sac, ou guette la boutique." : $"{Items.Required(item.Level)} · {item.Describe()}{(item.Bound ? " · liée" : string.Empty)}";
         _icon.Texture = item is null ? null : SpriteTexture.From(ItemSprites.Icon(item.Slot, item.Look, item.Rank, item.Class));
         _upgrade.Visible = _max.Visible = _remove.Visible = item is not null;
     }

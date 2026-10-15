@@ -81,7 +81,7 @@ public sealed class ActiveTests
         Assert.Equal(Balance.StunCooldown, Actives.Cooldown(state, FighterKind.Hero), 6);
     }
 
-    private static double Hit(FrontierState state) => Economy.Dps(state, FighterKind.Hero) * Roles.Of(state.Role).Interval / Talents.Speed(state);
+    private static double Hit(FrontierState state) => Economy.Force(state, FighterKind.Hero) * Roles.Of(state.Role).Interval / Talents.Speed(state);
 
     private static (FrontierState State, Monster Monster, IReadOnlyList<FrontierEvent> Events, double Before) Cast(HeroRole role, Gear? gear = null)
     {
