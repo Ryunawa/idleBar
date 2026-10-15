@@ -1,4 +1,5 @@
 using System;
+using IdleBar.Frontier;
 
 namespace IdleBar.Scene;
 
@@ -59,13 +60,55 @@ public static class EffectsPainter
             r.Fill(layout.FrontX, -layout.Top, layout.FogX - layout.FrontX, FrontierLayout.Ground + layout.Top, Rgba.Hex("fffbe0").WithAlpha(0.35f));
         }
 
+        Bolt(r, motion, time);
+    }
+
+    public static void Judgment(ArtRaster r, SceneMotion motion, float time)
+    {
+        if (motion.Heavy && motion.Lightning > 0 && motion.BoltPath.Count >= 2)
+        {
+            Bolt(r, motion, time);
+        }
+    }
+
+    private static void Bolt(ArtRaster r, SceneMotion motion, float time)
+    {
         Rgba core = (int)(time * 30) % 2 == 0 ? Palette.White : Palette.Yellow;
+        int width = motion.Heavy ? 2 : 1;
         for (int index = 1; index < motion.BoltPath.Count; index++)
         {
             ArtPoint from = motion.BoltPath[index - 1];
             ArtPoint to = motion.BoltPath[index];
-            r.Line(from.X + 1, from.Y, to.X + 1, to.Y, Palette.Gold);
-            r.Line(from.X, from.Y, to.X, to.Y, core);
+            r.Line(from.X + width, from.Y, to.X + width, to.Y, Palette.Gold);
+            if (motion.Heavy)
+            {
+                r.Line(from.X - 1, from.Y, to.X - 1, to.Y, Palette.Gold);
+            }
+
+            for (int offset = 0; offset < width; offset++)
+            {
+                r.Line(from.X + offset, from.Y, to.X + offset, to.Y, core);
+            }
+        }
+    }
+
+    public static void Storm(ArtRaster r, FrontierState state, FrontierLayout layout, FrontierScene scene)
+    {
+        const float Every = 0.9f;
+        if (state.StormLeft <= 0 || scene.Box(state, layout) is not MonsterBox box || scene.Time % Every > 0.12f)
+        {
+            return;
+        }
+
+        int strike = (int)(scene.Time / Every);
+        int x = box.CenterX + strike % 3 * 4 - 4;
+        Rgba core = strike % 2 == 0 ? Palette.White : Palette.Yellow;
+        for (int y = -2; y < box.Y + 2; y += 3)
+        {
+            int next = x + (y / 3 % 2 == 0 ? 1 : -1);
+            r.Line(x + 1, y, next + 1, y + 3, Palette.Gold);
+            r.Line(x, y, next, y + 3, core);
+            x = next;
         }
     }
 

@@ -4,6 +4,7 @@ public enum WindowTab
 {
     Fighters,
     Hero,
+    Skills,
     Loot,
     Market,
     Village,

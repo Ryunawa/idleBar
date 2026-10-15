@@ -8,7 +8,8 @@ public sealed class FrontierState
     public const int FighterCount = 3;
     public const int BuildingCount = 12;
     public const int PlotCount = 12;
-    public const int SkillCount = 3;
+    public const int SlotCount = 3;
+    public const int NodeCount = 15;
 
     public double Time { get; set; }
 
@@ -46,7 +47,13 @@ public sealed class FrontierState
 
     public int[] Levels { get; set; } = new int[PlotCount];
 
-    public double[] Cooldowns { get; set; } = new double[SkillCount];
+    public int[] Learned { get; } = new int[NodeCount];
+
+    public SkillKind?[] Slots { get; } = new SkillKind?[SlotCount];
+
+    public double[] Cooldowns { get; } = new double[NodeCount];
+
+    public bool[] PlacedThisRun { get; } = new bool[NodeCount];
 
     public double[] Timers { get; } = new double[FighterCount];
 
@@ -68,6 +75,12 @@ public sealed class FrontierState
 
     public double FuryLeft { get; set; }
 
+    public double StormLeft { get; set; }
+
+    public double ShieldLeft { get; set; }
+
+    public double HarvestLeft { get; set; }
+
     public double FrenzyLeft { get; set; }
 
     public List<double> Rations { get; } = [];
@@ -87,6 +100,8 @@ public sealed class FrontierState
     public long ConvoySequence { get; set; }
 
     public double? Chicken { get; set; }
+
+    public bool Lured { get; set; }
 
     public double ChickenTimer { get; set; } = Balance.ChickenFirst;
 

@@ -67,7 +67,9 @@ public static class Battle
             return;
         }
 
-        amount *= monster.Boss ? (1 + Talents.BossDamage(state)) * (1 + BossGear(state, source)) : 1;
+        amount *= monster.Boss && source != HitSource.Judgment
+            ? (1 + Talents.BossDamage(state)) * (1 + BossGear(state, source)) * (state.StormLeft > 0 ? 1 + Balance.StormBossBonus : 1)
+            : 1;
         monster.Hp -= amount;
         events.Add(new Hit(source, amount, critical, ally, big));
         if (monster.Hp <= 0)

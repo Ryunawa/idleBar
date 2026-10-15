@@ -62,6 +62,6 @@ public static class HeroSprites
             sprite = sprite.Over(ArtSprite.Parse(HeroGrids.MageHat, colors));
         }
 
-        return new HeroFigure(sprite, sprite.Silhouette(Palette.PicoRed), sprite.Silhouette(Palette.PicoWhite), sprite.Lying().Faded(Palette.Lavender, 0.5f), sprite.FirstRow);
+        return new HeroFigure(sprite, sprite.Silhouette(Palette.PicoRed), sprite.Silhouette(Palette.PicoYellow), sprite.Silhouette(Palette.PicoWhite), sprite.Lying().Faded(Palette.Lavender, 0.5f), sprite.FirstRow);
     }
 }

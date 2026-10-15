@@ -29,7 +29,15 @@ public static class Front
         if (state.Stage > state.MaxStage)
         {
             state.MaxStage = state.Stage;
-            state.BestStage = Math.Max(state.BestStage, state.Stage);
+            if (state.Stage > state.BestStage)
+            {
+                state.BestStage = state.Stage;
+                if (state.BestStage % Balance.BossEvery == 1)
+                {
+                    events.Add(new PointEarned(SkillTree.Points(state)));
+                }
+            }
+
             foreach (PlotInfo plot in Plots.All)
             {
                 if (plot.Unlock == state.MaxStage)
@@ -43,14 +51,6 @@ public static class Front
                 if (fighter.Unlock > 1 && fighter.Unlock == state.MaxStage)
                 {
                     events.Add(new CompanionReady(fighter.Kind));
-                }
-            }
-
-            foreach (SkillInfo skill in Skills.All)
-            {
-                if (skill.Unlock == state.MaxStage)
-                {
-                    events.Add(new SkillUnlocked(skill.Kind));
                 }
             }
         }

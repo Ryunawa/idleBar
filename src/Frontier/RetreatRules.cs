@@ -42,7 +42,8 @@ public static class RetreatRules
         state.RespawnIn = Balance.BossRetrySeconds;
         Array.Clear(state.Timers);
         Skirmish.Restore(state);
-        state.FuryLeft = 0;
+        SkillCasts.Stop(state);
+        SkillTree.NewRun(state);
         state.FrenzyLeft = 0;
         Actives.Stagger(state);
         Array.Clear(state.Guards);

@@ -8,19 +8,16 @@ public static class Absence
     {
         double away = Math.Max(0, seconds);
         double counted = Math.Min(away, Economy.AbsenceCap(state));
-        state.FuryLeft = 0;
+        SkillCasts.Stop(state);
         state.FrenzyLeft = 0;
         Convoys.Clear(state);
         double gold = Economy.AbsenceGoldPerSecond(state) * counted;
         state.Earn(gold);
-        for (int index = 0; index < state.Cooldowns.Length; index++)
-        {
-            state.Cooldowns[index] = Math.Max(0, state.Cooldowns[index] - away);
-        }
-
+        SkillCasts.Elapse(state, away);
         Skirmish.Restore(state);
         Help.Elapse(state, away, events);
         state.Chicken = null;
+        state.Lured = false;
         state.ChickenTimer = Math.Max(Balance.ChickenFirst, state.ChickenTimer - away);
         events.Add(new Returned(away, counted, gold));
         return gold;

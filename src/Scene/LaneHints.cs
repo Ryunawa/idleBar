@@ -9,7 +9,7 @@ public static class LaneHints
     public static string? Describe(LaneTarget target, FrontierState state) => target.Kind switch
     {
         TargetKind.Chicken => "Poule dorée : clique, or ×7 pendant 20 s",
-        TargetKind.Skill => Skill((SkillKind)target.Index, state),
+        TargetKind.Skill => Slot(target.Index, state),
         TargetKind.Monster => Monster(state),
         TargetKind.Fighter => Fighter((FighterKind)target.Index, state),
         TargetKind.Ally => Reinforcement(target.Index, state),
@@ -25,16 +25,22 @@ public static class LaneHints
     public static string Wait(double seconds) =>
         seconds >= 60 ? $"{Math.Ceiling(seconds / 60)} min" : $"{Math.Ceiling(seconds)} s";
 
-    private static string Skill(SkillKind kind, FrontierState state)
+    private static string? Slot(int slot, FrontierState state)
     {
-        SkillInfo skill = Skills.Of(kind);
-        if (!Skills.Unlocked(state, kind))
+        if (slot < 0 || slot >= FrontierState.SlotCount)
         {
-            return $"{skill.Name}, verrouillée : atteins le niveau {skill.Unlock} pour la débloquer. {skill.Effect}";
+            return null;
         }
 
-        double cooldown = state.Cooldowns[(int)kind];
-        return $"{skill.Name} : {skill.Effect} " + (cooldown > 0 ? $"Prête dans {Wait(cooldown)}." : "Prête.");
+        if (state.Slots[slot] is not SkillKind kind)
+        {
+            int free = SkillTree.Free(state);
+            string points = free > 0 ? $" ({free} point{(free > 1 ? "s" : string.Empty)} à dépenser)" : string.Empty;
+            string rule = SkillTree.CanRedistribute(state) ? string.Empty : " · une compétence déjà placée dans la partie y repart avec sa recharge complète";
+            return $"Emplacement de compétence vide : clique pour en placer une depuis l'onglet Compétences{points}{rule}";
+        }
+
+        return $"{Skills.Of(kind).Name} : {SkillText.Now(state, kind)} {SkillText.Status(state, kind)}";
     }
 
     private static string? Monster(FrontierState state)

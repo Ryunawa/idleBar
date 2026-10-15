@@ -38,6 +38,8 @@ public sealed class SceneMotion
 
     public float Lightning { get; set; }
 
+    public bool Heavy { get; set; }
+
     public float Shake { get; set; }
 
     public float Flash { get; set; }
@@ -85,6 +87,7 @@ public sealed class SceneMotion
         Decay(AllySwing, dt / SwingSeconds);
 
         Lightning = Math.Max(0, Lightning - dt);
+        Heavy = Heavy && Lightning > 0;
         Shake = Math.Max(0, Shake - dt);
         Flash = Math.Max(0, Flash - dt);
         Rain = Math.Max(0, Rain - dt);

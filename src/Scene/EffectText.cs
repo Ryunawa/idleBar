@@ -21,7 +21,7 @@ public static class EffectText
             BuildingKind.Tower => $"+{Percent(Balance.TowerBonus * level)} de dégâts du second compagnon",
             BuildingKind.Portal => $"+{Percent(Balance.PortalBonus * level)} de tout l'or",
             BuildingKind.Barracks => $"+{Percent(Balance.BarracksBonus * level)} de dégâts du premier compagnon et de PV des compagnons",
-            BuildingKind.Chapel => $"compétences rechargées {Times(Skills.Of(SkillKind.Smite).Cooldown / Economy.SkillCooldown(state, SkillKind.Smite))} plus vite",
+            BuildingKind.Chapel => $"compétences rechargées {Times(Economy.ChapelPace(state))} plus vite",
             BuildingKind.Tavern => $"+{Percent(Balance.TavernBonus * level)} de dégâts des clics",
             BuildingKind.Workshop => $"-{Percent(Math.Min(Balance.WorkshopMax, Balance.WorkshopDiscount * level))} sur l'équipement",
             _ => $"+{(Economy.BossSeconds(state) - Balance.BossSeconds).ToString("0.#", French)} s au chrono des boss",

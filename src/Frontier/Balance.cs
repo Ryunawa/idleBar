@@ -49,9 +49,20 @@ public static class Balance
 
     public const double SmiteHits = 25;
     public const double SmiteInterval = 0.6;
+    public const double ThunderHits = 8;
+    public const double StormBossBonus = 0.5;
+    public const double JudgmentShare = 0.05;
+    public const double JudgmentBossShare = 0.02;
     public const double FuryFactor = 2;
+    public const double RageSeconds = 10;
+    public const double TenacitySeconds = 2;
+    public const double RallyHealth = 0.5;
     public const double GoldRainSeconds = 30;
     public const double GoldRainKills = 10;
+    public const double DownpourSeconds = 15;
+    public const double HarvestGold = 3;
+    public const double BranchRecharge = 0.1;
+    public const int RedistributeStage = 10;
 
     public const double AbsenceCapSeconds = 8 * 3600;
     public const double AchievementSeconds = 1;
@@ -126,7 +137,7 @@ public static class Balance
     public const double GearXpCap = 0.5;
 
     public const double ShopKills = 30;
-    public const double UpgradeShare = 0.5;
+    public const double UpgradeShare = 0.3;
     public const double RefundShare = 0.25;
     public const double UpgradeGrowth = 1.25;
     public const double UpgradeBonus = 0.2;

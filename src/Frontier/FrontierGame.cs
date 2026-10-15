@@ -105,50 +105,20 @@ public sealed class FrontierGame
         return gold;
     }
 
-    public bool UseSkill(SkillKind kind)
-    {
-        int index = (int)kind;
-        if (Frozen || !Skills.Unlocked(State, kind) || State.Cooldowns[index] > 0)
-        {
-            return false;
-        }
+    public bool UseSkill(int slot) => !Frozen && SkillCasts.Use(State, slot, Events);
 
-        switch (kind)
-        {
-            case SkillKind.Smite when !Battle.Fighting(State):
-                return false;
-            case SkillKind.Smite:
-                Events.Add(new Smote());
-                double hit = Economy.HeroPower(State) * Balance.SmiteInterval * Balance.SmiteHits;
-                Battle.Damage(State, hit, HitSource.Smite, Events);
-                break;
-            case SkillKind.Fury:
-                State.FuryLeft = Skills.Of(kind).Duration;
-                Events.Add(new FuryStarted());
-                break;
-            case SkillKind.GoldRain:
-                double gold = Math.Max(Economy.GoldPerSecond(State) * Balance.GoldRainSeconds, Economy.KillGold(State, false) * Balance.GoldRainKills);
-                State.Earn(gold);
-                Events.Add(new GoldRained(gold));
-                break;
-        }
+    public bool Learn(SkillKind kind) => !Frozen && SkillTree.Learn(State, kind, Events);
 
-        State.Cooldowns[index] = Economy.SkillCooldown(State, kind);
-        State.SkillsUsed++;
-        return true;
-    }
+    public bool Place(int slot, SkillKind? kind) => !Frozen && SkillTree.Place(State, slot, kind, Events);
+
+    public bool Redistribute() => !Frozen && SkillTree.Redistribute(State, Events);
 
     private void Tick(double dt)
     {
         FrontierState state = State;
         state.Time += dt;
         state.Earn(Economy.GoldPerSecond(state) * dt);
-        for (int index = 0; index < state.Cooldowns.Length; index++)
-        {
-            state.Cooldowns[index] = Math.Max(0, state.Cooldowns[index] - dt);
-        }
-
-        state.FuryLeft = Math.Max(0, state.FuryLeft - dt);
+        SkillCasts.Elapse(state, dt);
         state.FrenzyLeft = Math.Max(0, state.FrenzyLeft - dt);
         Help.Elapse(state, dt, Events);
         Convoys.Update(state, dt, Events);

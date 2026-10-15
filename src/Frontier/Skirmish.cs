@@ -121,7 +121,7 @@ public static class Skirmish
     private static void Strike(FrontierState state, Monster monster, EventLog events)
     {
         monster.Strikes++;
-        if (Target(state, monster) is not Combatant target)
+        if (state.ShieldLeft > 0 || Target(state, monster) is not Combatant target)
         {
             return;
         }

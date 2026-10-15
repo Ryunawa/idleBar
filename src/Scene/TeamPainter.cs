@@ -89,11 +89,13 @@ public static class TeamPainter
         }
 
         int y = FrontierLayout.Ground - figure.Standing.Height;
-        if (state.FuryLeft > 0 && (int)(time * 10) % 2 == 0)
+        bool blink = (int)(time * 10) % 2 == 0;
+        ArtSprite? glow = state.ShieldLeft > 0 && (state.ShieldLeft > 1 || blink) ? figure.Aura : state.FuryLeft > 0 && blink ? figure.Rage : null;
+        if (glow is not null)
         {
-            r.Blit(figure.Rage, stance.X - 1, y);
-            r.Blit(figure.Rage, stance.X + 1, y);
-            r.Blit(figure.Rage, stance.X, y - 1);
+            r.Blit(glow, stance.X - 1, y);
+            r.Blit(glow, stance.X + 1, y);
+            r.Blit(glow, stance.X, y - 1);
         }
 
         r.Blit(stance.Hurt ? figure.Flash : figure.Standing, stance.X, y);

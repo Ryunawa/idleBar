@@ -10,7 +10,11 @@ public sealed record BossFailed : FrontierEvent;
 
 public sealed record BossCalled : FrontierEvent;
 
-public sealed record SkillUnlocked(SkillKind Kind) : FrontierEvent;
+public sealed record PointEarned(int Points) : FrontierEvent;
+
+public sealed record SkillsChanged : FrontierEvent;
+
+public sealed record SkillCast(SkillKind Kind, double Amount = 0) : FrontierEvent;
 
 public sealed record StageReached(int Stage, bool Boss) : FrontierEvent;
 
@@ -31,12 +35,6 @@ public sealed record Supplied(int Stacks) : FrontierEvent;
 public sealed record ChickenAppeared : FrontierEvent;
 
 public sealed record FrenzyStarted : FrontierEvent;
-
-public sealed record GoldRained(double Gold) : FrontierEvent;
-
-public sealed record Smote : FrontierEvent;
-
-public sealed record FuryStarted : FrontierEvent;
 
 public sealed record Retreated(int Souls, double Multiplier) : FrontierEvent;
 

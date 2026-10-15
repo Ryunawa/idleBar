@@ -116,7 +116,7 @@ select pg_temp.check(current_setting('test.reply')::jsonb ->> 'status' = 'ok', '
 select pg_temp.check((pg_temp.worn('hero', 'weapon') ->> 'upgrades')::integer = 3, 'trois améliorations');
 reset role;
 select pg_temp.check(abs((current_setting('test.reply')::jsonb ->> 'spent')::numeric
-  - 30 * (private.frontier_hp(31) * 0.35 + 2) * 0.5 * (1.25 ^ 3 - 1) / 0.25) < 0.01, 'améliorations au prix du record');
+  - 30 * (private.frontier_hp(31) * 0.35 + 2) * 0.3 * (1.25 ^ 3 - 1) / 0.25) < 0.01, 'améliorations à 30 % du prix d''achat au niveau du front');
 set role authenticated;
 select pg_temp.check(pg_temp.upgrade(current_setting('test.item')::bigint, 98) ->> 'status' = 'maxed', 'cent améliorations au plus');
 select pg_temp.check(pg_temp.upgrade(current_setting('test.item')::bigint, 0) ->> 'status' = 'refused', 'au moins une amélioration');

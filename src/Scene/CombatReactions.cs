@@ -63,6 +63,11 @@ public static class CombatReactions
                 motion.MonsterFlash = 0.14f;
                 fx.Float(amount + " !", target.CenterX, target.Y - 3, Palette.Gold, 1.2f);
                 break;
+            case HitSource.Judgment:
+                motion.MonsterFlash = 0.2f;
+                fx.Float("JUGEMENT : " + amount, target.CenterX, 1, Palette.White, 1.6f, 0);
+                fx.Burst(target.CenterX, target.Y, 12, Spark, random);
+                break;
         }
     }
 
@@ -126,11 +131,11 @@ public static class CombatReactions
         _ => null,
     };
 
-    public static void Bolt(FrontierScene scene, MonsterBox target, Random random)
+    public static void Bolt(FrontierScene scene, MonsterBox target, Random random, bool deep = false)
     {
         scene.Motion.BoltPath.Clear();
         int x = target.CenterX;
-        for (int y = -2; y <= target.Y + 2; y += 3)
+        for (int y = -2; y <= (deep ? target.MiddleY : target.Y + 2); y += 3)
         {
             scene.Motion.BoltPath.Add(new ArtPoint(x, y));
             x = Math.Clamp(x + random.Next(-2, 3), target.CenterX - 4, target.CenterX + 4);

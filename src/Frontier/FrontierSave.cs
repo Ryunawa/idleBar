@@ -28,4 +28,9 @@ public sealed record FrontierSave(
     int Armor = 0,
     HeroLook? Hero = null,
     IReadOnlyList<string?>? Companions = null,
-    IReadOnlyList<double>? Xp = null);
+    IReadOnlyList<double>? Xp = null,
+    IReadOnlyList<string>? Skills = null,
+    IReadOnlyList<int>? SkillLevels = null,
+    IReadOnlyList<string?>? Slots = null,
+    IReadOnlyList<bool>? Placed = null,
+    IReadOnlyList<double>? SkillCooldowns = null);

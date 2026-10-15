@@ -15,7 +15,7 @@ public sealed class LaneHitsTests
         FrontierState state = new();
         FrontierScene scene = new(new Random(1));
         int y = SkillPainter.ButtonY(Layout) + 2;
-        for (int index = 0; index < FrontierState.SkillCount; index++)
+        for (int index = 0; index < FrontierState.SlotCount; index++)
         {
             LaneTarget target = LaneHits.Find(state, Layout, scene, SkillPainter.ButtonX(Layout, index) + 2, y);
             Assert.Equal(new LaneTarget(TargetKind.Skill, index), target);

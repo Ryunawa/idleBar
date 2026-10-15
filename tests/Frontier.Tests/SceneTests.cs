@@ -18,7 +18,8 @@ public sealed class SceneTests
         IEnumerable<IReadOnlyList<string>> others =
         [
             FighterGrids.Archer, FighterGrids.Mage, FighterGrids.ChickenUp, FighterGrids.ChickenDown,
-            FighterGrids.Lock, FighterGrids.Bread, FighterGrids.Bolt, FighterGrids.Flame, FighterGrids.Coins,
+            FighterGrids.Lock, FighterGrids.Bread, SkillGrids.Bolt, SkillGrids.Storm, SkillGrids.Judgment, SkillGrids.Flame,
+            SkillGrids.Shield, SkillGrids.Banner, SkillGrids.Coins, SkillGrids.Sheaf, SkillGrids.Lure,
         ];
         return monsters.Concat(others).Select((grid, index) => new object[] { index, grid });
     }
@@ -157,7 +158,6 @@ public sealed class SceneTests
             }
         }
 
-        state.Cooldowns = [0, 300, 1200];
         return state;
     }
 }

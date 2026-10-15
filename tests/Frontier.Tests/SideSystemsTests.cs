@@ -94,50 +94,21 @@ public sealed class SideSystemsTests
     }
 
     [Fact]
-    public void SkillsStayLockedUntilTheirStage()
-    {
-        FrontierState state = new() { Stage = 24, MaxStage = 24 };
-        FrontierGame game = new(state, new Random(1));
-        Assert.False(game.UseSkill(SkillKind.Fury));
-        Assert.Equal(0, state.SkillsUsed);
-        state.MaxStage = 25;
-        Assert.True(game.UseSkill(SkillKind.Fury));
-        Assert.False(Skills.Unlocked(state, SkillKind.GoldRain));
-    }
-
-    [Fact]
-    public void ReachingAStageUnlocksItsSkill()
-    {
-        FrontierState state = new() { Stage = 14, MaxStage = 14, Kills = Balance.MonstersPerStage - 1 };
-        state.Fighters[(int)FighterKind.Hero] = 500;
-        FrontierGame game = new(state, new Random(1));
-        BattleTests.Run(game, 10);
-        Assert.Contains(game.Events.Drain(), frontierEvent => frontierEvent is SkillUnlocked { Kind: SkillKind.Smite });
-    }
-
-    [Fact]
     public void AFrozenGameIgnoresThePlayer()
     {
         FrontierState state = new() { Gold = 1e9, Stage = 60, MaxStage = 60, BestStage = 60, BossHeld = false };
         FrontierGame game = new(state, new Random(1)) { Frozen = true };
         Assert.False(game.Buy(new Construction(0, BuildingKind.Forge)));
         Assert.Equal(0, game.BuyMany(new Construction(0, BuildingKind.Forge), 3));
-        Assert.False(game.UseSkill(SkillKind.GoldRain));
+        state.Learned[(int)SkillKind.GoldRain] = 1;
+        state.Slots[0] = SkillKind.GoldRain;
+        Assert.False(game.UseSkill(0));
+        Assert.False(game.Learn(SkillKind.Fury));
+        Assert.False(game.Place(1, SkillKind.GoldRain));
         Assert.Equal(0, game.Retreat());
         Assert.Equal(1e9, state.Gold);
         game.Frozen = false;
         Assert.True(game.Buy(new Construction(0, BuildingKind.Forge)));
-    }
-
-    [Fact]
-    public void ASkillCannotBeUsedTwiceInARow()
-    {
-        FrontierState state = new() { MaxStage = 50 };
-        FrontierGame game = new(state, new Random(1));
-        Assert.True(game.UseSkill(SkillKind.Fury));
-        Assert.False(game.UseSkill(SkillKind.Fury));
-        Assert.Equal(Skills.Of(SkillKind.Fury).Duration, state.FuryLeft);
-        Assert.False(game.UseSkill(SkillKind.Smite));
     }
 
     [Fact]

@@ -75,8 +75,8 @@ public partial class GearSlotRow : PanelContainer
         }
 
         bool full = item.Upgrades >= Balance.MaxUpgrades;
-        _most = GearPrices.MaxUpgrades(state, item.Rank, item.Upgrades);
-        _upgrade.Text = full ? "Au maximum" : $"Améliorer · {NumberFormat.Gold(GearPrices.Upgrade(state, item.Rank, item.Upgrades, 1))}";
+        _most = GearPrices.MaxUpgrades(state, item.PriceStage, item.Rank, item.Upgrades);
+        _upgrade.Text = full ? "Au maximum" : $"Améliorer · {NumberFormat.Gold(GearPrices.Upgrade(state, item.PriceStage, item.Rank, item.Upgrades, 1))}";
         _upgrade.Disabled = !idle || full || _most < 1;
         _max.Text = $"Max ×{_most}";
         _max.Disabled = !idle || _most < 1;

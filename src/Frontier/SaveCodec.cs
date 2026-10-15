@@ -7,9 +7,10 @@ namespace IdleBar.Frontier;
 
 public static class SaveCodec
 {
-    public const int CurrentVersion = 4;
+    public const int CurrentVersion = 5;
     public const int OldestVersion = 2;
     public const int LevelCurveVersion = 4;
+    public const int TreeVersion = 5;
 
     public static JsonSerializerOptions Options { get; } = new() { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
 
@@ -27,7 +28,7 @@ public static class SaveCodec
         [.. state.Fighters],
         [.. state.Built.Select(kind => kind is BuildingKind built ? Buildings.Of(built).Id : null)],
         [.. state.Levels],
-        [.. state.Cooldowns],
+        SkillSave.LegacyCooldowns(state),
         [.. state.Achievements.Order(StringComparer.Ordinal)],
         state.MonstersKilled,
         state.BossesKilled,
@@ -39,7 +40,12 @@ public static class SaveCodec
         state.Armor,
         state.Hero,
         [.. state.Companions.Select(role => role is HeroRole picked ? Roles.Of(picked).Id : null)],
-        [.. state.Xp]);
+        [.. state.Xp],
+        SkillSave.Ids(state),
+        SkillSave.Levels(state),
+        SkillSave.SlotIds(state),
+        SkillSave.PlacedFlags(state),
+        SkillSave.Cooldowns(state));
 
     public static FrontierState Restore(FrontierSave save)
     {
@@ -57,7 +63,6 @@ public static class SaveCodec
             Kills = Math.Clamp(save.Kills, 0, Balance.MonstersPerStage - 1),
             BossHeld = save.BossHeld && !Economy.IsBossStage(stage),
             Fighters = FighterLevels(save),
-            Cooldowns = Fit(save.Cooldowns, FrontierState.SkillCount),
             MonstersKilled = save.MonstersKilled,
             BossesKilled = save.BossesKilled,
             Chickens = save.Chickens,
@@ -73,11 +78,21 @@ public static class SaveCodec
         state.Fighters[(int)FighterKind.Hero] = Math.Max(1, state.Fighters[(int)FighterKind.Hero]);
         PlaceBuildings(state, save);
         state.Achievements.UnionWith(save.Achievements.Where(Achievements.Known));
+        if (save.Version >= TreeVersion)
+        {
+            SkillSave.Restore(state, save);
+        }
+        else
+        {
+            SkillSave.Grant(state, save.Cooldowns);
+        }
+
         return state;
     }
 
     public static bool Valid(FrontierSave save) =>
-        double.IsFinite(save.Gold) && double.IsFinite(save.LifetimeGold) && save.Cooldowns.All(double.IsFinite) && (save.Xp ?? []).All(double.IsFinite);
+        double.IsFinite(save.Gold) && double.IsFinite(save.LifetimeGold) && save.Cooldowns.All(double.IsFinite) && (save.Xp ?? []).All(double.IsFinite)
+        && (save.SkillCooldowns ?? []).All(double.IsFinite);
 
     public static string Serialize(FrontierSave save) => JsonSerializer.Serialize(save, Options);
 

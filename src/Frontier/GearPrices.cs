@@ -6,18 +6,18 @@ public static class GearPrices
 {
     public static double Offer(FrontierState state, int level, int rarity) => Base(state, level, rarity);
 
-    public static double Upgrade(FrontierState state, int rarity, int upgrades, int count)
+    public static double Upgrade(FrontierState state, int stage, int rarity, int upgrades, int count)
     {
         double growth = Balance.UpgradeGrowth;
-        return Base(state, state.BestStage, rarity) * Balance.UpgradeShare * Math.Pow(growth, upgrades) * (Math.Pow(growth, count) - 1) / (growth - 1);
+        return Base(state, Math.Max(Math.Max(1, stage), state.MaxStage), rarity) * Balance.UpgradeShare * Math.Pow(growth, upgrades) * (Math.Pow(growth, count) - 1) / (growth - 1);
     }
 
     public static double Refund(FrontierState state, int rarity, int level) => Base(state, level, rarity) * Balance.RefundShare;
 
-    public static int MaxUpgrades(FrontierState state, int rarity, int upgrades)
+    public static int MaxUpgrades(FrontierState state, int stage, int rarity, int upgrades)
     {
         int count = 0;
-        while (upgrades + count < Balance.MaxUpgrades && Upgrade(state, rarity, upgrades, count + 1) <= state.Gold)
+        while (upgrades + count < Balance.MaxUpgrades && Upgrade(state, stage, rarity, upgrades, count + 1) <= state.Gold)
         {
             count++;
         }

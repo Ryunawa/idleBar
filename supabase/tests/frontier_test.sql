@@ -37,7 +37,7 @@ select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000001
 select pg_temp.check(public.start_frontier('00000000-0000-0000-0000-000000000001') #>> '{frontier,revision}' = '0', 'partie créée');
 select pg_temp.check(public.start_frontier('00000000-0000-0000-0000-000000000001') #> '{frontier,fighters}' = '[1, 0, 0]', 'le héros part au niveau 1');
 select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000001') #> '{frontier,plots}' = '[null, null, null, null, null, null, null, null, null, null, null, null]', 'douze emplacements vides');
-select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000001') #> '{frontier,cooldowns}' = '[0, 0, 0]', 'compétences prêtes');
+select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000001') #> '{frontier,cooldowns}' = '[0, 0, 0]' and public.claim_frontier('00000000-0000-0000-0000-000000000001') #> '{frontier,skill_cooldowns}' = '[]', 'aucune compétence, aucune recharge');
 select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000001') #> '{frontier,achievements}' = '[]', 'aucun succès');
 
 select pg_temp.check(pg_temp.save(0, '00000000-0000-0000-0000-000000000001') = 'ok', 'sauvegarde acceptée');
@@ -45,7 +45,6 @@ select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000001
 select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000001') #>> '{frontier,stage}' = '12', 'niveau relu');
 select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000001') #>> '{frontier,plots,0}' = 'forge', 'bâtiment relu');
 select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000001') #>> '{frontier,levels,0}' = '3', 'niveau du bâtiment relu');
-select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000001') #>> '{frontier,cooldowns,1}' = '30.5', 'recharge relue');
 select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000001') #>> '{frontier,achievements,0}' = 'monstres-100', 'succès relu');
 
 select pg_temp.check(pg_temp.save(0, '00000000-0000-0000-0000-000000000001') = 'conflict', 'ancienne révision refusée');
@@ -101,4 +100,4 @@ select pg_temp.check(not exists (select 1 from public.frontier_plots where playe
 select pg_temp.check((select count(*) from public.plots) = 12 and (select max(unlock_stage) from public.plots) = 101, 'douze emplacements, le dernier au boss 100');
 select pg_temp.check((select count(*) from public.building_kinds) = 12, 'douze bâtiments');
 select pg_temp.check((select count(*) from public.achievement_kinds) = 30, 'trente succès connus');
-select pg_temp.check((select min_client_version from private.settings) = '0.9.1', 'la 0.9.1 est exigée');
+select pg_temp.check((select min_client_version from private.settings) = '0.10.0', 'la 0.10.0 est exigée');

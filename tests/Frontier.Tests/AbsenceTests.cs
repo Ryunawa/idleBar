@@ -47,10 +47,12 @@ public sealed class AbsenceTests
     {
         FrontierState state = new();
         state.Cooldowns[(int)SkillKind.GoldRain] = 1_000;
+        state.StormLeft = 10;
         state.FrenzyLeft = 10;
         FrontierGame game = new(state, new Random(1));
         game.Absent(400);
         Assert.Equal(600, state.Cooldowns[(int)SkillKind.GoldRain], 6);
+        Assert.Equal(0, state.StormLeft);
         Assert.Equal(0, state.FrenzyLeft);
     }
 }

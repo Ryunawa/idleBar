@@ -52,6 +52,8 @@ public sealed class ScenePainter
         OverlayPainter.Bubble(_frame, layout, scene.Village.Crier);
         OverlayPainter.Floats(_frame, layout, scene.Fx);
         OverlayPainter.Monster(_frame, state, layout, scene);
+        EffectsPainter.Judgment(_frame, scene.Motion, scene.Time);
+        EffectsPainter.Storm(_frame, state, layout, scene);
         TeamPainter.Bars(_frame, state, layout, scene);
         OverlayPainter.Banner(_frame, layout, scene.Banners, scene.Motion, scene.Time);
         SkillPainter.Paint(_frame, state, layout, hoveredSkill, scene.Time);

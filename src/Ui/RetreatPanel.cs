@@ -18,7 +18,7 @@ public partial class RetreatPanel : VBoxContainer
     {
         Name = "Repli";
         AddThemeConstantOverride("separation", 8);
-        AddChild(WindowRows.Muted("Se replier abandonne le terrain conquis : tu repars du niveau 1, sans or, sans bâtiments ni compagnons, et tout l'équipement porté retourne dans le sac, même au-delà de sa limite. Le Marché renouvelle ses offres, et tu choisis de nouveau la classe de ton héros. En échange, tu gagnes des âmes : chaque âme donne +2,5 % de dégâts et d'or pour toujours. Les âmes viennent de tout l'or gagné depuis le début, et chacune demande plus d'or que la précédente ; un repli ajoute celles gagnées depuis le dernier."));
+        AddChild(WindowRows.Muted("Se replier abandonne le terrain conquis : tu repars du niveau 1, sans or, sans bâtiments ni compagnons, et tout l'équipement porté retourne dans le sac, même au-delà de sa limite. Le Marché renouvelle ses offres, et tu choisis de nouveau la classe de ton héros. Tes points de compétence et tes compétences restent, et tu peux les redistribuer gratuitement en début de partie. En échange, tu gagnes des âmes : chaque âme donne +2,5 % de dégâts et d'or pour toujours. Les âmes viennent de tout l'or gagné depuis le début, et chacune demande plus d'or que la précédente ; un repli ajoute celles gagnées depuis le dernier."));
         _souls = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         AddChild(WindowRows.Card(_souls));
         _offer = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };

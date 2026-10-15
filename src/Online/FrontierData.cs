@@ -37,14 +37,20 @@ public sealed record FrontierData(
     int HeroHairColor = 0,
     int HeroOutfit = 0,
     IReadOnlyList<string?>? Companions = null,
-    IReadOnlyList<double>? Xp = null)
+    IReadOnlyList<double>? Xp = null,
+    IReadOnlyList<string>? Skills = null,
+    IReadOnlyList<int>? SkillLevels = null,
+    IReadOnlyList<string?>? Slots = null,
+    IReadOnlyList<bool>? Placed = null,
+    IReadOnlyList<double>? SkillCooldowns = null)
 {
     public HeroLook? Hero => HeroName is null ? null : new HeroLook(HeroName, HeroSkin, HeroHair, HeroHairColor, HeroOutfit);
 
     public FrontierSave ToSave() => WithHero(new FrontierSave(
-        SaveCodec.CurrentVersion, Gold, LifetimeGold, Souls, Retreats, Stage, MaxStage, BestStage, Kills, BossHeld,
+        Skills is null ? SaveCodec.LevelCurveVersion : SaveCodec.CurrentVersion, Gold, LifetimeGold, Souls, Retreats, Stage, MaxStage, BestStage, Kills, BossHeld,
         Fighters, Plots, Levels, Cooldowns, Achievements,
-        MonstersKilled, BossesKilled, Chickens, Clicks, SkillsUsed, Armor: Armor, Companions: Companions, Xp: Xp));
+        MonstersKilled, BossesKilled, Chickens, Clicks, SkillsUsed, Armor: Armor, Companions: Companions, Xp: Xp,
+        Skills: Skills, SkillLevels: SkillLevels, Slots: Slots, Placed: Placed, SkillCooldowns: SkillCooldowns));
 
     public FrontierSave WithHero(FrontierSave save) => save with { Role = HeroRole, RoleRetreats = RoleRetreats, Hero = Hero };
 }

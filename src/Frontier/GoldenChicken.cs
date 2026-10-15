@@ -10,6 +10,11 @@ public static class GoldenChicken
     {
         if (state.Chicken is double flight)
         {
+            if (state.Lured)
+            {
+                state.ChickenTimer -= dt;
+            }
+
             flight += dt;
             if (flight >= Balance.ChickenFlight)
             {
@@ -43,9 +48,21 @@ public static class GoldenChicken
         return true;
     }
 
+    public static void Lure(FrontierState state, EventLog events)
+    {
+        state.Chicken = 0;
+        state.Lured = true;
+        events.Add(new ChickenAppeared());
+    }
+
     private static void Leave(FrontierState state, Random random)
     {
         state.Chicken = null;
-        state.ChickenTimer = (Balance.ChickenMin + random.NextDouble() * (Balance.ChickenMax - Balance.ChickenMin)) / Economy.ChickenPace(state);
+        if (!state.Lured)
+        {
+            state.ChickenTimer = (Balance.ChickenMin + random.NextDouble() * (Balance.ChickenMax - Balance.ChickenMin)) / Economy.ChickenPace(state);
+        }
+
+        state.Lured = false;
     }
 }

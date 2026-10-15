@@ -65,8 +65,9 @@ public static class Economy
     public static double ClickDamage(FrontierState state) =>
         Math.Max(1, HeroPower(state) * Balance.ClickShare * (1 + Balance.TavernBonus * state.Level(BuildingKind.Tavern)));
 
-    public static double SkillCooldown(FrontierState state, SkillKind kind) =>
-        Skills.Of(kind).Cooldown / (1 + Math.Min(Balance.ChapelMax, Balance.ChapelBonus * state.Level(BuildingKind.Chapel)));
+    public static double ChapelPace(FrontierState state) => 1 + Math.Min(Balance.ChapelMax, Balance.ChapelBonus * state.Level(BuildingKind.Chapel));
+
+    public static double SkillCooldown(FrontierState state, SkillKind kind) => Skills.Of(kind).Cooldown / ChapelPace(state) / SkillTree.Pace(state, kind);
 
     public static double BossSeconds(FrontierState state) =>
         Balance.BossSeconds + Math.Min(Balance.BelfryMax, Balance.BelfrySeconds * state.Level(BuildingKind.Belfry));
@@ -129,7 +130,7 @@ public static class Economy
     public static bool IsBossStage(int stage) => stage % Balance.BossEvery == 0;
 
     public static double KillGold(FrontierState state, bool boss) =>
-        BaseKillGold(state, boss) * Plunder(state) * (state.FrenzyLeft > 0 ? Balance.FrenzyGold : 1) * Help.GoldFactor(state);
+        BaseKillGold(state, boss) * Plunder(state) * (state.FrenzyLeft > 0 ? Balance.FrenzyGold : 1) * (state.HarvestLeft > 0 ? Balance.HarvestGold : 1) * Help.GoldFactor(state);
 
     public static double Plunder(FrontierState state)
     {

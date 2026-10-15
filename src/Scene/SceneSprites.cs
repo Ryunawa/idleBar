@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using IdleBar.Frontier;
 
 namespace IdleBar.Scene;
 
@@ -23,8 +24,18 @@ public static class SceneSprites
 
     public static ArtSprite Bread { get; } = ArtSprite.Parse(FighterGrids.Bread);
 
-    public static IReadOnlyList<ArtSprite> Skills { get; } =
-        [ArtSprite.Parse(FighterGrids.Bolt), ArtSprite.Parse(FighterGrids.Flame), ArtSprite.Parse(FighterGrids.Coins)];
+    public static IReadOnlyDictionary<SkillKind, ArtSprite> SkillIcons { get; } = new Dictionary<SkillKind, ArtSprite>
+    {
+        [SkillKind.Smite] = ArtSprite.Parse(SkillGrids.Bolt),
+        [SkillKind.Storm] = ArtSprite.Parse(SkillGrids.Storm),
+        [SkillKind.Judgment] = ArtSprite.Parse(SkillGrids.Judgment),
+        [SkillKind.Fury] = ArtSprite.Parse(SkillGrids.Flame),
+        [SkillKind.HolyShield] = ArtSprite.Parse(SkillGrids.Shield),
+        [SkillKind.Rally] = ArtSprite.Parse(SkillGrids.Banner),
+        [SkillKind.GoldRain] = ArtSprite.Parse(SkillGrids.Coins),
+        [SkillKind.Harvest] = ArtSprite.Parse(SkillGrids.Sheaf),
+        [SkillKind.Lure] = ArtSprite.Parse(SkillGrids.Lure),
+    };
 
     public static IReadOnlyList<ArtSprite?> Monsters { get; } =
         [.. MonsterGrids.Templates.Select(grid => grid is null ? null : ArtSprite.Parse(grid))];

@@ -8,4 +8,5 @@ public enum HitSource
     Click,
     Smite,
     Ally,
+    Judgment,
 }

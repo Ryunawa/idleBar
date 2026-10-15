@@ -11,6 +11,7 @@ public sealed class SaveTests
         FrontierState state = new() { Gold = 1234.5, LifetimeGold = 99_999, Souls = 31, Retreats = 1, Stage = 47, MaxStage = 52, BestStage = 61, Kills = 3 };
         Village.Build(state, BuildingKind.Market, 8);
         state.Fighters[(int)FighterKind.Second] = 18;
+        state.Learned[(int)SkillKind.Fury] = 1;
         state.Cooldowns[(int)SkillKind.Fury] = 120;
         state.Achievements.Add("boss-1");
         state.Companions[1] = HeroRole.Support;

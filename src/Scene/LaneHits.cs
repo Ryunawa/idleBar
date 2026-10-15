@@ -81,7 +81,7 @@ public static class LaneHits
     private static LaneTarget Skill(FrontierLayout layout, int x, int y)
     {
         int top = SkillPainter.ButtonY(layout);
-        for (int index = 0; index < FrontierState.SkillCount; index++)
+        for (int index = 0; index < FrontierState.SlotCount; index++)
         {
             int left = SkillPainter.ButtonX(layout, index);
             if (x >= left && x < left + layout.SkillSize && y >= top && y < top + layout.SkillSize)

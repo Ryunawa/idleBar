@@ -29,22 +29,4 @@ public static class FighterGrids
     public static IReadOnlyList<string> Lock { get; } = [".666.", "6...6", "99999", "99099", "99099", "99999"];
 
     public static IReadOnlyList<string> Bread { get; } = [".fff.", "f9f9f", ".fff."];
-
-    public static IReadOnlyList<string> Bolt { get; } =
-    [
-        "......a9...", ".....aa9...", "....aa9....", "...aa9.....", "..aaaaaa9..", "......aa9..",
-        ".....aa9...", "....aa9....", "...aa9.....", "...a9......", "..a9.......",
-    ];
-
-    public static IReadOnlyList<string> Flame { get; } =
-    [
-        ".....8.....", "....88.....", "....888..8.", "...88988.8.", "..88999888.", "..89999998.",
-        ".8899aa9988", ".899aaaa998", ".89aa77aa98", "..89a77a98.", "...888888..",
-    ];
-
-    public static IReadOnlyList<string> Coins { get; } =
-    [
-        "..9.....9..", "...........", "....999....", "...9aaa9...", "...9a7a9.9.", "9..9aaa9...",
-        "....999....", ".999...999.", "9aaa9.9aaa9", "9a7a9.9a7a9", ".999...999.",
-    ];
 }

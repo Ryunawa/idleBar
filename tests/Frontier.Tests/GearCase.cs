@@ -81,13 +81,13 @@ public sealed class GearCase
         Gear[] gears = Current();
         double before = worth.Score(gears);
         gears[fighter] = GearWorth.Sum(GearWorth.Minus(gears[fighter], _values[piece]), Gear.Of(_pieces[piece].Stats(1)));
-        return (GearPrices.Upgrade(state, _pieces[piece].Rarity, _pieces[piece].Upgrades, 1), worth.Score(gears) / before - 1);
+        return (GearPrices.Upgrade(state, _pieces[piece].Stage, _pieces[piece].Rarity, _pieces[piece].Upgrades, 1), worth.Score(gears) / before - 1);
     }
 
     public bool Upgrade(FrontierGame game, int fighter, int slot)
     {
         int piece = _worn[fighter][slot];
-        double cost = piece < 0 ? double.PositiveInfinity : GearPrices.Upgrade(game.State, _pieces[piece].Rarity, _pieces[piece].Upgrades, 1);
+        double cost = piece < 0 ? double.PositiveInfinity : GearPrices.Upgrade(game.State, _pieces[piece].Stage, _pieces[piece].Rarity, _pieces[piece].Upgrades, 1);
         if (game.State.Gold < cost)
         {
             return false;

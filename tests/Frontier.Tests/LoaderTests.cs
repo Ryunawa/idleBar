@@ -1,4 +1,6 @@
 using System;
+using System.Text.Json;
+using IdleBar.Cloud;
 using IdleBar.Frontier;
 using IdleBar.Online;
 using Xunit;
@@ -126,6 +128,18 @@ public sealed class LoaderTests
         Assert.Equal(["support", null], SaveArguments.From(SaveCodec.Capture(plan.State), 1, Guid.Empty).PCompanions);
     }
 
+    [Fact]
+    public void TheServerReplyKeepsTheOldCooldownsApart()
+    {
+        string json = """{"revision":3,"stage":5,"max_stage":5,"best_stage":41,"fighters":[1,0,0],"plots":[],"levels":[],"cooldowns":[0,0,1800],"achievements":[],"skills":["gold_rain"],"skill_levels":[0],"skill_cooldowns":[1500],"placed":[false],"slots":[null,null,null]}""";
+        FrontierData? data = JsonSerializer.Deserialize<FrontierData>(json, SupabaseJson.Options);
+        Assert.NotNull(data);
+        FrontierState state = FrontierLoader.Plan(data, null, Now).State;
+        Assert.Equal(1500, SkillCasts.Wait(state, SkillKind.GoldRain));
+        Assert.False(SkillTree.Known(state, SkillKind.GoldRain));
+        Assert.Equal([0, 0, 1500], SaveArguments.From(SaveCodec.Capture(state), 3, Guid.Empty).PCooldowns);
+    }
+
     private static FrontierData Data(FrontierState state, int revision, double away, Guid? savedBy = null)
     {
         FrontierSave save = SaveCodec.Capture(state);
@@ -133,6 +147,7 @@ public sealed class LoaderTests
             revision, Now, away, save.Gold, save.LifetimeGold, save.Souls, save.Retreats, save.Stage, save.MaxStage,
             save.BestStage, save.Kills, save.BossHeld, save.MonstersKilled,
             save.BossesKilled, save.Chickens, save.Clicks, save.SkillsUsed, save.Fighters, save.Plots, save.Levels,
-            save.Cooldowns, save.Achievements, savedBy, save.Armor, Companions: save.Companions);
+            save.Cooldowns, save.Achievements, savedBy, save.Armor, Companions: save.Companions,
+            Skills: save.Skills, SkillLevels: save.SkillLevels, Slots: save.Slots, Placed: save.Placed, SkillCooldowns: save.SkillCooldowns);
     }
 }

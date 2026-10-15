@@ -66,7 +66,15 @@ public partial class FrontierLane
                 game.CatchChicken();
                 break;
             case TargetKind.Skill:
-                game.UseSkill((SkillKind)_hovered.Index);
+                if (_hovered.Index >= 0 && _hovered.Index < FrontierState.SlotCount && game.State.Slots[_hovered.Index] is null)
+                {
+                    ManageRequested?.Invoke(WindowTab.Skills);
+                }
+                else
+                {
+                    game.UseSkill(_hovered.Index);
+                }
+
                 break;
             case TargetKind.Monster:
                 _scene.LastStrike = point;

@@ -28,10 +28,16 @@ public sealed record SaveArguments(
     long PSkillsUsed,
     int PArmor,
     IReadOnlyList<string?> PCompanions,
-    IReadOnlyList<double> PXp)
+    IReadOnlyList<double> PXp,
+    IReadOnlyList<string> PSkills,
+    IReadOnlyList<int> PSkillLevels,
+    IReadOnlyList<string?> PSlots,
+    IReadOnlyList<bool> PPlaced,
+    IReadOnlyList<double> PSkillCooldowns)
 {
     public static SaveArguments From(FrontierSave save, int revision, Guid session) => new(
         revision, session, save.Gold, save.LifetimeGold, save.Souls, save.Retreats, save.Stage, save.MaxStage, save.BestStage,
         save.Kills, save.BossHeld, save.Fighters, save.Plots, save.Levels, save.Cooldowns,
-        save.Achievements, save.MonstersKilled, save.BossesKilled, save.Chickens, save.Clicks, save.SkillsUsed, save.Armor, save.Companions ?? [], save.Xp ?? []);
+        save.Achievements, save.MonstersKilled, save.BossesKilled, save.Chickens, save.Clicks, save.SkillsUsed, save.Armor, save.Companions ?? [], save.Xp ?? [],
+        save.Skills ?? [], save.SkillLevels ?? [], save.Slots ?? [], save.Placed ?? [], save.SkillCooldowns ?? []);
 }

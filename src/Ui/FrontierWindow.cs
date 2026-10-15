@@ -14,6 +14,7 @@ public partial class FrontierWindow : Window
     private Label _wealth = null!;
     private FightersPanel _fighters = null!;
     private HeroPanel _hero = null!;
+    private SkillsPanel _skills = null!;
     private LootPanel _loot = null!;
     private MarketPanel _market = null!;
     private VillagePanel _village = null!;
@@ -54,6 +55,7 @@ public partial class FrontierWindow : Window
         _tabs = new TabContainer { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
         _fighters = new FightersPanel();
         _hero = new HeroPanel();
+        _skills = new SkillsPanel();
         _loot = new LootPanel();
         _market = new MarketPanel();
         _village = new VillagePanel();
@@ -64,6 +66,7 @@ public partial class FrontierWindow : Window
         _help = new HelpPanel();
         _tabs.AddChild(_fighters);
         _tabs.AddChild(_hero);
+        _tabs.AddChild(_skills);
         _tabs.AddChild(_loot);
         _tabs.AddChild(_market);
         _tabs.AddChild(_village);
@@ -111,6 +114,7 @@ public partial class FrontierWindow : Window
     {
         _fighters.Game = _game;
         _hero.Game = _game;
+        _skills.Game = _game;
         _loot.Game = _game;
         _market.Game = _game;
         _village.Game = _game;
@@ -131,6 +135,7 @@ public partial class FrontierWindow : Window
         _loot.Refresh();
         _market.Refresh();
         _hero.Refresh();
+        _skills.Refresh();
         _village.Refresh();
         _retreat.Refresh();
         _achievements.Refresh();

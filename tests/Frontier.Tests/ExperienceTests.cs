@@ -128,7 +128,9 @@ public sealed class ExperienceTests
         double common = 30 * (Economy.MonsterHp(31) * 0.35 + 2);
         Assert.Equal(common, GearPrices.Offer(state, 31, 0), 3);
         Assert.Equal(common * 3, GearPrices.Offer(state, 31, 2), 3);
-        Assert.Equal(common * 0.5 * (Math.Pow(1.25, 3) - 1) / 0.25, GearPrices.Upgrade(state, 0, 0, 3), 3);
+        Assert.Equal(common * 0.3 * (Math.Pow(1.25, 3) - 1) / 0.25, GearPrices.Upgrade(state, 31, 0, 0, 3), 3);
+        state.BestStage = 150;
+        Assert.Equal(common * 0.3, GearPrices.Upgrade(state, 31, 0, 0, 1), 3);
         Assert.Equal(1.6, Items.Upgraded(1, 3), 6);
     }
 
