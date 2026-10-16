@@ -21,6 +21,7 @@ public partial class FrontierWindow : Window
     private RetreatPanel _retreat = null!;
     private AchievementsPanel _achievements = null!;
     private GuildPanel _guild = null!;
+    private ResearchPanel _research = null!;
     private TitanPanel _titan = null!;
     private HelpPanel _help = null!;
     private double _sinceRefresh;
@@ -62,6 +63,7 @@ public partial class FrontierWindow : Window
         _retreat = new RetreatPanel();
         _achievements = new AchievementsPanel();
         _guild = new GuildPanel();
+        _research = new ResearchPanel();
         _titan = new TitanPanel();
         _help = new HelpPanel();
         _tabs.AddChild(_fighters);
@@ -72,6 +74,7 @@ public partial class FrontierWindow : Window
         _tabs.AddChild(_village);
         _tabs.AddChild(_retreat);
         _tabs.AddChild(_guild);
+        _tabs.AddChild(_research);
         _tabs.AddChild(_titan);
         _tabs.AddChild(_achievements);
         _tabs.AddChild(_help);
@@ -82,6 +85,7 @@ public partial class FrontierWindow : Window
     public void Connect(SocialSession social)
     {
         _guild.Connect(social);
+        _research.Connect(social);
         _loot.Connect(social);
         _market.Connect(social);
         _titan.Connect(social);
@@ -140,6 +144,7 @@ public partial class FrontierWindow : Window
         _retreat.Refresh();
         _achievements.Refresh();
         _guild.Refresh();
+        _research.Refresh();
         _titan.Refresh();
     }
 }

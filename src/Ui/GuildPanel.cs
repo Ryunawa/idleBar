@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Godot;
+using IdleBar.Frontier;
 using IdleBar.Online;
 
 namespace IdleBar.Ui;
@@ -12,6 +13,7 @@ public partial class GuildPanel : VBoxContainer
     private LineEdit _name = null!;
     private LineEdit _code = null!;
     private Label _rejoin = null!;
+    private Label _seals = null!;
     private VBoxContainer _guild = null!;
     private Label _title = null!;
     private HBoxContainer _chief = null!;
@@ -28,9 +30,11 @@ public partial class GuildPanel : VBoxContainer
         Name = "Guilde";
         VBoxContainer rows = new();
         rows.AddThemeConstantOverride("separation", 8);
+        _seals = WindowRows.Heading(string.Empty);
+        rows.AddChild(_seals);
         _lonely = new VBoxContainer();
         _lonely.AddThemeConstantOverride("separation", 8);
-        _lonely.AddChild(WindowRows.Muted("Une guilde réunit jusqu'à 20 joueurs. Ses membres s'envoient des renforts et des convois, et comptent ensemble leurs monstres contre le titan de la semaine. On la rejoint seulement avec son code."));
+        _lonely.AddChild(WindowRows.Muted("Une guilde réunit jusqu'à 20 joueurs. Ses membres s'envoient des renforts et des convois, comptent ensemble leurs monstres contre le titan de la semaine et financent une recherche avec leurs sceaux. On la rejoint seulement avec son code."));
         _name = new LineEdit { PlaceholderText = "Nom de la guilde", MaxLength = 24, SizeFlagsHorizontal = SizeFlags.ExpandFill };
         _lonely.AddChild(Line(_name, "Fonder", () => Act(social => social.CreateGuildAsync(_name.Text), "Guilde fondée : partage son code avec tes amis.")));
         _code = new LineEdit { PlaceholderText = "Code de 6 caractères", MaxLength = 6, SizeFlagsHorizontal = SizeFlags.ExpandFill };
@@ -87,13 +91,15 @@ public partial class GuildPanel : VBoxContainer
 
         double rejoin = _social.Left(data.RejoinIn);
         _rejoin.Text = rejoin > 0 ? $"Tu pourras rejoindre une guilde dans {GuildMessages.Wait(rejoin)}." : string.Empty;
+        string seals = $"Sceaux : {data.Research?.Seals ?? 0}";
+        _seals.Text = data.Guild is null ? $"{seals} · gardés pour ta future guilde" : $"{seals} · à verser dans l'onglet « Recherche »";
         if (data.Help is HelpData help)
         {
             double hero = _social.Left(help.HeroReadyIn);
             double convoy = _social.Left(help.ConvoyReadyIn);
             string heroText = hero > 0 ? $"Ton héros repart en renfort dans {GuildMessages.Wait(hero)}." : "Ton héros peut partir en renfort.";
             string convoyText = convoy > 0 ? $"Prochain convoi dans {GuildMessages.Wait(convoy)}." : "Un convoi est prêt.";
-            _ready.Text = $"{heroText} {convoyText} Chaque aide se recharge en 4 h.";
+            _ready.Text = $"{heroText} {convoyText} Chaque aide se recharge en {ResearchText.Hours(GuildResearch.CooldownMinutes(data.ResearchLevels) / 60.0)}.";
         }
     }
 
@@ -120,9 +126,9 @@ public partial class GuildPanel : VBoxContainer
             _chief.Visible = guild.Leader;
             foreach (MemberData member in guild.Members)
             {
-                MemberRow row = MemberRow.Create(member, guild.Leader, _social.Left(help.HeroReadyIn), _social.Left(help.ConvoyReadyIn), _social.Left(member.ConvoyIn));
-                row.HelpRequested += kind => Act(social => social.SendHelpAsync(member.Id, kind),
-                    kind == SocialApi.HeroHelp ? $"Ton héros combat 30 min aux côtés de {member.Name}." : $"Convoi envoyé à {member.Name}.", true);
+                MemberRow row = MemberRow.Create(member, guild.Leader, _social.Left(help.HeroReadyIn), _social.Left(help.ConvoyReadyIn), _social.Left(member.ConvoyIn), _social.Data.ResearchLevels);
+                row.HelpRequested += kind => Act(social => social.SendHelpAsync(member.Id, kind), kind == SocialApi.HeroHelp
+                    ? $"Ton héros combat {GuildResearch.AllyMinutes(_social.Data?.ResearchLevels)} min aux côtés de {member.Name}." : $"Convoi envoyé à {member.Name}.", true);
                 row.KickRequested += () => Act(social => social.KickAsync(member.Id), $"{member.Name} ne fait plus partie de la guilde.");
                 _members.AddChild(row);
             }

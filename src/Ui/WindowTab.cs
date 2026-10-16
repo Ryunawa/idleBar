@@ -10,6 +10,7 @@ public enum WindowTab
     Village,
     Retreat,
     Guild,
+    Research,
     Titan,
     Achievements,
     Help,

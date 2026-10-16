@@ -28,6 +28,7 @@ public static class FrontierJournal
         Boosted boosted => $"Un convoi de ta guilde arrive : +{boosted.Gold} % d'or.",
         LootFound found => $"Butin : {found.Name}, à équiper dans l'onglet Équipement.",
         Recycled recycled => $"Objet recyclé : +{NumberFormat.Gold(recycled.Gold)}.",
+        ResearchDone done => $"Recherche terminée : {Researches.Of(done.Kind).Name} niveau {done.Level} ({ResearchText.Effect(done.Kind, done.Level)}).",
         TitanAppeared { Fallen: false } appeared => $"Le titan de la semaine, {Titans.Name(appeared.Kind)}, menace toutes les frontières : il lui reste {Math.Ceiling(appeared.Left * 100)} % de ses PV.",
         TitanWounded wounded => $"{Titans.Name(wounded.Kind)} vacille : plus que {Math.Ceiling(wounded.Left * 100)} % de ses PV.",
         TitanFell fell => $"Le titan est tombé : {Titans.Name(fell.Kind)} ne menace plus la frontière. Réclame ta récompense dans l'onglet Titan.",

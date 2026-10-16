@@ -8,7 +8,6 @@ namespace IdleBar.Ui;
 
 public partial class MemberRow : PanelContainer
 {
-    private const int FrontMax = 3;
     private const double ConvoyFull = 7140;
     private const int SpriteScale = 2;
     private const string ConfirmKick = "Confirmer";
@@ -17,7 +16,7 @@ public partial class MemberRow : PanelContainer
 
     public event Action? KickRequested;
 
-    public static MemberRow Create(MemberData member, bool leader, double heroReady, double convoyReady, double convoyIn)
+    public static MemberRow Create(MemberData member, bool leader, double heroReady, double convoyReady, double convoyIn, ResearchView? research)
     {
         MemberRow row = new() { ThemeTypeVariation = WindowSkin.Card };
         HBoxContainer line = new();
@@ -40,11 +39,11 @@ public partial class MemberRow : PanelContainer
 
         if (!member.Me)
         {
-            line.AddChild(row.Offer("Mon héros", heroReady > 0 || member.Heroes >= FrontMax,
-                heroReady > 0 ? $"Ton héros repart dans {GuildMessages.Wait(heroReady)}." : "Ton héros combat 30 min sur son front, en plus du sien.",
+            line.AddChild(row.Offer("Mon héros", heroReady > 0 || member.Heroes >= GuildResearch.FrontMax(research),
+                heroReady > 0 ? $"Ton héros repart dans {GuildMessages.Wait(heroReady)}." : $"Ton héros combat {GuildResearch.AllyMinutes(research)} min sur son front, en plus du sien.",
                 () => row.HelpRequested?.Invoke(SocialApi.HeroHelp)));
             line.AddChild(row.Offer("Convoi", convoyReady > 0 || convoyIn >= ConvoyFull,
-                convoyReady > 0 ? $"Ton prochain convoi part dans {GuildMessages.Wait(convoyReady)}." : "+50 % d'or pendant 30 min, jusqu'à 2 h en tout.",
+                convoyReady > 0 ? $"Ton prochain convoi part dans {GuildMessages.Wait(convoyReady)}." : $"+{GuildResearch.ConvoyGold(research)} % d'or pendant 30 min, jusqu'à 2 h en tout.",
                 () => row.HelpRequested?.Invoke(SocialApi.ConvoyHelp)));
             if (leader)
             {

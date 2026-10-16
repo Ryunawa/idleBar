@@ -148,6 +148,8 @@ public sealed partial class SocialSession
             watcher.Sight(titan.ToView(), !quiet);
         }
 
+        _frontier.Game?.Study(data.ResearchLevels, !quiet);
+
         bool settled = _frontier.Game?.State.Retreats == retreats && _frontier.SavedRetreats == retreats;
         if (_frontier.Game is FrontierGame wearer && data.Items is ItemsData items)
         {

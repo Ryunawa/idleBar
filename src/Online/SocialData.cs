@@ -14,7 +14,9 @@ public sealed record SocialData(
     ItemsData? Items = null,
     int? Revision = null,
     double? Spent = null,
-    ShopData? Shop = null)
+    ShopData? Shop = null,
+    ResearchData? Research = null,
+    int? Given = null)
 {
     public const string Ok = "ok";
     public const string Missing = "missing";
@@ -47,6 +49,13 @@ public sealed record SocialData(
     public const string UnknownOffer = "unknown_offer";
     public const string Sold = "sold";
     public const string LevelTooLow = "level_too_low";
+    public const string Locked = "locked";
+    public const string UnknownNode = "unknown_node";
+    public const string Running = "running";
+    public const string QueueEdge = "queue_edge";
+    public const string NotQueued = "not_queued";
+
+    public ResearchView? ResearchLevels => Guild is null ? null : Research?.ToView();
 }
 
 public sealed record GuildData(string Name, string Code, bool Leader, IReadOnlyList<MemberData> Members);
@@ -101,10 +110,10 @@ public sealed record TitanData(
     public TitanView ToView() => new(Week, Kind, Hp, Damage, Fallen, Mine, Claimable is not null);
 }
 
-public sealed record TitanTier(long Points, int Percent, int Hours);
+public sealed record TitanTier(long Points, int Percent, int Hours, int Seals = 0);
 
 public sealed record LastTitan(int Kind, bool Fallen, long Mine);
 
-public sealed record TitanReward(int Percent, int Hours);
+public sealed record TitanReward(int Percent, int Hours, int Seals = 0);
 
 public sealed record RankData(int Rank, string Name, long Monsters, bool Mine);

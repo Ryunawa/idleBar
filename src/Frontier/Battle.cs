@@ -68,7 +68,7 @@ public static class Battle
         }
 
         amount *= monster.Boss && source != HitSource.Judgment
-            ? (1 + Talents.BossDamage(state)) * (1 + BossGear(state, source)) * (state.StormLeft > 0 ? 1 + Balance.StormBossBonus : 1)
+            ? (1 + Talents.BossDamage(state)) * (1 + BossGear(state, source)) * (state.StormLeft > 0 ? 1 + Balance.StormBossBonus : 1) * GuildResearch.BossFactor(state)
             : 1;
         monster.Hp -= amount;
         events.Add(new Hit(source, amount, critical, ally, big));

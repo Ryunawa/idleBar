@@ -25,7 +25,7 @@ public partial class TitanPanel : VBoxContainer
         Name = "Titan";
         VBoxContainer rows = new();
         rows.AddThemeConstantOverride("separation", 8);
-        rows.AddChild(WindowRows.Muted("Chaque lundi, un titan se dresse dans le brouillard de toutes les frontières. Il faut tous les joueurs pour l'abattre avant le lundi suivant : chaque monstre vaincu lui porte un coup, chaque boss dix. Personne ne peut lui retirer plus de la moitié de ses PV, ni plus de 60 coups par minute."));
+        rows.AddChild(WindowRows.Muted("Chaque lundi, un titan se dresse dans le brouillard de toutes les frontières. Il faut tous les joueurs pour l'abattre avant le lundi suivant : chaque monstre vaincu lui porte un coup, chaque boss dix, et le Cri de guerre de la recherche de guilde en ajoute. Personne ne peut lui retirer plus de la moitié de ses PV, ni plus de 60 coups par minute avant ce bonus."));
         _title = new Label();
         _title.AddThemeColorOverride("font_color", BarPalette.Gold);
         rows.AddChild(_title);
@@ -87,9 +87,9 @@ public partial class TitanPanel : VBoxContainer
         _life.Value = titan.Hp > 0 ? 1 - (double)titan.Damage / titan.Hp : 0;
         _share.Text = Share(titan, tiers);
         _tiers.Text = "Paliers, si le titan tombe : " + string.Join(" ; ", tiers.Select(tier =>
-            $"{NumberFormat.Exact(tier.Points)} coups, +{tier.Percent} % d'or et de dégâts pendant {tier.Hours} h")) + ".";
+            $"{NumberFormat.Exact(tier.Points)} coups, +{tier.Percent} % d'or et de dégâts pendant {tier.Hours} h{Seals(tier.Seals)}")) + ".";
         _claim.Visible = titan.Claimable is not null;
-        _claim.Text = titan.Claimable is TitanReward reward ? $"Réclamer : +{reward.Percent} % d'or et de dégâts pendant {reward.Hours} h" : string.Empty;
+        _claim.Text = titan.Claimable is TitanReward reward ? $"Réclamer : +{reward.Percent} % d'or et de dégâts pendant {reward.Hours} h{Seals(reward.Seals)}" : string.Empty;
         _last.Text = titan.Last is LastTitan last
             ? $"La semaine dernière, le titan {Titans.Name(last.Kind)} {(last.Fallen ? "est tombé" : "a survécu")} ; ta part : {NumberFormat.Exact(last.Mine)} coups."
             : string.Empty;
@@ -116,10 +116,12 @@ public partial class TitanPanel : VBoxContainer
     {
         TitanTier? reached = tiers.LastOrDefault(tier => titan.Mine >= tier.Points);
         TitanTier? next = tiers.FirstOrDefault(tier => titan.Mine < tier.Points);
-        string reward = reached is null ? "pas encore de récompense" : $"+{reached.Percent} % pendant {reached.Hours} h s'il tombe";
+        string reward = reached is null ? "pas encore de récompense" : $"+{reached.Percent} % pendant {reached.Hours} h{Seals(reached.Seals)} s'il tombe";
         string ahead = next is null ? string.Empty : $" Prochain palier à {NumberFormat.Exact(next.Points)} coups.";
         return $"Ta part : {NumberFormat.Exact(titan.Mine)} coups, {reward}.{ahead}";
     }
+
+    private static string Seals(int seals) => seals > 0 ? $" et {ResearchSnapshot.Seal(seals)}" : string.Empty;
 
     private async void Claim()
     {

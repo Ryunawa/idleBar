@@ -71,3 +71,5 @@ public sealed record TitanStruck(long Monsters) : FrontierEvent;
 public sealed record LootFound(int Rarity, string Name) : FrontierEvent;
 
 public sealed record Recycled(double Gold) : FrontierEvent;
+
+public sealed record ResearchDone(ResearchKind Kind, int Level) : FrontierEvent;

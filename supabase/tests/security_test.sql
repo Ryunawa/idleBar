@@ -37,6 +37,8 @@ select pg_temp.expect_denied('select public.unequip_item(''weapon'', ''hero'')')
 select pg_temp.expect_denied('select public.buy_offer(gen_random_uuid(), 0, 1)');
 select pg_temp.expect_denied('select public.upgrade_item(gen_random_uuid(), 0, 1, 1)');
 select pg_temp.expect_denied('select public.salvage_item(1)');
+select pg_temp.expect_denied('select public.fund_research(''common_forge'', 1)');
+select pg_temp.expect_denied('select public.move_research(''common_forge'', 2, 1)');
 reset role;
 
 select set_config('request.jwt.claim.sub', '33333333-3333-3333-3333-333333333333', false);
@@ -87,5 +89,16 @@ select pg_temp.expect_denied('update public.titan_tiers set percent = 1000');
 select pg_temp.expect_denied('update public.frontiers set hero_role = ''tank''');
 select pg_temp.expect_denied('select * from public.achievement_kinds');
 select pg_temp.expect_denied('select private.frontier_reply(auth.uid(), ''ok'')');
+select pg_temp.expect_denied('select * from public.research_nodes');
+select pg_temp.expect_denied('update public.research_nodes set cost = 1');
+select pg_temp.expect_denied('select * from public.player_seals');
+select pg_temp.expect_denied('insert into public.player_seals (player_id, seals) values (auth.uid(), 1000)');
+select pg_temp.expect_denied('update public.player_seals set seals = 1000');
+select pg_temp.expect_denied('select * from public.guild_research');
+select pg_temp.expect_denied('update public.guild_research set level = 5');
+select pg_temp.expect_denied('select * from public.research_queue');
+select pg_temp.expect_denied('update public.research_queue set ends_at = now()');
+select pg_temp.expect_denied('select private.grant_seals(auth.uid(), 1000)');
+select pg_temp.expect_denied('select private.advance_research(gen_random_uuid())');
 select public.get_requirements();
 reset role;

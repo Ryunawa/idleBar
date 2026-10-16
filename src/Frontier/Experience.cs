@@ -21,7 +21,7 @@ public static class Experience
             return;
         }
 
-        state.Xp[index] += Unit(state, stage) * weight * (1 + Math.Min(Balance.GearXpCap, state.Gears[index].Xp));
+        state.Xp[index] += Unit(state, stage) * weight * (1 + Math.Min(Balance.GearXpCap, state.Gears[index].Xp)) * GuildResearch.XpFactor(state);
         int before = state.Level(kind);
         while (state.Xp[index] >= ToNext(state, kind))
         {

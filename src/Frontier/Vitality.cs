@@ -41,7 +41,7 @@ public static class Vitality
         }
 
         double hp = Fighters.Of(kind).Hp * level * Math.Pow(Balance.MilestoneFactor, level / Balance.MilestoneLevels)
-            * Economy.Wealth(state) * ArmorFactor(state.Armor);
+            * Economy.Wealth(state) * ArmorFactor(state.Armor) * GuildResearch.HealthFactor(state);
         return kind == FighterKind.Hero
             ? hp * (1 + Balance.ForgeBonus * state.Level(BuildingKind.Forge))
             : hp * (1 + Balance.BarracksHpBonus * state.Level(BuildingKind.Barracks));

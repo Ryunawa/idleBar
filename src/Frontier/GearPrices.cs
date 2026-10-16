@@ -27,5 +27,5 @@ public static class GearPrices
 
     private static double Base(FrontierState state, int level, int rarity) =>
         Balance.ShopKills * (Economy.MonsterHp(level) * Balance.KillGoldRatio + Balance.KillGoldFlat)
-        * Balance.RarityPrices[Math.Clamp(rarity, 0, Balance.RarityPrices.Length - 1)] * Economy.Discount(state);
+        * Balance.RarityPrices[Math.Clamp(rarity, 0, Balance.RarityPrices.Length - 1)] * Economy.Discount(state) * GuildResearch.Discount(state);
 }

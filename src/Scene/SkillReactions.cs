@@ -34,6 +34,9 @@ public static class SkillReactions
             case AchievementUnlocked unlocked:
                 scene.Banners.Add(["SUCCÈS DÉBLOQUÉ", unlocked.Achievement.Name]);
                 break;
+            case ResearchDone done:
+                scene.Banners.Add(["RECHERCHE TERMINÉE", $"{Researches.Of(done.Kind).Name} niveau {done.Level}"]);
+                break;
             case Returned returned when returned.Seconds >= 60:
                 motion.Replay = 2;
                 motion.ReplayLabel = $">> {SceneText.Duration(returned.Seconds)} PLUS TARD";

@@ -84,6 +84,8 @@ public sealed class FrontierGame
 
     public void Sight(TitanView titan, bool announce = true) => Titans.Sight(State, titan, announce ? Events : new EventLog());
 
+    public void Study(ResearchView? research, bool announce = true) => GuildResearch.Sync(State, research, announce ? Events : new EventLog());
+
     public void Equip(FighterKind kind, Gear gear, GearLook worn)
     {
         State.Gears[(int)kind] = gear;

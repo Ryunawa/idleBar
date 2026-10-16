@@ -17,3 +17,7 @@ public sealed record UnequipArguments(string PSlot, string PFighter);
 public sealed record OfferArguments(System.Guid PSession, int PRevision, long POffer);
 
 public sealed record UpgradeArguments(System.Guid PSession, int PRevision, long PItem, int PCount);
+
+public sealed record FundArguments(string PNode, int PAmount);
+
+public sealed record MoveArguments(string PNode, int PLevel, int POffset);

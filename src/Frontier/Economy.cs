@@ -29,7 +29,7 @@ public static class Economy
     public static double Synergy(FrontierState state) => 1 + Balance.SynergyBonus * Roles.OnFront(state).Count;
 
     public static double Buff(FrontierState state) =>
-        (state.FuryLeft > 0 ? Balance.FuryFactor : 1) * (1 + Balance.SupplyBonus * state.Supply) * Synergy(state) * Help.DamageFactor(state)
+        (state.FuryLeft > 0 ? Balance.FuryFactor : 1) * (1 + Balance.SupplyBonus * state.Supply) * Synergy(state) * Help.DamageFactor(state) * GuildResearch.DamageFactor(state)
         * (1 + Talents.Blessing(state));
 
     public static double HeroPower(FrontierState state) =>
@@ -67,7 +67,7 @@ public static class Economy
 
     public static double ChapelPace(FrontierState state) => 1 + Math.Min(Balance.ChapelMax, Balance.ChapelBonus * state.Level(BuildingKind.Chapel));
 
-    public static double SkillCooldown(FrontierState state, SkillKind kind) => Skills.Of(kind).Cooldown / ChapelPace(state) / SkillTree.Pace(state, kind);
+    public static double SkillCooldown(FrontierState state, SkillKind kind) => Skills.Of(kind).Cooldown / ChapelPace(state) / SkillTree.Pace(state, kind) / GuildResearch.RechargePace(state);
 
     public static double BossSeconds(FrontierState state) =>
         Balance.BossSeconds + Math.Min(Balance.BelfryMax, Balance.BelfrySeconds * state.Level(BuildingKind.Belfry));
@@ -106,7 +106,7 @@ public static class Economy
     }
 
     public static double GoldPerSecond(FrontierState state) =>
-        BaseGoldPerSecond(state) * (state.FrenzyLeft > 0 ? Balance.FrenzyGold : 1) * Help.GoldFactor(state);
+        BaseGoldPerSecond(state) * (state.FrenzyLeft > 0 ? Balance.FrenzyGold : 1) * Help.GoldFactor(state) * GuildResearch.GoldFactor(state);
 
     public static double MonsterHp(int stage)
     {
@@ -130,7 +130,7 @@ public static class Economy
     public static bool IsBossStage(int stage) => stage % Balance.BossEvery == 0;
 
     public static double KillGold(FrontierState state, bool boss) =>
-        BaseKillGold(state, boss) * Plunder(state) * (state.FrenzyLeft > 0 ? Balance.FrenzyGold : 1) * (state.HarvestLeft > 0 ? Balance.HarvestGold : 1) * Help.GoldFactor(state);
+        BaseKillGold(state, boss) * Plunder(state) * (state.FrenzyLeft > 0 ? Balance.FrenzyGold : 1) * (state.HarvestLeft > 0 ? Balance.HarvestGold : 1) * Help.GoldFactor(state) * GuildResearch.GoldFactor(state);
 
     public static double Plunder(FrontierState state)
     {

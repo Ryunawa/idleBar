@@ -22,7 +22,7 @@ public static class GuildMessages
         SocialData.NotLeader => "Seul le chef de la guilde peut faire ça.",
         SocialData.UnknownMember => "Ce joueur n'est plus dans la guilde.",
         SocialData.Self => "Tu ne peux pas t'envoyer d'aide.",
-        SocialData.FrontFull => "Son front accueille déjà trois renforts.",
+        SocialData.FrontFull => "Son front accueille déjà tous les renforts qu'il peut recevoir.",
         SocialData.ConvoyFull => "Ses convois couvrent déjà deux heures.",
         SocialData.Nothing => "Rien à réclamer pour l'instant.",
         SocialData.UnknownItem => "Cet objet n'est plus dans ton sac.",

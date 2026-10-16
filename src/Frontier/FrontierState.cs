@@ -95,6 +95,8 @@ public sealed class FrontierState
 
     public TitanView? Titan { get; set; }
 
+    public ResearchView? Research { get; set; }
+
     public double ConvoyTimer { get; set; } = 2;
 
     public long ConvoySequence { get; set; }
