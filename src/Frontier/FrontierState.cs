@@ -138,7 +138,7 @@ public sealed class FrontierState
         return plot >= 0 ? plot : null;
     }
 
-    public bool CanChangeRole => Hero is null || Retreats > RoleRetreats;
+    public bool CanChangeRole => Hero is null || (Retreats > RoleRetreats && MaxStage <= Balance.RedistributeStage);
 
     public void Earn(double gold)
     {

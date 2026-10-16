@@ -74,7 +74,7 @@ select pg_temp.check(pg_temp.squad(null) #> '{frontier,companions}' = '[null, nu
 select pg_temp.check(not (pg_temp.squad('{tank}') -> 'frontier' ? 'intendant_on'), 'plus d''intendant');
 reset role;
 
-update public.frontiers set retreats = 1 where player_id = '88888888-8888-8888-8888-888888888888';
+update public.frontiers set retreats = 1, stage = 1, max_stage = 1 where player_id = '88888888-8888-8888-8888-888888888888';
 
 set role authenticated;
 select pg_temp.check(pg_temp.hero('Aldric', 'mage') #>> '{frontier,role_retreats}' = '1', 'rôle changé après un repli');
@@ -82,11 +82,24 @@ select pg_temp.check(pg_temp.hero('Aldric', 'archer') ->> 'status' = 'role_locke
 select pg_temp.check(public.claim_frontier('00000000-0000-0000-0000-000000000008') #>> '{frontier,hero_role}' = 'mage', 'nouveau rôle relu');
 reset role;
 
-update public.frontiers set retreats = 2 where player_id = '88888888-8888-8888-8888-888888888888';
+update public.frontiers set retreats = 2, stage = 1, max_stage = 1 where player_id = '88888888-8888-8888-8888-888888888888';
 
 set role authenticated;
 select pg_temp.check(pg_temp.hero('Aldric', 'mage') #>> '{frontier,role_retreats}' = '2', 'garder la même classe après un repli compte comme le choix');
 select pg_temp.check(pg_temp.hero('Aldric', 'archer') ->> 'status' = 'role_locked', 'plus de changement après avoir gardé sa classe');
+reset role;
+
+update public.frontiers set retreats = 3, best_stage = greatest(best_stage, 11), max_stage = 11, stage = 11
+where player_id = '88888888-8888-8888-8888-888888888888';
+
+set role authenticated;
+select pg_temp.check(pg_temp.hero('Aldric', 'archer') ->> 'status' = 'role_locked', 'pas de changement de classe au-delà du niveau 10 de la partie');
+reset role;
+
+update public.frontiers set stage = 10, max_stage = 10 where player_id = '88888888-8888-8888-8888-888888888888';
+
+set role authenticated;
+select pg_temp.check(pg_temp.hero('Aldric', 'archer') #>> '{frontier,hero_role}' = 'archer', 'changement de classe accepté au début de la partie');
 reset role;
 
 delete from auth.users where id = '88888888-8888-8888-8888-888888888888';

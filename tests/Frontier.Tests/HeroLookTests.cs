@@ -16,6 +16,10 @@ public sealed class HeroLookTests
         Assert.False(game.State.CanChangeRole);
         game.State.Retreats++;
         Assert.True(game.State.CanChangeRole);
+        game.State.MaxStage = Balance.RedistributeStage + 1;
+        Assert.False(game.State.CanChangeRole);
+        game.State.MaxStage = Balance.RedistributeStage;
+        Assert.True(game.State.CanChangeRole);
         game.Adopt(look with { Outfit = 7 }, HeroRole.Mage, 5);
         Assert.Equal(HeroRole.Mage, game.State.Role);
         Assert.Equal(7, game.State.Hero?.Outfit);
